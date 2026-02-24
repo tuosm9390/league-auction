@@ -2,9 +2,9 @@
 
 import { useEffect, use, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useAuctionStore, Role } from '@/store/useAuctionStore'
+import { useAuctionStore, Role, Player } from '@/store/useAuctionStore'
 import { useAuctionRealtime } from '@/hooks/useAuctionRealtime'
-import { drawNextPlayer, awardPlayer, skipPlayer } from '@/lib/auctionActions'
+import { drawNextPlayer, startAuction, awardPlayer } from '@/lib/auctionActions'
 import { supabase } from '@/lib/supabase'
 import { AuctionTimer } from '@/components/AuctionTimer'
 import { AuctionBoard } from '@/components/AuctionBoard'
@@ -12,17 +12,19 @@ import { TeamList } from '@/components/TeamList'
 import { ChatPanel } from '@/components/ChatPanel'
 import { LinksModal } from '@/components/LinksModal'
 import { HowToUseModal } from '@/components/HowToUseModal'
+import { LotteryOverlay } from '@/components/LotteryOverlay'
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const roomId = resolvedParams.id
   const searchParams = useSearchParams()
-  const role = searchParams.get('role') as Role
+  const roleParam = searchParams.get('role')
+  const role: Role = (roleParam === 'ORGANIZER' || roleParam === 'LEADER' || roleParam === 'VIEWER') ? roleParam : null
   const teamId = searchParams.get('teamId') || undefined
 
   const setRoomContext = useAuctionStore(s => s.setRoomContext)
-  const players       = useAuctionStore(s => s.players)
-  const timerEndsAt   = useAuctionStore(s => s.timerEndsAt)
+  const players = useAuctionStore(s => s.players)
+  const timerEndsAt = useAuctionStore(s => s.timerEndsAt)
 
   useEffect(() => {
     setRoomContext(roomId, role, teamId)
@@ -30,28 +32,76 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
   useAuctionRealtime(roomId)
 
-  const currentPlayer  = players.find(p => p.status === 'IN_AUCTION')
+  const currentPlayer = players.find(p => p.status === 'IN_AUCTION')
   const waitingPlayers = players.filter(p => p.status === 'WAITING')
-  const soldPlayers    = players.filter(p => p.status === 'SOLD')
+  const soldPlayers = players.filter(p => p.status === 'SOLD')
+  const unsoldPlayers = players.filter(p => p.status === 'UNSOLD')
 
   // 버튼 로딩 상태
-  const [isDrawing, setIsDrawing]   = useState(false)
-  const [isAwarding, setIsAwarding] = useState(false)
-  const [isSkipping, setIsSkipping] = useState(false)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
+
+  // 추첨 모달 상태 관리 (진입 시 자동 실행 방지)
+  const [lotteryPlayer, setLotteryPlayer] = useState<Player | null>(null)
+  const prevPlayersRef = useRef<Player[]>([])
+
+  useEffect(() => {
+    const prev = prevPlayersRef.current
+    const curr = players
+
+    // 초기 로딩 이후(배열에 값이 채워진 뒤) 상태 변화 감지
+    if (prev.length > 0 && curr.length > 0) {
+      const prevActive = prev.find(p => p.status === 'IN_AUCTION')
+      const currActive = curr.find(p => p.status === 'IN_AUCTION')
+
+      // 이전에 IN_AUCTION 선수가 없었는데 새로 등장했을 때만 추첨 팝업 발생 (즉, 당첨 버튼이 눌렸을 때)
+      if (!prevActive && currActive) {
+        setLotteryPlayer(currActive)
+      }
+    }
+    prevPlayersRef.current = curr
+  }, [players])
+
+  // 전역 추첨 모달 닫기 동기화 (Broadcast)
+  useEffect(() => {
+    if (!roomId) return
+    const channel = supabase.channel(`lottery-${roomId}`)
+      .on('broadcast', { event: 'CLOSE_LOTTERY' }, () => {
+        setLotteryPlayer(null)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [roomId])
+
+  const handleCloseLottery = async () => {
+    if (role !== 'ORGANIZER') return
+    // 내 화면 닫기
+    setLotteryPlayer(null)
+    // 다른 모든 사람 닫기
+    await supabase.channel(`lottery-${roomId}`).send({
+      type: 'broadcast',
+      event: 'CLOSE_LOTTERY',
+      payload: {}
+    })
+  }
 
   // 공지 상태
-  const [noticeText, setNoticeText]     = useState('')
+  const [noticeText, setNoticeText] = useState('')
   const [isSendingNotice, setIsSendingNotice] = useState(false)
 
   const handleNotice = async () => {
     if (!noticeText.trim() || !roomId || isSendingNotice) return
+    if (noticeText.trim().length > 200) return
     setIsSendingNotice(true)
     try {
       await supabase.from('messages').insert([{
-        room_id:     roomId,
+        room_id: roomId,
         sender_name: '주최자',
         sender_role: 'NOTICE',
-        content:     noticeText.trim(),
+        content: noticeText.trim(),
       }])
       setNoticeText('')
     } finally {
@@ -61,23 +111,23 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
   const handleDraw = async () => {
     setIsDrawing(true)
-    const res = await drawNextPlayer(roomId)
-    if (res.error) alert(res.error)
-    setIsDrawing(false)
+    try {
+      const res = await drawNextPlayer(roomId)
+      if (res.error) alert(res.error)
+    } finally {
+      setIsDrawing(false)
+    }
   }
 
-  const handleAward = async () => {
-    if (!currentPlayer) return
-    setIsAwarding(true)
-    await awardPlayer(roomId, currentPlayer.id)
-    setIsAwarding(false)
-  }
-
-  const handleSkip = async () => {
-    if (!currentPlayer) return
-    setIsSkipping(true)
-    await skipPlayer(roomId, currentPlayer.id)
-    setIsSkipping(false)
+  const handleStart = async () => {
+    setIsStarting(true)
+    try {
+      const res = await startAuction(roomId)
+      if (res.error) alert(res.error)
+      else await handleCloseLottery() // 경매 시작 시 모달 글로벌 닫기
+    } finally {
+      setIsStarting(false)
+    }
   }
 
   // ── 타이머 만료 시 자동 낙찰 (주최자 클라이언트) ──
@@ -100,14 +150,17 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       const stillActive = playersRef.current.find(p => p.id === playerId && p.status === 'IN_AUCTION')
       if (!stillActive) return
       awardLock.current = true
-      await awardPlayer(roomId, playerId)
-      awardLock.current = false
+      try {
+        await awardPlayer(roomId, playerId)
+      } finally {
+        awardLock.current = false
+      }
     }, delay)
 
     return () => { cancelled = true; clearTimeout(t) }
   }, [timerEndsAt, role, roomId])
 
-  const allDone = waitingPlayers.length === 0 && !currentPlayer && soldPlayers.length > 0
+  const allDone = waitingPlayers.length === 0 && !currentPlayer && soldPlayers.length > 0 && unsoldPlayers.length === 0
 
   return (
     <div className="min-h-screen bg-blue-50 text-foreground flex flex-col font-sans">
@@ -115,17 +168,17 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       {/* Header */}
       <header className="bg-minion-blue text-white p-4 flex justify-between items-center shadow-md">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl font-black text-minion-yellow tracking-tight">League Auction 🍌</h1>
+          <h1 className="text-2xl font-black text-minion-yellow tracking-tight">M I N I O N S 🍌</h1>
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold border border-white/30">
             {role === 'ORGANIZER' && '👑 주최자 모드'}
-            {role === 'LEADER'    && '🛡️ 팀장 모드'}
-            {role === 'VIEWER'    && '👀 관전자 모드'}
+            {role === 'LEADER' && '🛡️ 팀장 모드'}
+            {role === 'VIEWER' && '👀 관전자 모드'}
           </span>
           {role === 'ORGANIZER' && <LinksModal />}
           <HowToUseModal variant="header" />
         </div>
         {/* 헤더 타이머: 중앙 화면에 타이머가 없을 때(대기 중)만 표시 */}
-        {!currentPlayer && <AuctionTimer />}
+        {/* {!currentPlayer && <AuctionTimer />} */}
       </header>
 
       {/* Main Grid */}
@@ -186,7 +239,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                   <p className="text-sm text-gray-400 mt-1">왼쪽 팀 현황에서 최종 결과를 확인하세요.</p>
                 </div>
               ) : !currentPlayer ? (
-                // 경매 대기 상태
+                // 1. 경매 대기 상태 (추첨 전)
                 <button
                   onClick={handleDraw}
                   disabled={isDrawing || waitingPlayers.length === 0}
@@ -195,26 +248,23 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                   {isDrawing
                     ? '추첨 중...'
                     : waitingPlayers.length === 0
-                    ? '대기 중인 선수 없음'
-                    : `🎲 다음 선수 추첨 (${waitingPlayers.length}명 대기)`}
+                      ? '대기 중인 선수 없음'
+                      : `🎲 다음 선수 추첨 (${waitingPlayers.length}명 대기)`}
+                </button>
+              ) : !timerEndsAt ? (
+                // 2. 선수 추첨됨, 경매 시작 대기
+                <button
+                  onClick={handleStart}
+                  disabled={isStarting}
+                  className="w-full bg-lime-500 hover:bg-lime-600 text-white py-3.5 rounded-xl font-black text-lg transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 shadow-[0_3px_0_#4d7c0f]"
+                >
+                  {isStarting ? '준비 중...' : '▶ 경매 시작'}
                 </button>
               ) : (
-                // 경매 진행 중
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleAward}
-                    disabled={isAwarding}
-                    className="flex-1 bg-minion-yellow hover:bg-minion-yellow-hover text-minion-blue py-3 rounded-xl font-black transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 shadow-[0_3px_0_#D9B310]"
-                  >
-                    {isAwarding ? '처리 중...' : '🏆 낙찰 처리'}
-                  </button>
-                  <button
-                    onClick={handleSkip}
-                    disabled={isSkipping}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50"
-                  >
-                    {isSkipping ? '처리 중...' : '⏭️ 건너뛰기'}
-                  </button>
+                // 3. 경매 진행 중 (타이머 시작됨)
+                <div className="bg-minion-yellow/10 border-2 border-minion-yellow/30 text-minion-blue py-3.5 px-4 rounded-xl font-bold text-center flex flex-col items-center justify-center">
+                  <span className="text-lg">🔥 경매 진행 중</span>
+                  <span className="text-sm font-medium mt-1 opacity-80">타이머가 종료되면 최고 입찰자에게 자동 낙찰 (혹은 유찰) 됩니다.</span>
                 </div>
               )}
             </div>
@@ -227,6 +277,18 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         </aside>
 
       </main>
+
+      {/* 추첨 애니메이션 오버레이 */}
+      {lotteryPlayer && (
+        <LotteryOverlay
+          candidates={waitingPlayers}
+          targetPlayer={lotteryPlayer}
+          role={role}
+          isStarting={isStarting}
+          onClose={handleCloseLottery}
+          onStartAuction={handleStart}
+        />
+      )}
     </div>
   )
 }

@@ -55,14 +55,14 @@ function saveRoomToStorage(room: StoredRoom) {
     const prev: StoredRoom[] = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
     const updated = [room, ...prev.filter(r => r.id !== room.id)].slice(0, 5);
     localStorage.setItem(LS_KEY, JSON.stringify(updated));
-  } catch {}
+  } catch { }
 }
 
 function removeRoomFromStorage(id: string) {
   try {
     const prev: StoredRoom[] = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
     localStorage.setItem(LS_KEY, JSON.stringify(prev.filter(r => r.id !== id)));
-  } catch {}
+  } catch { }
 }
 
 export function CreateRoomModal() {
@@ -150,9 +150,9 @@ export function CreateRoomModal() {
   const handleNext = async () => {
     if (step === 0) {
       if (!basic.title.trim()) { alert('경매 제목을 입력해주세요.'); return; }
-      if (basic.teamCount < 2) { alert('팀은 최소 2개 이상이어야 합니다.'); return; }
-      if (basic.membersPerTeam < 2) { alert('팀당 인원은 최소 2명 이상이어야 합니다.'); return; }
-      if (basic.totalPoints < 100) { alert('총 포인트는 최소 100 이상이어야 합니다.'); return; }
+      if (!basic.teamCount || basic.teamCount < 2) { alert('팀은 최소 2개 이상이어야 합니다.'); return; }
+      if (!basic.membersPerTeam || basic.membersPerTeam < 2) { alert('팀당 인원은 최소 2명 이상이어야 합니다.'); return; }
+      if (!basic.totalPoints || basic.totalPoints < 100) { alert('총 포인트는 최소 100 이상이어야 합니다.'); return; }
       syncCaptains(basic.teamCount);
       setStep(1);
     } else if (step === 1) {
@@ -334,11 +334,10 @@ export function CreateRoomModal() {
             <div className="px-6 pt-4 pb-2 flex items-center shrink-0">
               {STEPS.map((label, i) => (
                 <div key={i} className="flex items-center" style={{ flex: i < STEPS.length - 1 ? '1' : 'initial' }}>
-                  <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors shrink-0 ${
-                    i < step ? 'bg-green-500 text-white' :
-                    i === step ? 'bg-minion-blue text-white' :
-                    'bg-gray-100 text-gray-400'
-                  }`}>
+                  <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors shrink-0 ${i < step ? 'bg-green-500 text-white' :
+                      i === step ? 'bg-minion-blue text-white' :
+                        'bg-gray-100 text-gray-400'
+                    }`}>
                     {i < step ? <Check size={13} /> : i + 1}
                   </div>
                   <span className={`ml-1.5 text-xs font-medium whitespace-nowrap ${i === step ? 'text-minion-blue' : 'text-gray-400'}`}>
@@ -415,7 +414,7 @@ export function CreateRoomModal() {
                       <input
                         type="number" min={2} max={12}
                         value={basic.teamCount}
-                        onChange={e => setBasic(p => ({ ...p, teamCount: Math.max(2, parseInt(e.target.value) || 2) }))}
+                        onChange={e => setBasic(p => ({ ...p, teamCount: e.target.value === '' ? '' as any : parseInt(e.target.value) }))}
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                       />
                     </div>
@@ -424,7 +423,7 @@ export function CreateRoomModal() {
                       <input
                         type="number" min={2} max={20}
                         value={basic.membersPerTeam}
-                        onChange={e => setBasic(p => ({ ...p, membersPerTeam: Math.max(2, parseInt(e.target.value) || 2) }))}
+                        onChange={e => setBasic(p => ({ ...p, membersPerTeam: e.target.value === '' ? '' as any : parseInt(e.target.value) }))}
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                       />
                       <p className="text-xs text-gray-400 mt-1">팀장 포함</p>
@@ -434,7 +433,7 @@ export function CreateRoomModal() {
                       <input
                         type="number" min={100} step={100}
                         value={basic.totalPoints}
-                        onChange={e => setBasic(p => ({ ...p, totalPoints: Math.max(100, parseInt(e.target.value) || 100) }))}
+                        onChange={e => setBasic(p => ({ ...p, totalPoints: e.target.value === '' ? '' as any : parseInt(e.target.value) }))}
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                       />
                     </div>
@@ -451,11 +450,10 @@ export function CreateRoomModal() {
                           key={String(opt.value)}
                           type="button"
                           onClick={() => setBasic(p => ({ ...p, orderPublic: opt.value }))}
-                          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${
-                            basic.orderPublic === opt.value
+                          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${basic.orderPublic === opt.value
                               ? 'border-minion-blue bg-minion-blue text-white'
                               : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
+                            }`}
                         >
                           {opt.label}
                         </button>
@@ -525,7 +523,7 @@ export function CreateRoomModal() {
                           <input
                             type="number" min={0} max={basic.totalPoints - 1}
                             value={captain.captainPoints}
-                            onChange={e => updateCaptain(i, 'captainPoints', Math.max(0, parseInt(e.target.value) || 0))}
+                            onChange={e => updateCaptain(i, 'captainPoints', e.target.value === '' ? '' as any : parseInt(e.target.value))}
                             className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
                           />
                         </div>
@@ -554,11 +552,10 @@ export function CreateRoomModal() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-gray-700">경매 선수 목록</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        players.length >= minPlayers
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${players.length >= minPlayers
                           ? 'bg-green-100 text-green-600'
                           : 'bg-orange-100 text-orange-500'
-                      }`}>
+                        }`}>
                         {players.length} / 최소 {minPlayers}명
                       </span>
                     </div>
@@ -746,11 +743,10 @@ function LinkCard({
       </div>
       <button
         onClick={() => onCopy(link, linkKey)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${
-          copied === linkKey
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${copied === linkKey
             ? 'bg-green-100 text-green-700'
             : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
-        }`}
+          }`}
       >
         {copied === linkKey ? <><Check size={12} /> 복사됨</> : <><Copy size={12} /> 복사</>}
       </button>

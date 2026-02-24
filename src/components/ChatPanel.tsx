@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useAuctionStore } from '@/store/useAuctionStore'
+import { useAuctionStore, Message } from '@/store/useAuctionStore'
 import { supabase } from '@/lib/supabase'
 
-function MessageItem({ msg }: { msg: any }) {
+const MAX_MESSAGE_LENGTH = 200
+
+function MessageItem({ msg }: { msg: Message }) {
   const role = msg.sender_role
 
   // ── 시스템 메시지 ──
@@ -73,6 +75,7 @@ export function ChatPanel() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || !roomId || isSending) return
+    if (input.trim().length > MAX_MESSAGE_LENGTH) return
 
     setIsSending(true)
     try {
@@ -109,7 +112,7 @@ export function ChatPanel() {
             첫 메시지를 입력해 대화를 시작하세요.
           </div>
         ) : (
-          messages.map((msg: any) => <MessageItem key={msg.id} msg={msg} />)
+          messages.map((msg) => <MessageItem key={msg.id} msg={msg} />)
         )}
         <div ref={bottomRef} />
       </div>
@@ -120,6 +123,7 @@ export function ChatPanel() {
           value={input}
           onChange={e => setInput(e.target.value)}
           placeholder="메시지 입력..."
+          maxLength={MAX_MESSAGE_LENGTH}
           className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-minion-yellow transition-shadow"
           disabled={isSending}
         />

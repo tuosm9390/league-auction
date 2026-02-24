@@ -45,8 +45,8 @@ export function AuctionTimer() {
 
   return (
     <div className={`text-xl font-bold px-6 py-2 rounded-full font-mono shadow-inner border transition-colors duration-300 ${isWarning
-        ? 'bg-red-500/20 border-red-500/50 text-white animate-pulse'
-        : 'bg-black/30 border-black/10 text-white'
+      ? 'bg-red-500/20 border-red-500/50 text-white animate-pulse'
+      : 'bg-black/30 border-black/10 text-white'
       }`}>
       남은 시간: <span className={isWarning ? 'text-red-400' : 'text-minion-yellow'}>
         {pad(minutes)}:{pad(seconds)}

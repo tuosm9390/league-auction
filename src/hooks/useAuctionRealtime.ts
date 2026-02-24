@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuctionStore } from '@/store/useAuctionStore'
+import { useAuctionStore, PresenceUser, Bid, Message } from '@/store/useAuctionStore'
 
 export function useAuctionRealtime(roomId: string | null) {
   const setRealtimeData = useAuctionStore(s => s.setRealtimeData)
@@ -18,7 +18,7 @@ export function useAuctionRealtime(roomId: string | null) {
       supabase.from('teams').select('*').eq('room_id', roomId),
       supabase.from('players').select('*').eq('room_id', roomId),
       supabase.from('bids').select('*').eq('room_id', roomId).order('created_at', { ascending: true }),
-      supabase.from('messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }),
+      supabase.from('messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }).limit(200),
     ])
 
     if (roomRes.data) {
@@ -76,14 +76,14 @@ export function useAuctionRealtime(roomId: string | null) {
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bids', filter: `room_id=eq.${roomId}` },
         (payload) => {
-          addBid(payload.new)
+          addBid(payload.new as Bid)
         }
       )
       // messages INSERT → 즉시 추가
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` },
         (payload) => {
-          addMessage(payload.new)
+          addMessage(payload.new as Message)
         }
       )
       .subscribe((status) => {
@@ -110,7 +110,7 @@ export function useAuctionRealtime(roomId: string | null) {
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState()
-        const presences = Object.values(state).flat() as any[]
+        const presences = Object.values(state).flat() as unknown as PresenceUser[]
         setRealtimeData({ presences })
       })
       .subscribe(async (status) => {
