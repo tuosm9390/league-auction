@@ -14,23 +14,49 @@ export function TeamList() {
     return <div className="text-muted-foreground text-sm text-center py-10">생성된 팀이 없습니다. 주최자가 팀을 등록해야 합니다.</div>
   }
 
+  const sortedTeams = [...teams].sort((a, b) => {
+    // 내 팀은 무조건 맨 위로
+    if (a.id === myTeamId) return -1;
+    if (b.id === myTeamId) return 1;
+
+    // 나머지 팀은 이름(예: 1팀, 2팀)에 포함된 숫자를 기준으로 순차 정렬
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
+
   return (
     <div className="flex flex-col gap-3">
-      {teams.map((team: Team) => {
+      {sortedTeams.map((team: Team) => {
         const teamPlayers = players.filter(p => p.team_id === team.id)
         const isMyTeam = team.id === myTeamId
+        const isTeamComplete = teamPlayers.length === (membersPerTeam - 1)
 
         return (
           <div
             key={team.id}
-            className={`p-3 rounded-xl border-2 transition-all duration-300 ${isMyTeam ? 'border-minion-yellow bg-minion-yellow/10 shadow-md' : 'border-gray-100 bg-gray-50'}`}
+            className={`p-3 rounded-xl border-2 transition-all duration-300 relative overflow-hidden
+              ${isTeamComplete
+                ? 'border-green-400 bg-green-50/80 shadow-md ring-2 ring-green-400/20'
+                : isMyTeam
+                  ? 'border-minion-yellow bg-minion-yellow/10 shadow-md'
+                  : 'border-gray-100 bg-gray-50'
+              }`}
           >
+            {isTeamComplete && (
+              <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">
+                <div className="absolute top-3 -right-6 origin-center rotate-45 bg-green-500 text-white text-[10px] font-bold py-1 px-8 shadow-sm">
+                  COMPLETED
+                </div>
+              </div>
+            )}
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <h3 className={`font-bold flex items-center gap-2 ${isTeamComplete ? 'text-green-800' : 'text-gray-800'}`}>
                 {isMyTeam && <span className="text-minion-yellow text-lg">★</span>}
                 {team.name}
               </h3>
-              <div className="font-mono font-bold text-minion-blue bg-white px-2 py-1 rounded shadow-sm border border-gray-200">
+              <div className={`font-mono font-bold px-2 py-1 rounded shadow-sm border ${isTeamComplete
+                ? 'bg-green-100 text-green-700 border-green-200'
+                : 'bg-white text-minion-blue border-gray-200'
+                }`}>
                 {team.point_balance} P
               </div>
             </div>

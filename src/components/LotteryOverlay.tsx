@@ -46,10 +46,10 @@ export function LotteryOverlay({
       setStartRoll(true)
     }, 100)
 
-    // 애니메이션 4초간 진행 후 종료 상태로 변경
+    // 애니메이션 3초간 진행 후 종료 상태로 변경
     const timer2 = setTimeout(() => {
       setIsSpinning(false)
-    }, 4100)
+    }, 3100)
 
     return () => {
       clearTimeout(timer1)
@@ -74,11 +74,11 @@ export function LotteryOverlay({
       </div>
 
       <div
-        className="w-80 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 border-4 border-minion-yellow shadow-[0_0_30px_rgba(255,204,0,0.3),inset_0_0_20px_rgba(0,0,0,0.8)] relative"
+        className="w-[90vw] max-w-xl sm:w-[500px] overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 border-4 border-minion-yellow shadow-[0_0_30px_rgba(255,204,0,0.3),inset_0_0_20px_rgba(0,0,0,0.8)] relative mx-auto"
         style={{ height: `${ITEM_HEIGHT}px` }}
       >
         <div
-          className="flex flex-col w-full absolute top-0 left-0"
+          className="flex flex-col w-full absolute top-0 left-0 px-4"
           style={{
             transform: startRoll ? `translateY(${targetTranslateY}px)` : 'translateY(0px)',
             transition: startRoll ? 'transform 4s cubic-bezier(0.1, 0.8, 0.2, 1)' : 'none'
@@ -91,10 +91,11 @@ export function LotteryOverlay({
               style={{ height: `${ITEM_HEIGHT}px` }}
             >
               <span
-                className={`text-3xl font-black transition-all duration-300 ${!isSpinning && idx === 40
+                className={`text-xl sm:text-2xl font-black w-full text-center truncate transition-all duration-300 ${!isSpinning && idx === 40
                   ? 'text-minion-yellow drop-shadow-[0_0_12px_rgba(255,204,0,0.6)] animate-pulse scale-110'
                   : 'text-white'
                   }`}
+                title={p.name}
               >
                 {p.name}
               </span>

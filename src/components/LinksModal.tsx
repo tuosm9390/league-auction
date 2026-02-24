@@ -74,23 +74,25 @@ export function LinksModal() {
               <div>
                 <p className="text-sm font-bold text-gray-600 mb-2">🛡️ 팀장 링크</p>
                 <div className="space-y-2">
-                  {teams.map((team: Team, i: number) => {
-                    const link = team.leader_token
-                      ? `${baseUrl}/room/${roomId}?role=LEADER&teamId=${team.id}&token=${team.leader_token}`
-                      : null
-                    if (!link) return null
-                    return (
-                      <LinkRow
-                        key={team.id}
-                        label={team.name}
-                        desc={`팀장: ${team.leader_name || '(미설정)'} · 입찰 가능`}
-                        link={link}
-                        linkKey={`captain-${i}`}
-                        copied={copied}
-                        onCopy={copyToClipboard}
-                      />
-                    )
-                  })}
+                  {[...teams]
+                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+                    .map((team: Team, i: number) => {
+                      const link = team.leader_token
+                        ? `${baseUrl}/room/${roomId}?role=LEADER&teamId=${team.id}&token=${team.leader_token}`
+                        : null
+                      if (!link) return null
+                      return (
+                        <LinkRow
+                          key={team.id}
+                          label={team.name}
+                          desc={`팀장: ${team.leader_name || '(미설정)'} · 입찰 가능`}
+                          link={link}
+                          linkKey={`captain-${i}`}
+                          copied={copied}
+                          onCopy={copyToClipboard}
+                        />
+                      )
+                    })}
                 </div>
               </div>
 
@@ -142,11 +144,10 @@ function LinkRow({
       </div>
       <button
         onClick={() => onCopy(link, linkKey)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${
-          copied === linkKey
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${copied === linkKey
             ? 'bg-green-100 text-green-700'
             : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
-        }`}
+          }`}
       >
         {copied === linkKey ? <><Check size={12} /> 복사됨</> : <><Copy size={12} /> 복사</>}
       </button>

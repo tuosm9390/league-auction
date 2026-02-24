@@ -51,36 +51,6 @@ export function useAuctionRealtime(roomId: string | null) {
     }
   }, [roomId, setRealtimeData])
 
-  // 폴링용 경량 fetch — 변동 가능한 필드만 조회
-  // bids·messages는 realtime INSERT 핸들러(addBid·addMessage)가 증분 처리하므로 제외
-  // 정적 설정(base_point, total_teams, members_per_team, order_public)은 방 생성 후 불변이므로 제외
-  const fetchPoll = useCallback(async () => {
-    if (!roomId) return
-    if (fetchingRef.current) return  // 전체 fetch 진행 중이면 스킵
-    try {
-      const [roomRes, teamsRes, playersRes] = await Promise.all([
-        supabase.from('rooms')
-          .select('timer_ends_at, organizer_token, viewer_token')
-          .eq('id', roomId).single(),
-        supabase.from('teams').select('*').eq('room_id', roomId),
-        supabase.from('players').select('*').eq('room_id', roomId),
-      ])
-      if (roomRes.data) {
-        setRealtimeData({
-          timerEndsAt:    roomRes.data.timer_ends_at,
-          organizerToken: roomRes.data.organizer_token,
-          viewerToken:    roomRes.data.viewer_token,
-        })
-      }
-      setRealtimeData({
-        teams:   teamsRes.data   || [],
-        players: playersRes.data || [],
-      })
-    } catch (err) {
-      console.error('fetchPoll error:', err)
-    }
-  }, [roomId, setRealtimeData])
-
   // ── 실시간 구독 ──
   useEffect(() => {
     if (!roomId) return
@@ -133,13 +103,6 @@ export function useAuctionRealtime(roomId: string | null) {
 
     return () => { supabase.removeChannel(channel) }
   }, [roomId, fetchAll, setRealtimeData, addBid, addMessage])
-
-  // ── 3초 폴링 fallback (realtime이 누락될 경우 보완) — 경량 버전 ──
-  useEffect(() => {
-    if (!roomId) return
-    const interval = setInterval(fetchPoll, 3000)
-    return () => clearInterval(interval)
-  }, [roomId, fetchPoll])
 
   // ── Presence tracking ──
   useEffect(() => {
