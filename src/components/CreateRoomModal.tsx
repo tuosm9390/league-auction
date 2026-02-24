@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Copy, Plus, Trash2, X, Check, ExternalLink, ArrowRight, Upload } from 'lucide-react';
+import { Copy, X, Check, ExternalLink, ArrowRight, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const TIERS = ['챌린저', '그랜드마스터', '마스터', '다이아', '에메랄드', '플래티넘', '골드', '실버', '브론즈', '언랭'];
@@ -90,17 +90,17 @@ function parseExcelPlayers(file: File): Promise<PlayerInfo[]> {
         const workbook = XLSX.read(new Uint8Array(data as ArrayBuffer), { type: 'array' });
         const sheetName = workbook.SheetNames.includes('DB') ? 'DB' : workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as string[][];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as (string | undefined)[][];
 
         if (rows.length < 2) { resolve([]); return; }
 
-        const headerRow = rows[0].map(h => String(h ?? '').trim());
+        const headerRow = Array.from(rows[0], h => String(h ?? '').trim());
 
         // Detect name / tier / comment columns
         let nameCol = 2, tierCol = 3, commentCol = 6;
         for (let ci = 0; ci < headerRow.length; ci++) {
           const h = headerRow[ci];
-          if (h.includes('이름')) nameCol = ci;
+          if (h.includes('닉네임')) nameCol = ci;
           else if (h.includes('티어')) tierCol = ci;
           else if (h.includes('코멘트') || h.includes('설명')) commentCol = ci;
         }
@@ -228,7 +228,8 @@ export function CreateRoomModal() {
 
   const syncPlayers = (count: number) => {
     setPlayers(prev => {
-      if (prev.length >= count) return prev;
+      if (prev.length === count) return prev;
+      if (prev.length > count) return prev.slice(0, count);
       const extra = Array.from({ length: count - prev.length }, () => ({
         name: '', tier: '골드', mainPosition: '탑', subPosition: '무관', description: '',
       }));
@@ -252,15 +253,8 @@ export function CreateRoomModal() {
       syncPlayers(basic.teamCount * (basic.membersPerTeam - 1));
       setStep(2);
     } else if (step === 2) {
-      const minPlayers = basic.teamCount * (basic.membersPerTeam - 1);
       const invalidName = players.find(p => !p.name.trim());
       if (invalidName) { alert('모든 선수의 이름을 입력해주세요.'); return; }
-      if (players.length < minPlayers) {
-        const confirmed = confirm(
-          `현재 ${players.length}명 등록됨.\n최소 추천 인원은 ${minPlayers}명 (${basic.teamCount}팀 × ${basic.membersPerTeam - 1}명)입니다.\n\n계속 진행하시겠습니까?`
-        );
-        if (!confirmed) return;
-      }
       setIsLoading(true);
       try {
         await createRoom();
@@ -347,10 +341,6 @@ export function CreateRoomModal() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const addPlayer = () => {
-    setPlayers(prev => [...prev, { name: '', tier: '골드', mainPosition: '탑', subPosition: '무관', description: '' }]);
-  };
-
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -359,18 +349,21 @@ export function CreateRoomModal() {
     try {
       const parsed = await parseExcelPlayers(file);
       if (parsed.length === 0) { alert('파싱된 선수가 없습니다. 파일 형식을 확인해주세요.'); return; }
-      setPlayers(prev => [...prev, ...parsed]);
-      alert(`${parsed.length}명의 선수가 추가되었습니다.`);
+      const fixed = basic.teamCount * (basic.membersPerTeam - 1);
+      const trimmed = parsed.slice(0, fixed);
+      const padded: PlayerInfo[] = trimmed.length < fixed
+        ? [...trimmed, ...Array.from({ length: fixed - trimmed.length }, () => ({
+            name: '', tier: '골드', mainPosition: '탑', subPosition: '무관', description: '',
+          }))]
+        : trimmed;
+      setPlayers(padded);
+      alert(`${trimmed.length}명의 선수 정보로 목록을 덮어썼습니다.${parsed.length > fixed ? `\n(엑셀의 ${parsed.length}명 중 ${fixed}명만 적용)` : ''}`);
     } catch (err) {
       console.error('Excel parse error:', err);
       alert('엑셀 파일 파싱에 실패했습니다.');
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const removePlayer = (i: number) => {
-    setPlayers(prev => prev.filter((_, idx) => idx !== i));
   };
 
   const updatePlayer = (i: number, field: keyof PlayerInfo, value: string) => {
@@ -442,8 +435,8 @@ export function CreateRoomModal() {
               {STEPS.map((label, i) => (
                 <div key={i} className="flex items-center" style={{ flex: i < STEPS.length - 1 ? '1' : 'initial' }}>
                   <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors shrink-0 ${i < step ? 'bg-green-500 text-white' :
-                      i === step ? 'bg-minion-blue text-white' :
-                        'bg-gray-100 text-gray-400'
+                    i === step ? 'bg-minion-blue text-white' :
+                      'bg-gray-100 text-gray-400'
                     }`}>
                     {i < step ? <Check size={13} /> : i + 1}
                   </div>
@@ -558,8 +551,8 @@ export function CreateRoomModal() {
                           type="button"
                           onClick={() => setBasic(p => ({ ...p, orderPublic: opt.value }))}
                           className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${basic.orderPublic === opt.value
-                              ? 'border-minion-blue bg-minion-blue text-white'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                            ? 'border-minion-blue bg-minion-blue text-white'
+                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
                             }`}
                         >
                           {opt.label}
@@ -574,7 +567,7 @@ export function CreateRoomModal() {
                   <div className="bg-blue-50 rounded-2xl p-4 text-sm text-gray-600 space-y-1">
                     <p className="font-bold text-minion-blue mb-1">요약</p>
                     <p>· 총 {basic.teamCount}팀, 팀당 {basic.membersPerTeam}명 (팀장 포함)</p>
-                    <p>· 경매 선수 최소 <span className="font-bold text-red-500">{minPlayers}명</span> 필요</p>
+                    <p>· 경매 선수 <span className="font-bold text-minion-blue">{minPlayers}명</span> 고정 등록</p>
                     <p>· 각 팀 시작 포인트: {basic.totalPoints}P (팀장 포인트 차감 전)</p>
                   </div>
                 </div>
@@ -659,11 +652,11 @@ export function CreateRoomModal() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-gray-700">경매 선수 목록</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${players.length >= minPlayers
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${players.filter(p => p.name.trim()).length === minPlayers
                           ? 'bg-green-100 text-green-600'
                           : 'bg-orange-100 text-orange-500'
                         }`}>
-                        {players.length} / 최소 {minPlayers}명
+                        {players.filter(p => p.name.trim()).length} / {minPlayers}명
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -681,77 +674,59 @@ export function CreateRoomModal() {
                       >
                         <Upload size={14} /> {isUploading ? '처리 중...' : '엑셀 업로드'}
                       </button>
-                      <button
-                        onClick={addPlayer}
-                        className="flex items-center gap-1.5 bg-minion-blue hover:bg-minion-blue-hover text-white px-3 py-1.5 rounded-xl text-sm font-bold transition-colors"
-                      >
-                        <Plus size={14} /> 선수 추가
-                      </button>
                     </div>
                   </div>
 
-                  {players.length === 0 ? (
-                    <div className="text-center py-16 text-gray-400">
-                      <p className="text-4xl mb-2">👤</p>
-                      <p className="text-sm">위의 버튼으로 선수를 추가해주세요</p>
+                  <div className="space-y-1.5">
+                    <div className="grid gap-2 text-xs font-bold text-gray-400 px-2 pb-1" style={{ gridTemplateColumns: '1.5rem 1fr 5rem 5rem 5rem 1fr' }}>
+                      <span className="text-center">#</span>
+                      <span>이름 *</span>
+                      <span>티어</span>
+                      <span>주 포지션</span>
+                      <span>부 포지션</span>
+                      <span>소개</span>
                     </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <div className="grid gap-2 text-xs font-bold text-gray-400 px-2 pb-1" style={{ gridTemplateColumns: '1fr 5rem 5rem 5rem 1fr 2rem' }}>
-                        <span>이름 *</span>
-                        <span>티어</span>
-                        <span>주 포지션</span>
-                        <span>부 포지션</span>
-                        <span>소개</span>
-                        <span />
+                    {players.map((player, i) => (
+                      <div key={i} className="grid gap-2 items-center bg-gray-50 rounded-xl px-2 py-1.5" style={{ gridTemplateColumns: '1.5rem 1fr 5rem 5rem 5rem 1fr' }}>
+                        <span className="text-xs text-gray-400 text-center">{i + 1}</span>
+                        <input
+                          type="text"
+                          value={player.name}
+                          onChange={e => updatePlayer(i, 'name', e.target.value)}
+                          placeholder="선수 이름"
+                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                        />
+                        <select
+                          value={player.tier}
+                          onChange={e => updatePlayer(i, 'tier', e.target.value)}
+                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                        >
+                          {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select
+                          value={player.mainPosition}
+                          onChange={e => updatePlayer(i, 'mainPosition', e.target.value)}
+                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                        >
+                          {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                        <select
+                          value={player.subPosition}
+                          onChange={e => updatePlayer(i, 'subPosition', e.target.value)}
+                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                        >
+                          {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                        <input
+                          type="text"
+                          value={player.description}
+                          onChange={e => updatePlayer(i, 'description', e.target.value)}
+                          placeholder="소개 (선택)"
+                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                        />
                       </div>
-                      {players.map((player, i) => (
-                        <div key={i} className="grid gap-2 items-center bg-gray-50 rounded-xl px-2 py-1.5" style={{ gridTemplateColumns: '1fr 5rem 5rem 5rem 1fr 2rem' }}>
-                          <input
-                            type="text"
-                            value={player.name}
-                            onChange={e => updatePlayer(i, 'name', e.target.value)}
-                            placeholder="선수 이름"
-                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
-                          />
-                          <select
-                            value={player.tier}
-                            onChange={e => updatePlayer(i, 'tier', e.target.value)}
-                            className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
-                          >
-                            {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                          <select
-                            value={player.mainPosition}
-                            onChange={e => updatePlayer(i, 'mainPosition', e.target.value)}
-                            className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
-                          >
-                            {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
-                          </select>
-                          <select
-                            value={player.subPosition}
-                            onChange={e => updatePlayer(i, 'subPosition', e.target.value)}
-                            className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
-                          >
-                            {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
-                          </select>
-                          <input
-                            type="text"
-                            value={player.description}
-                            onChange={e => updatePlayer(i, 'description', e.target.value)}
-                            placeholder="소개 (선택)"
-                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
-                          />
-                          <button
-                            onClick={() => removePlayer(i)}
-                            className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -867,8 +842,8 @@ function LinkCard({
       <button
         onClick={() => onCopy(link, linkKey)}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${copied === linkKey
-            ? 'bg-green-100 text-green-700'
-            : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
+          ? 'bg-green-100 text-green-700'
+          : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
           }`}
       >
         {copied === linkKey ? <><Check size={12} /> 복사됨</> : <><Copy size={12} /> 복사</>}
