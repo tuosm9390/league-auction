@@ -24,10 +24,42 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const setRoomContext = useAuctionStore(s => s.setRoomContext)
   const players = useAuctionStore(s => s.players)
   const timerEndsAt = useAuctionStore(s => s.timerEndsAt)
+  const teams = useAuctionStore(s => s.teams)
+  const storeOrganizerToken = useAuctionStore(s => s.organizerToken)
+  const storeViewerToken = useAuctionStore(s => s.viewerToken)
+
+  const tokenParam = searchParams.get('token')
+  // 토큰 검증 전까지는 URL param role로 초기화, 검증 실패 시 null로 강등
+  const [effectiveRole, setEffectiveRole] = useState<Role>(role)
+  const tokenCheckedRef = useRef(false)
 
   useEffect(() => {
     setRoomContext(roomId, role, teamId)
   }, [roomId, role, teamId, setRoomContext])
+
+  // DB에서 토큰 로드 후 URL 토큰 검증 — 불일치 시 role 무효화
+  useEffect(() => {
+    if (tokenCheckedRef.current) return
+    let hasData = false
+    let valid = false
+    if (role === 'ORGANIZER' && storeOrganizerToken !== null) {
+      hasData = true
+      valid = tokenParam === storeOrganizerToken
+    } else if (role === 'VIEWER' && storeViewerToken !== null) {
+      hasData = true
+      valid = tokenParam === storeViewerToken
+    } else if (role === 'LEADER' && teams.length > 0) {
+      hasData = true
+      const myTeam = teams.find(t => t.id === teamId)
+      valid = !!myTeam && tokenParam === myTeam.leader_token
+    }
+    if (!hasData) return
+    tokenCheckedRef.current = true
+    if (!valid) {
+      setEffectiveRole(null)
+      setRoomContext(roomId, null, undefined)
+    }
+  }, [storeOrganizerToken, storeViewerToken, teams, role, tokenParam, roomId, teamId, setRoomContext])
 
   useAuctionRealtime(roomId)
 
@@ -76,7 +108,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }, [roomId])
 
   const handleCloseLottery = async () => {
-    if (role !== 'ORGANIZER') return
+    if (effectiveRole !== 'ORGANIZER') return
     // 내 화면 닫기
     setLotteryPlayer(null)
     // 다른 모든 사람 닫기
@@ -96,13 +128,13 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     if (noticeText.trim().length > 200) return
     setIsSendingNotice(true)
     try {
-      await supabase.from('messages').insert([{
+      const { error } = await supabase.from('messages').insert([{
         room_id: roomId,
         sender_name: '주최자',
         sender_role: 'NOTICE',
         content: noticeText.trim(),
       }])
-      setNoticeText('')
+      if (!error) setNoticeText('')
     } finally {
       setIsSendingNotice(false)
     }
@@ -135,7 +167,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   playersRef.current = players
 
   useEffect(() => {
-    if (role !== 'ORGANIZER' || !timerEndsAt || !roomId) return
+    if (effectiveRole !== 'ORGANIZER' || !timerEndsAt || !roomId) return
 
     const cp = playersRef.current.find(p => p.status === 'IN_AUCTION')
     if (!cp) return
@@ -169,11 +201,11 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-black text-minion-yellow tracking-tight">M I N I O N S 🍌</h1>
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold border border-white/30">
-            {role === 'ORGANIZER' && '👑 주최자 모드'}
-            {role === 'LEADER' && '🛡️ 팀장 모드'}
-            {role === 'VIEWER' && '👀 관전자 모드'}
+            {effectiveRole === 'ORGANIZER' && '👑 주최자 모드'}
+            {effectiveRole === 'LEADER' && '🛡️ 팀장 모드'}
+            {effectiveRole === 'VIEWER' && '👀 관전자 모드'}
           </span>
-          {role === 'ORGANIZER' && <LinksModal />}
+          {effectiveRole === 'ORGANIZER' && <LinksModal />}
           <HowToUseModal variant="header" />
         </div>
         {/* 헤더 타이머: 중앙 화면에 타이머가 없을 때(대기 중)만 표시 */}
@@ -198,7 +230,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           <AuctionBoard />
 
           {/* 주최자 컨트롤 패널 */}
-          {role === 'ORGANIZER' && (
+          {effectiveRole === 'ORGANIZER' && (
             <div className="bg-card rounded-2xl shadow-sm border border-border p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-muted-foreground">🎛️ 주최자 컨트롤</h3>
@@ -282,7 +314,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         <LotteryOverlay
           candidates={waitingPlayers}
           targetPlayer={lotteryPlayer}
-          role={role}
+          role={effectiveRole}
           isStarting={isStarting}
           onClose={handleCloseLottery}
           onStartAuction={handleStart}

@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuctionStore, PresenceUser, Bid, Message } from '@/store/useAuctionStore'
 
@@ -9,36 +9,76 @@ export function useAuctionRealtime(roomId: string | null) {
   const role            = useAuctionStore(s => s.role)
   const teamId          = useAuctionStore(s => s.teamId)
 
-  // 모든 데이터를 DB에서 새로 불러오는 함수 (안정적인 레퍼런스)
+  // 동시 fetch 방지: fetchAll 진행 중일 때 중복 요청 스킵
+  const fetchingRef = useRef(false)
+
+  // 전체 데이터 로드 — 초기 로드 및 realtime 이벤트 트리거 시 사용
   const fetchAll = useCallback(async () => {
     if (!roomId) return
+    if (fetchingRef.current) return  // 이미 fetch 중이면 스킵 (dedup)
+    fetchingRef.current = true
+    try {
+      const [roomRes, teamsRes, playersRes, bidsRes, messagesRes] = await Promise.all([
+        supabase.from('rooms').select('*').eq('id', roomId).single(),
+        supabase.from('teams').select('*').eq('room_id', roomId),
+        supabase.from('players').select('*').eq('room_id', roomId),
+        supabase.from('bids').select('*').eq('room_id', roomId).order('created_at', { ascending: true }),
+        supabase.from('messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }).limit(200),
+      ])
 
-    const [roomRes, teamsRes, playersRes, bidsRes, messagesRes] = await Promise.all([
-      supabase.from('rooms').select('*').eq('id', roomId).single(),
-      supabase.from('teams').select('*').eq('room_id', roomId),
-      supabase.from('players').select('*').eq('room_id', roomId),
-      supabase.from('bids').select('*').eq('room_id', roomId).order('created_at', { ascending: true }),
-      supabase.from('messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }).limit(200),
-    ])
+      if (roomRes.data) {
+        setRealtimeData({
+          basePoint:      roomRes.data.base_point,
+          totalTeams:     roomRes.data.total_teams,
+          membersPerTeam: roomRes.data.members_per_team ?? 5,
+          orderPublic:    roomRes.data.order_public ?? true,
+          timerEndsAt:    roomRes.data.timer_ends_at,
+          organizerToken: roomRes.data.organizer_token,
+          viewerToken:    roomRes.data.viewer_token,
+        })
+      }
 
-    if (roomRes.data) {
       setRealtimeData({
-        basePoint:      roomRes.data.base_point,
-        totalTeams:     roomRes.data.total_teams,
-        membersPerTeam: roomRes.data.members_per_team ?? 5,
-        orderPublic:    roomRes.data.order_public ?? true,
-        timerEndsAt:    roomRes.data.timer_ends_at,
-        organizerToken: roomRes.data.organizer_token,
-        viewerToken:    roomRes.data.viewer_token,
+        teams:    teamsRes.data    || [],
+        bids:     bidsRes.data     || [],
+        players:  playersRes.data  || [],
+        messages: messagesRes.data || [],
       })
+    } catch (err) {
+      console.error('fetchAll error:', err)
+    } finally {
+      fetchingRef.current = false
     }
+  }, [roomId, setRealtimeData])
 
-    setRealtimeData({
-      teams:    teamsRes.data    || [],
-      bids:     bidsRes.data     || [],
-      players:  playersRes.data  || [],
-      messages: messagesRes.data || [],
-    })
+  // 폴링용 경량 fetch — 변동 가능한 필드만 조회
+  // bids·messages는 realtime INSERT 핸들러(addBid·addMessage)가 증분 처리하므로 제외
+  // 정적 설정(base_point, total_teams, members_per_team, order_public)은 방 생성 후 불변이므로 제외
+  const fetchPoll = useCallback(async () => {
+    if (!roomId) return
+    if (fetchingRef.current) return  // 전체 fetch 진행 중이면 스킵
+    try {
+      const [roomRes, teamsRes, playersRes] = await Promise.all([
+        supabase.from('rooms')
+          .select('timer_ends_at, organizer_token, viewer_token')
+          .eq('id', roomId).single(),
+        supabase.from('teams').select('*').eq('room_id', roomId),
+        supabase.from('players').select('*').eq('room_id', roomId),
+      ])
+      if (roomRes.data) {
+        setRealtimeData({
+          timerEndsAt:    roomRes.data.timer_ends_at,
+          organizerToken: roomRes.data.organizer_token,
+          viewerToken:    roomRes.data.viewer_token,
+        })
+      }
+      setRealtimeData({
+        teams:   teamsRes.data   || [],
+        players: playersRes.data || [],
+      })
+    } catch (err) {
+      console.error('fetchPoll error:', err)
+    }
   }, [roomId, setRealtimeData])
 
   // ── 실시간 구독 ──
@@ -94,12 +134,12 @@ export function useAuctionRealtime(roomId: string | null) {
     return () => { supabase.removeChannel(channel) }
   }, [roomId, fetchAll, setRealtimeData, addBid, addMessage])
 
-  // ── 3초 폴링 fallback (realtime이 누락될 경우 보완) ──
+  // ── 3초 폴링 fallback (realtime이 누락될 경우 보완) — 경량 버전 ──
   useEffect(() => {
     if (!roomId) return
-    const interval = setInterval(fetchAll, 3000)
+    const interval = setInterval(fetchPoll, 3000)
     return () => clearInterval(interval)
-  }, [roomId, fetchAll])
+  }, [roomId, fetchPoll])
 
   // ── Presence tracking ──
   useEffect(() => {

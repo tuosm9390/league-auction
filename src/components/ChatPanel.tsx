@@ -67,6 +67,7 @@ export function ChatPanel() {
   const [input, setInput]       = useState('')
   const [isSending, setIsSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const lastSentAtRef = useRef(0)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -76,6 +77,10 @@ export function ChatPanel() {
     e.preventDefault()
     if (!input.trim() || !roomId || isSending) return
     if (input.trim().length > MAX_MESSAGE_LENGTH) return
+    // 도배 방지: 1초 쿨다운
+    const now = Date.now()
+    if (now - lastSentAtRef.current < 1000) return
+    lastSentAtRef.current = now
 
     setIsSending(true)
     try {
@@ -86,12 +91,13 @@ export function ChatPanel() {
         senderName = myTeam?.leader_name || myTeam?.name || '팀장'
       }
 
-      await supabase.from('messages').insert([{
+      const { error } = await supabase.from('messages').insert([{
         room_id:     roomId,
         sender_name: senderName,
         sender_role: role || 'VIEWER',
         content:     input.trim(),
       }])
+      if (error) { console.error('Failed to send message:', error); return }
       setInput('')
     } catch (err) {
       console.error('Failed to send message:', err)
