@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@plugin "tailwindcss-animate";
 
-@theme inline {
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-minion-yellow: #FBE042;
+  --color-minion-yellow-hover: #F2D214;
+  --color-minion-blue: #2358A4;
+  --color-minion-blue-hover: #194079;
+  --color-minion-grey: #808080;
+  --color-minion-skin: #FFC09A;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Define standard card, border colors */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  :root {
+    --background: #FAFAFA;
+    --foreground: #111827;
+    --card: #FFFFFF;
+    --card-foreground: #111827;
+    --popover: #FFFFFF;
+    --popover-foreground: #111827;
+    --primary: #FBE042;
+    --primary-foreground: #111827;
+    --secondary: #2358A4;
+    --secondary-foreground: #FAFAFA;
+    --muted: #F3F4F6;
+    --muted-foreground: #6B7280;
+    --accent: #FFC09A;
+    --accent-foreground: #111827;
+    --destructive: #EF4444;
+    --destructive-foreground: #FAFAFA;
+    --border: #E5E7EB;
+    --input: #E5E7EB;
+    --ring: #FBE042;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: #111827;
+    --foreground: #F9FAFB;
+    --card: #1F2937;
+    --card-foreground: #F9FAFB;
+    --popover: #1F2937;
+    --popover-foreground: #F9FAFB;
+    --primary: #FBE042;
+    --primary-foreground: #111827;
+    --secondary: #2358A4;
+    --secondary-foreground: #FAFAFA;
+    --muted: #374151;
+    --muted-foreground: #9CA3AF;
+    --accent: #FFC09A;
+    --accent-foreground: #111827;
+    --destructive: #7F1D1D;
+    --destructive-foreground: #F9FAFB;
+    --border: #374151;
+    --input: #374151;
+    --ring: #FBE042;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
