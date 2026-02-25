@@ -68,6 +68,39 @@ export function useAuctionRealtime(roomId: string | null) {
     }
   }, [roomId, setRealtimeData, setRoomNotFound, setReAuctionRound])
 
+  // 경량 폴링 함수 — rooms + teams + players만 조회 (bids/messages는 realtime INSERT로 충분)
+  const fetchPoll = useCallback(async () => {
+    if (!roomId) return
+    if (fetchingRef.current) return  // fetchAll 진행 중이면 스킵
+    fetchingRef.current = true
+    try {
+      const [roomRes, teamsRes, playersRes] = await Promise.all([
+        supabase.from('rooms').select('*').eq('id', roomId).maybeSingle(),
+        supabase.from('teams').select('*').eq('room_id', roomId),
+        supabase.from('players').select('*').eq('room_id', roomId),
+      ])
+
+      if (!roomRes.data) return  // 일시적 오류 허용, setRoomNotFound 호출 안 함
+
+      setRealtimeData({
+        basePoint: roomRes.data.base_point,
+        totalTeams: roomRes.data.total_teams,
+        membersPerTeam: roomRes.data.members_per_team ?? 5,
+        orderPublic: roomRes.data.order_public ?? true,
+        timerEndsAt: roomRes.data.timer_ends_at,
+        roomName: roomRes.data.name,
+        organizerToken: roomRes.data.organizer_token,
+        viewerToken: roomRes.data.viewer_token,
+        teams: teamsRes.data || [],
+        players: playersRes.data || [],
+      })
+    } catch (err) {
+      console.error('fetchPoll error:', err)
+    } finally {
+      fetchingRef.current = false
+    }
+  }, [roomId, setRealtimeData])
+
   // ── 실시간 구독 ──
   useEffect(() => {
     if (!roomId) return
@@ -86,6 +119,9 @@ export function useAuctionRealtime(roomId: string | null) {
             viewerToken: payload.new.viewer_token,
             roomName: payload.new.name,
             orderPublic: payload.new.order_public,
+            basePoint: payload.new.base_point,
+            membersPerTeam: payload.new.members_per_team ?? 5,
+            totalTeams: payload.new.total_teams,
           })
         }
       )
@@ -134,8 +170,14 @@ export function useAuctionRealtime(roomId: string | null) {
         if (status === 'SUBSCRIBED') fetchAll()
       })
 
-    return () => { supabase.removeChannel(channel) }
-  }, [roomId, fetchAll, setRealtimeData, addBid, addMessage, setReAuctionRound, setRoomNotFound])
+    // 3초 폴링 fallback — realtime 이벤트 누락 시 stale 상태 방지
+    const pollInterval = setInterval(fetchPoll, 3000)
+
+    return () => {
+      clearInterval(pollInterval)
+      supabase.removeChannel(channel)
+    }
+  }, [roomId, fetchAll, fetchPoll, setRealtimeData, addBid, addMessage, setReAuctionRound, setRoomNotFound])
 
   // ── Presence tracking ──
   useEffect(() => {

@@ -7,7 +7,7 @@ import { useAuctionRealtime } from '@/hooks/useAuctionRealtime'
 import { useRoomAuth } from '@/hooks/useRoomAuth'
 import { useAuctionControl } from '@/hooks/useAuctionControl'
 import { supabase } from '@/lib/supabase'
-import { startAuction, deleteRoom, drawNextPlayer, saveAuctionArchive, pauseAuction, resumeAuction } from '@/lib/auctionActions'
+import { startAuction, deleteRoom, drawNextPlayer, saveAuctionArchive, pauseAuction } from '@/lib/auctionActions'
 import { AuctionBoard } from '@/components/AuctionBoard'
 import { TeamList, UnsoldPanel } from '@/components/TeamList'
 import { ChatPanel } from '@/components/ChatPanel'
@@ -65,17 +65,13 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         wasPausedByDisconnectRef.current = true
         pauseAuction(roomId)
       }
-    } else if (allConnected && prev === false) {
-      if (wasPausedByDisconnectRef.current && currentPlayerRef.current) {
-        wasPausedByDisconnectRef.current = false
-        resumeAuction(roomId)
-      }
     }
+    // allConnected 복귀 시 자동 재개하지 않음 — 방장이 수동으로 "▶ 경매 시작" 버튼을 눌러야 재개
   }, [allConnected, roomId, effectiveRole])
   const [isDrawing, setIsDrawing] = useState(false); const [isStarting, setIsStarting] = useState(false); const router = useRouter(); const [isEndRoomOpen, setIsEndRoomOpen] = useState(false); const [isDeleting, setIsDeleting] = useState(false); const [showResultModal, setShowResultModal] = useState(false); const [noticeText, setNoticeText] = useState(''); const [isSendingNotice, setIsSendingNotice] = useState(false)
   const handleNotice = async () => { if (!noticeText.trim() || !roomId || isSendingNotice) return; setIsSendingNotice(true); try { await supabase.from('messages').insert([{ room_id: roomId, sender_name: '주최자', sender_role: 'NOTICE', content: noticeText.trim() }]); setNoticeText('') } finally { setIsSendingNotice(false) } }
   const handleDraw = async () => { setIsDrawing(true); try { const res = await drawNextPlayer(roomId); if (res.error) alert(res.error) } finally { setIsDrawing(false) } }
-  const handleStart = async () => { setIsStarting(true); try { setLotteryPlayer(null); const duration = isReAuctionRound ? 5000 : 10000; const res = await startAuction(roomId, duration); if (res.error) alert(res.error) } finally { setIsStarting(false) } }
+  const handleStart = async () => { setIsStarting(true); try { setLotteryPlayer(null); const duration = (isReAuctionRound || wasPausedByDisconnectRef.current) ? 5000 : 10000; wasPausedByDisconnectRef.current = false; const res = await startAuction(roomId, duration); if (res.error) alert(res.error) } finally { setIsStarting(false) } }
   const isRoomComplete = teams.length > 0 && teams.every(t => players.filter(p => p.team_id === t.id && p.status === 'SOLD').length === (membersPerTeam - 1)); const allDone = waitingPlayers.length === 0 && !currentPlayer && soldPlayers.length > 0 && isRoomComplete
   const handleEndRoom = async (saveResult: boolean) => { if (!roomId) return; setIsDeleting(true); try { if (saveResult && allDone) { await saveAuctionArchive({ roomId, roomName: roomName ?? '경매방', roomCreatedAt: createdAt ?? new Date().toISOString(), teams: teams.map(t => ({ id: t.id, name: t.name, leader_name: t.leader_name, point_balance: t.point_balance, players: players.filter(p => p.team_id === t.id).map(p => ({ name: p.name, sold_price: p.sold_price })) })) }) }; const result = await deleteRoom(roomId); if (!result.error) router.push('/') } finally { setIsDeleting(false) } }
 
@@ -109,12 +105,49 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         </aside>
 
         <section className="col-span-6 flex flex-col gap-5 h-full min-h-0">
-          <AuctionBoard isLotteryActive={!!lotteryPlayer} lotteryPlayer={lotteryPlayer} waitingPlayers={waitingPlayers} role={effectiveRole} allConnected={allConnected} onStartAuction={handleStart} onCloseLottery={handleCloseLottery} />
+          <AuctionBoard isLotteryActive={!!lotteryPlayer} lotteryPlayer={lotteryPlayer} waitingPlayers={waitingPlayers} role={effectiveRole} allConnected={allConnected} onCloseLottery={handleCloseLottery} />
           {effectiveRole === 'ORGANIZER' && (
             <div className="bg-card rounded-[2.5rem] shadow-2xl border-[3px] border-border p-8 shrink-0 mt-auto">
-              <div className="flex items-center justify-between mb-5 px-2"><h3 className="text-base font-black text-minion-blue uppercase tracking-widest flex items-center gap-3">🎛️ 주최자 컨트롤</h3><div className="flex items-center gap-4">{currentPlayer && !timerEndsAt && allConnected && <button onClick={handleStart} className="bg-lime-500 hover:bg-lime-600 text-white px-5 py-2 rounded-2xl text-sm font-black animate-pulse shadow-lg border-2 border-lime-400">▶ 재개</button>}<span className="text-sm font-black text-gray-400 bg-gray-50 px-4 py-1.5 rounded-full border-2 border-gray-100 shadow-inner">WAITING: {waitingPlayers.length} / SOLD: {soldPlayers.length}</span></div></div>
-              <div className="flex gap-3 mb-5 pb-5 border-b-2 border-gray-100"><input type="text" value={noticeText} onChange={e => setNoticeText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNotice()} placeholder="공지 입력..." className="flex-1 border-4 border-gray-50 rounded-2xl px-6 py-4 text-base font-bold focus:outline-none focus:border-minion-blue shadow-inner" disabled={isSendingNotice} /><button onClick={handleNotice} disabled={!noticeText.trim() || isSendingNotice} className="bg-minion-yellow text-minion-blue px-8 py-4 rounded-2xl text-base font-black shadow-lg">공지 발송</button></div>
-              {allDone ? <div className="text-center py-6 bg-green-50 rounded-3xl border-[3px] border-green-100"><p className="font-black text-green-600 text-2xl tracking-tighter">🏆 경매 완료!</p></div> : !currentPlayer ? (isAutoDraftMode ? <div className="bg-indigo-50 border-4 border-indigo-100 text-indigo-800 py-6 rounded-3xl font-black text-center text-xl animate-pulse">⚡ 자동 드래프트 진행 중</div> : <button onClick={handleDraw} disabled={isDrawing || waitingPlayers.length === 0 || !allConnected} className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-20 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1a3d73]">🎲 다음 추첨 ({waitingPlayers.length})</button>) : !timerEndsAt ? <button onClick={handleStart} disabled={isStarting || !allConnected} className="w-full bg-lime-500 hover:bg-lime-600 text-white h-20 rounded-3xl font-black text-3xl shadow-[0_8px_0_#4d7c0f]">▶ 타이머 시작</button> : <div className="bg-minion-yellow/10 border-[6px] border-minion-yellow/20 text-minion-blue py-6 rounded-[2rem] font-black text-center text-2xl animate-pulse uppercase tracking-widest">🔥 경매 진행 중 🔥</div>}
+              <div className="flex items-center justify-between mb-5 px-2"><h3 className="text-base font-black text-minion-blue uppercase tracking-widest flex items-center gap-3">🎛️ 주최자 컨트롤 박스</h3>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-black text-gray-400 bg-gray-50 px-4 py-1.5 rounded-full border-2 border-gray-100 shadow-inner">대기자: {waitingPlayers.length}명 / 낙찰자: {soldPlayers.length}명</span>
+                </div>
+              </div>
+              <div className="flex gap-3 mb-5 pb-5 border-b-2 border-gray-100">
+                <input type="text" value={noticeText} onChange={e => setNoticeText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNotice()} placeholder="공지 내용 입력..." className="flex-1 border-4 border-gray-50 rounded-2xl px-6 py-4 text-base font-bold focus:outline-none focus:border-minion-blue shadow-inner" disabled={isSendingNotice} />
+                <button onClick={handleNotice} disabled={!noticeText.trim() || isSendingNotice} className="bg-minion-yellow text-minion-blue px-8 py-4 rounded-2xl text-base font-black shadow-lg">
+                  선포
+                </button>
+              </div>
+              {allDone ?
+                <div className="text-center py-6 bg-green-50 rounded-3xl border-[3px] border-green-100">
+                  <p className="font-black text-green-600 text-2xl tracking-tighter">
+                    🏆 경매 완료!
+                  </p>
+                </div>
+                :
+                !currentPlayer ?
+                  (isAutoDraftMode ?
+                    <div className="bg-indigo-50 border-4 border-indigo-100 text-indigo-800 py-6 rounded-3xl font-black text-center text-xl animate-pulse">
+                      ⚡ 자동 드래프트 진행 중
+                    </div>
+                    :
+                    <button onClick={handleDraw} disabled={isDrawing || waitingPlayers.length === 0 || !allConnected} className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-20 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1a3d73]">
+                      🎲 다음 선수 추첨 (남은 인원 : {waitingPlayers.length}명)
+                    </button>
+                  ) : !timerEndsAt && !lotteryPlayer ?
+                    <button onClick={handleStart} disabled={isStarting || !allConnected} className="w-full bg-lime-500 hover:bg-lime-600 text-white h-20 rounded-3xl font-black text-3xl shadow-[0_8px_0_#4d7c0f]">
+                      ▶ 경매 시작
+                    </button>
+                    : !timerEndsAt ?
+                      <div className="bg-minion-blue/10 border-[6px] border-minion-blue/20 text-minion-blue py-6 rounded-[2rem] font-black text-center text-2xl animate-pulse uppercase tracking-widest">
+                        🎰 추첨 진행 중
+                      </div>
+                      :
+                      <div className="bg-minion-yellow/10 border-[6px] border-minion-yellow/20 text-minion-blue py-6 rounded-[2rem] font-black text-center text-2xl animate-pulse uppercase tracking-widest">
+                        🔥 경매 진행 중 🔥
+                      </div>
+              }
             </div>
           )}
           {effectiveRole === 'LEADER' && roomId && teamIdParam && (

@@ -15,18 +15,6 @@ const TIER_COLOR: Record<string, string> = {
   'Gold': 'text-yellow-500', 'Silver': 'text-gray-400', 'Bronze': 'text-amber-700',
 }
 
-const ReadyAnimationOverlay = memo(function ReadyAnimationOverlay({ onDone }: { onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t) }, [onDone])
-  return (
-    <div className="absolute inset-0 z-[100] flex items-center justify-center bg-minion-blue/5 backdrop-blur-sm animate-in fade-in duration-500">
-      <div className="bg-white p-10 rounded-[3rem] shadow-2xl border-8 border-minion-yellow flex flex-col items-center gap-4 animate-bounce">
-        <span className="text-8xl">🍌</span>
-        <h2 className="text-5xl font-black text-minion-blue text-center tracking-tighter">준비 완료!</h2>
-      </div>
-    </div>
-  )
-})
-
 const NoticeBanner = memo(function NoticeBanner({ msg }: { msg: Message }) {
   return (
     <div className="bg-minion-yellow border-b-2 border-amber-400 px-6 py-2.5 flex items-center gap-3 shrink-0">
@@ -57,9 +45,9 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
 }
 
 export function AuctionBoard({
-  isLotteryActive = false, lotteryPlayer, waitingPlayers = [], role, allConnected = true, onStartAuction, onCloseLottery,
+  isLotteryActive = false, lotteryPlayer, waitingPlayers = [], role, allConnected = true, onCloseLottery,
 }: {
-  isLotteryActive?: boolean; lotteryPlayer?: Player | null; waitingPlayers?: Player[]; role?: Role; allConnected?: boolean; onStartAuction?: () => void; onCloseLottery?: () => void;
+  isLotteryActive?: boolean; lotteryPlayer?: Player | null; waitingPlayers?: Player[]; role?: Role; allConnected?: boolean; onCloseLottery?: () => void;
 }) {
   const players = useAuctionStore(s => s.players); const bids = useAuctionStore(s => s.bids); const teams = useAuctionStore(s => s.teams); const presences = useAuctionStore(s => s.presences); const messages = useAuctionStore(s => s.messages); const teamId = useAuctionStore(s => s.teamId); const roomId = useAuctionStore(s => s.roomId); const timerEndsAt = useAuctionStore(s => s.timerEndsAt); const membersPerTeam = useAuctionStore(s => s.membersPerTeam); const hasPlayedReadyAnimation = useAuctionStore(s => s.hasPlayedReadyAnimation); const setReadyAnimationPlayed = useAuctionStore(s => s.setReadyAnimationPlayed)
   const connectedLeaderIds = new Set(presences.filter((p: PresenceUser) => p.role === 'LEADER').map((p: PresenceUser) => p.teamId))
@@ -77,6 +65,8 @@ export function AuctionBoard({
   const currentTurnTeam = needyTeams.length > 0 ? needyTeams[0] : null; const [isProcessingAction, setIsProcessingAction] = useState<string | null>(null); const [showResultModal, setShowResultModal] = useState(false)
   const handleDraft = async (playerId: string) => { if (!currentTurnTeam || !roomId) return; setIsProcessingAction(playerId); try { const res = await draftPlayer(roomId, playerId, currentTurnTeam.id); if (res.error) alert(res.error) } finally { setIsProcessingAction(null) } }
   const [isRestarting, setIsRestarting] = useState(false); const handleRestartAuction = async () => { if (!roomId) return; setIsRestarting(true); try { const res = await restartAuctionWithUnsold(roomId); if (res.error) alert(res.error) } finally { setIsRestarting(false) } }
+  const [lotteryDone, setLotteryDone] = useState(false)
+  useEffect(() => { setLotteryDone(false) }, [lotteryPlayer])
 
   return (
     <div className="bg-white rounded-[2.5rem] shadow-xl border-[6px] border-minion-blue flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-0">
@@ -93,7 +83,7 @@ export function AuctionBoard({
       <div className="absolute top-0 right-0 w-80 h-80 bg-minion-yellow/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="z-10 flex flex-col flex-1 p-6 gap-4 min-h-0">
         <div className="flex justify-center min-h-[40px]">
-          {currentPlayer ? (timerEndsAt ? <span className="bg-red-500 text-white font-black px-6 py-2 rounded-full text-sm shadow-lg border-2 border-red-600 animate-bounce">🔥 경매 진행 중 🔥</span> : <span className="bg-gray-200 text-gray-500 font-black px-6 py-2 rounded-full text-sm border-2 border-gray-300 animate-pulse uppercase tracking-widest">Awaiting Start</span>)
+          {currentPlayer ? (timerEndsAt ? <span className="bg-red-500 text-white font-black px-6 py-2 rounded-full text-sm shadow-lg border-2 border-red-600 animate-bounce">🔥 경매 진행 중 🔥</span> : <span className="bg-gray-200 text-gray-500 font-black px-6 py-2 rounded-full text-sm border-2 border-gray-300 animate-pulse uppercase tracking-widest">경매 준비중...</span>)
             : isLotteryActive ? <span className="bg-minion-blue text-white font-black px-6 py-2 rounded-full text-sm shadow-lg border-2 border-blue-600 animate-pulse">🎲 추첨 진행 중</span>
               : isAuctionFinished ? <span className="bg-green-500 text-white font-black px-6 py-2 rounded-full text-sm shadow-lg border-2 border-green-600">✅ 경매 종료</span>
                 : <span className="bg-minion-yellow text-minion-blue font-black px-6 py-2 rounded-full text-sm shadow-lg border-2 border-amber-400">⏱️ 추첨 대기</span>}
@@ -101,12 +91,11 @@ export function AuctionBoard({
         <div className="flex-1 flex flex-col min-h-0">
           {isLotteryActive && lotteryPlayer ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <LotteryAnimation candidates={waitingPlayers} targetPlayer={lotteryPlayer} />
+              <LotteryAnimation candidates={waitingPlayers} targetPlayer={lotteryPlayer} onFinished={() => setLotteryDone(true)} />
               <div className="min-h-[70px] flex items-center justify-center">
-                {role === 'ORGANIZER' && (
-                  <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-1000">
-                    <button onClick={onStartAuction} disabled={!allConnected} className="bg-lime-500 hover:bg-lime-600 text-white px-8 py-3 rounded-2xl font-black text-lg shadow-[0_4px_0_#4d7c0f] active:translate-y-1 transition-all">▶ 바로 시작</button>
-                    <button onClick={onCloseLottery} className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-2xl font-black text-lg shadow-[0_4px_0_#374151] active:translate-y-1 transition-all">닫기</button>
+                {role === 'ORGANIZER' && lotteryDone && (
+                  <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <button onClick={onCloseLottery} className="w-[200px] bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-2xl font-black text-lg shadow-[0_4px_0_#374151] active:translate-y-1 transition-all">경매 준비</button>
                   </div>
                 )}
               </div>
@@ -164,7 +153,6 @@ export function AuctionBoard({
             </div>
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              {showReadyAnim && <ReadyAnimationOverlay onDone={() => { setShowReadyAnim(false); setReadyAnimationPlayed(true); }} />}
               {!allConnected ? (
                 <>
                   <div className="flex items-center justify-between mb-6 px-2">
