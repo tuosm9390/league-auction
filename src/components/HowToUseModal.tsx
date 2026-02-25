@@ -59,7 +59,7 @@ export function HowToUseModal({ variant = 'default' }: { variant?: 'default' | '
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
         >
           <div

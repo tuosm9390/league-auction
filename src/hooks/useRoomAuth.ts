@@ -35,7 +35,9 @@ export function useRoomAuth({
 
   useEffect(() => {
     if (tokenCheckedRef.current || !isRoomLoaded || !roomExists) return
-    
+    // LEADER 역할일 때 teams 데이터가 아직 로드되지 않은 경우 검증을 지연
+    if (role === 'LEADER' && teams.length === 0) return
+
     let valid = false
     if (role === 'ORGANIZER') {
       valid = tokenParam === storeOrganizerToken

@@ -22,7 +22,7 @@ function ArchiveDetailModal({ archive, onClose }: { archive: AuctionArchiveRow; 
 
   return (
     <div
-      className="fixed inset-0 z-[110] bg-black/70 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[210] bg-black/70 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -148,7 +148,7 @@ export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, on
   if (!isOpen) return null
 
   if (loading) return (
-    <div className="fixed inset-0 z-40 bg-black/70 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center text-gray-400 text-sm animate-pulse">
         이전 경매 결과 불러오는 중...
       </div>
@@ -158,7 +158,7 @@ export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, on
   return (
     <>
       <div
-        className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+        className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
         onClick={onClose}
       >
         <div
