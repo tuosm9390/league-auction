@@ -339,7 +339,7 @@ export async function draftPlayer(
     return { error: '영입 처리 중 오류가 발생했습니다.' }
   }
 
-  await sysMsg(roomId, `🤝 ${team.name}에서 ${player.name} 선수를 추가 영입(자유계약) 했습니다. (0P)`)
+  await sysMsg(roomId, `🤝 ${team.name}장 ${player.name} 선수를 자동 배정(유찰 계약) 했습니다. (0P)`)
   return {}
 }
 

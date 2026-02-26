@@ -28,6 +28,7 @@ export function useRoomAuth({
 }: UseRoomAuthProps) {
   const [effectiveRole, setEffectiveRole] = useState<Role>(role)
   const tokenCheckedRef = useRef(false)
+  const [isTokenChecked, setIsTokenChecked] = useState(false)
 
   useEffect(() => {
     setRoomContext(roomId, role, teamId)
@@ -48,10 +49,12 @@ export function useRoomAuth({
       valid = !!myTeam && tokenParam === myTeam.leader_token
     } else {
       tokenCheckedRef.current = true
+      setIsTokenChecked(true)
       return
     }
 
     tokenCheckedRef.current = true
+    setIsTokenChecked(true)
     if (!valid) {
       console.warn('Invalid token or unauthorized access. Downgrading to null role.')
       setEffectiveRole(null)
@@ -59,5 +62,5 @@ export function useRoomAuth({
     }
   }, [storeOrganizerToken, storeViewerToken, teams, role, tokenParam, roomId, teamId, setRoomContext, isRoomLoaded, roomExists])
 
-  return { effectiveRole }
+  return { effectiveRole, isTokenChecked }
 }
