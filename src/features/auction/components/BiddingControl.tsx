@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useAuctionStore, Player, Team } from "@/features/auction/store/useAuctionStore";
+import {
+  useAuctionStore,
+  Player,
+  Team,
+} from "@/features/auction/store/useAuctionStore";
 import { placeBid } from "@/features/auction/api/auctionActions";
 
 interface BiddingControlProps {
@@ -77,7 +81,7 @@ export function BiddingControl({
     <div className="bg-card rounded-[2rem] shadow-xl border-[3px] border-border p-7 shrink-0 mt-auto">
       <div className="flex items-center justify-between mb-5 px-2">
         <h3 className="text-base font-black text-minion-blue uppercase tracking-widest flex items-center gap-2">
-          <span className="text-2xl">🔨</span> 입찰 컨트롤 박스
+          <span className="text-2xl">🔨</span> 팀장 컨트롤 박스
         </h3>
         <div className="flex gap-6">
           <div className="flex flex-col items-end">
@@ -113,7 +117,7 @@ export function BiddingControl({
             <p className="text-base text-gray-500 font-black flex items-center gap-3">
               <span className="text-2xl animate-bounce">⏱️</span>
               {!currentPlayer
-                ? "선수가 추첨되면 입찰창이 활성화됩니다."
+                ? "선수가 추첨되면 입찰 창이 활성화됩니다."
                 : !timerEndsAt
                   ? "주최자가 경매를 시작하면 입찰할 수 있습니다."
                   : "경매 시간이 종료되었습니다."}

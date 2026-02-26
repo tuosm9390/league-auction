@@ -366,13 +366,13 @@ export function AuctionBoard({
                         className={`text-white font-black px-8 py-3 rounded-2xl text-base border-[3px] shadow-lg ${effectivePhase === "DRAFT" ? "bg-purple-500 border-purple-600" : "bg-orange-500 border-orange-600"}`}
                       >
                         {effectivePhase === "DRAFT"
-                          ? "🤝 자유계약 (드래프트) 진행 중"
+                          ? "🤝 유찰 선수 배정 진행 중"
                           : "🔄 유찰 선수 재경매 진행 중"}
                       </span>
                       {effectivePhase === "DRAFT" && currentTurnTeam && (
                         <div className="mt-6 flex flex-col items-center">
                           <span className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
-                            Current Turn
+                            배정 순서
                           </span>
                           <span className="text-4xl font-black text-purple-700 bg-purple-50 px-8 py-2 rounded-2xl border-2 border-purple-200 shadow-sm">
                             {currentTurnTeam.name}{" "}

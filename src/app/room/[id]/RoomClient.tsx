@@ -256,20 +256,23 @@ export function RoomClient({
   if (!isRoomLoaded)
     return (
       <div className="h-screen bg-blue-50 flex items-center justify-center font-black text-minion-blue text-2xl animate-pulse tracking-tighter uppercase">
-        Syncing Data...
+        데이터 로딩 중...
       </div>
     );
   if (!roomExists)
     return (
       <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border-4 border-red-100">
+          <span className="text-5xl">🚫</span>
+        </div>
         <h2 className="text-3xl font-black text-minion-blue mb-6">
-          Room Not Found
+          경매가 종료된 방이거나, 유효하지 않은 접근입니다.
         </h2>
         <button
           onClick={() => router.push("/")}
           className="bg-minion-yellow text-minion-blue font-black px-10 py-3 rounded-2xl shadow-lg text-lg uppercase"
         >
-          Back to Home
+          홈으로 돌아가기
         </button>
       </div>
     );
@@ -291,7 +294,8 @@ export function RoomClient({
           유효하지 않은 접근
         </h2>
         <p className="text-base text-gray-500 font-bold mb-8 max-w-sm leading-relaxed">
-          유효한 인증 정보가 없습니다.<br />
+          유효한 인증 정보가 없습니다.
+          <br />
           초대 링크를 통해 다시 접속해 주세요.
         </p>
         <button
