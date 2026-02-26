@@ -402,7 +402,7 @@ export function CreateRoomModal() {
 
   const goToRoom = (organizerPath: string) => {
     close();
-    router.push(organizerPath);
+    window.location.href = organizerPath;
   };
 
   const minPlayers = basic.teamCount * (basic.membersPerTeam - 1);
@@ -817,7 +817,7 @@ export function CreateRoomModal() {
                   </button>
                   {links && (
                     <button
-                      onClick={() => { router.push(links.organizerPath); close(); }}
+                      onClick={() => { window.location.href = links.organizerPath; close(); }}
                       className="bg-minion-yellow hover:bg-minion-yellow-hover text-minion-blue px-6 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2 shadow-[0_4px_0_#D9B310] hover:shadow-[0_2px_0_#D9B310] hover:translate-y-0.5 active:shadow-none active:translate-y-1"
                     >
                       경매 시작하기 <ExternalLink size={14} />
