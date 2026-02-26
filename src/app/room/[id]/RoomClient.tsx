@@ -311,7 +311,7 @@ export function RoomClient({
     <div className="h-screen max-h-screen flex flex-col bg-blue-50 text-foreground font-sans overflow-hidden tracking-tight">
       <header className="h-14 shrink-0 bg-minion-blue text-white px-8 flex justify-between items-center shadow-xl relative z-[110]">
         <div className="flex items-center gap-6">
-          <h1 className="text-2xl font-black text-minion-yellow tracking-tighter">
+          <h1 className="text-lg md:text-2xl font-black text-minion-yellow tracking-tighter">
             MINIONS 🍌
           </h1>
           <div className="flex items-center gap-3">
@@ -348,8 +348,8 @@ export function RoomClient({
         {createdAt && <ElapsedTimer createdAt={createdAt} />}
       </header>
 
-      <main className="flex-1 flex flex-col xl:grid xl:grid-cols-12 gap-5 p-4 sm:p-6 lg:px-12 xl:px-24 overflow-y-auto xl:overflow-hidden min-h-0">
-        <aside className="xl:col-span-3 flex flex-col min-h-0 order-3 xl:order-1 mt-6 xl:mt-0 h-[400px] xl:h-auto">
+      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-5 p-3 sm:p-4 lg:px-8 xl:px-24 overflow-y-auto lg:overflow-hidden min-h-0">
+        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 mt-4 lg:mt-0 h-[300px] sm:h-[400px] lg:h-auto">
           <div className="bg-card rounded-[2.5rem] shadow-xl border-[3px] border-border flex-1 flex flex-col overflow-hidden min-h-0">
             <div className="p-5 border-b-2 border-border bg-card shrink-0">
               <h2 className="text-lg font-black text-minion-blue flex items-center gap-2 uppercase tracking-tighter">
@@ -362,7 +362,7 @@ export function RoomClient({
           </div>
         </aside>
 
-        <section className="xl:col-span-6 flex flex-col gap-5 min-h-0 order-1 xl:order-2">
+        <section className="lg:col-span-6 flex flex-col gap-4 lg:gap-5 min-h-0 order-1 lg:order-2">
           <AuctionBoard
             isLotteryActive={!!lotteryPlayer}
             lotteryPlayer={lotteryPlayer}
@@ -372,7 +372,7 @@ export function RoomClient({
             onCloseLottery={handleCloseLottery}
           />
           {effectiveRole === "ORGANIZER" && (
-            <div className="bg-card rounded-[2.5rem] shadow-2xl border-[3px] border-border p-8 shrink-0 mt-auto">
+            <div className="bg-card rounded-[2.5rem] shadow-2xl border-[3px] border-border p-5 lg:p-8 shrink-0 mt-auto">
               <div className="flex items-center justify-between mb-5 px-2">
                 <h3 className="text-base font-black text-minion-blue uppercase tracking-widest flex items-center gap-3">
                   🎛️ 주최자 컨트롤 박스
@@ -419,7 +419,7 @@ export function RoomClient({
                     disabled={
                       isDrawing || waitingPlayers.length === 0 || !allConnected
                     }
-                    className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-20 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1a3d73]"
+                    className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-16 lg:h-20 rounded-2xl lg:rounded-3xl font-black text-lg md:text-xl lg:text-2xl shadow-[0_8px_0_#1a3d73]"
                   >
                     🎲 다음 선수 추첨 (남은 인원 : {waitingPlayers.length}명)
                   </button>
@@ -428,7 +428,7 @@ export function RoomClient({
                 <button
                   onClick={handleStart}
                   disabled={isStarting || !allConnected}
-                  className="w-full bg-lime-500 hover:bg-lime-600 text-white h-20 rounded-3xl font-black text-3xl shadow-[0_8px_0_#4d7c0f]"
+                  className="w-full bg-lime-500 hover:bg-lime-600 text-white h-16 lg:h-20 rounded-2xl lg:rounded-3xl font-black text-2xl lg:text-3xl shadow-[0_8px_0_#4d7c0f]"
                 >
                   ▶ 경매 시작
                 </button>
@@ -457,7 +457,7 @@ export function RoomClient({
           )}
         </section>
 
-        <aside className="xl:col-span-3 flex flex-col gap-5 min-h-0 order-2 xl:order-3 mt-6 xl:mt-0 h-[500px] xl:h-auto">
+        <aside className="lg:col-span-3 flex flex-col gap-4 lg:gap-5 min-h-0 order-2 lg:order-3 mt-4 lg:mt-0 h-[400px] sm:h-[500px] lg:h-auto">
           <div className="bg-card rounded-[2.5rem] shadow-xl border-[3px] border-border flex-none max-h-[160px] flex flex-col overflow-hidden min-h-0 relative">
             <div className="p-3 border-b-2 border-border bg-card shrink-0">
               <h2 className="text-sm font-black text-red-500 flex items-center gap-2 uppercase px-1">

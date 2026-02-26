@@ -77,9 +77,9 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className={`relative flex items-center justify-center gap-3 rounded-2xl px-10 py-4 font-mono font-black text-6xl transition-all duration-300 overflow-hidden ${isUrgent ? "bg-red-500 text-white animate-shake shadow-xl" : displayTime === 0 ? "bg-gray-100 text-gray-400" : "bg-minion-blue text-white shadow-lg"}`}
+        className={`relative flex items-center justify-center gap-2 lg:gap-3 rounded-2xl px-6 py-2 lg:px-10 lg:py-4 font-mono font-black text-4xl lg:text-6xl transition-all duration-300 overflow-hidden ${isUrgent ? "bg-red-500 text-white animate-shake shadow-xl" : displayTime === 0 ? "bg-gray-100 text-gray-400" : "bg-minion-blue text-white shadow-lg"}`}
       >
-        <span className="text-4xl">⏱</span>
+        <span className="text-2xl lg:text-4xl">⏱</span>
         <span className="z-10 tracking-tighter">
           {isUrgent
             ? timeLeftSec.toFixed(1)
@@ -245,7 +245,7 @@ export function AuctionBoard({
         </div>
       )}
       <div className="absolute top-0 right-0 w-80 h-80 bg-minion-yellow/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="z-10 flex flex-col flex-1 p-6 gap-4 min-h-0">
+      <div className="z-10 flex flex-col flex-1 p-4 lg:p-6 gap-3 lg:gap-4 min-h-0">
         <div className="flex justify-center min-h-[40px]">
           {currentPlayer ? (
             timerEndsAt ? (
@@ -297,17 +297,17 @@ export function AuctionBoard({
               <div className="flex justify-center min-h-[60px]">
                 {timerEndsAt && <CenterTimer timerEndsAt={timerEndsAt} />}
               </div>
-              <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-                <h2 className="text-6xl font-black text-gray-900 tracking-tighter drop-shadow-sm leading-none">
+              <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 lg:gap-3">
+                <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter drop-shadow-sm leading-none">
                   {currentPlayer.name}
                 </h2>
-                <div className="flex gap-3 items-center justify-center">
+                <div className="flex gap-2 lg:gap-3 items-center justify-center">
                   <div
-                    className={`text-2xl font-black bg-gray-50 px-5 py-2 rounded-2xl border-2 border-gray-200 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
+                    className={`text-lg lg:text-2xl font-black bg-gray-50 px-4 py-1.5 lg:px-5 lg:py-2 rounded-2xl border-2 border-gray-200 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
                   >
                     {currentPlayer.tier}
                   </div>
-                  <div className="text-2xl font-black bg-gray-50 px-5 py-2 rounded-2xl border-2 border-gray-200 text-gray-700">
+                  <div className="text-lg lg:text-2xl font-black bg-gray-50 px-4 py-1.5 lg:px-5 lg:py-2 rounded-2xl border-2 border-gray-200 text-gray-700">
                     {currentPlayer.main_position}
                   </div>
                 </div>
@@ -318,24 +318,24 @@ export function AuctionBoard({
                 )}
               </div>
               <div
-                className={`rounded-3xl p-5 border-[3px] transition-all ${highestBid > 0 ? "bg-minion-yellow/5 border-minion-yellow shadow-inner" : "bg-gray-50 border-gray-200"}`}
+                className={`rounded-3xl p-4 lg:p-5 border-[3px] transition-all ${highestBid > 0 ? "bg-minion-yellow/5 border-minion-yellow shadow-inner" : "bg-gray-50 border-gray-200"}`}
               >
                 {highestBid > 0 ? (
-                  <div className="flex items-center justify-between px-4">
+                  <div className="flex items-center justify-between px-2 lg:px-4">
                     <div>
-                      <p className="text-xs text-gray-400 font-black mb-1 uppercase tracking-widest">
+                      <p className="text-[10px] lg:text-xs text-gray-400 font-black mb-1 uppercase tracking-widest">
                         최고 입찰가
                       </p>
-                      <p className="text-5xl font-black text-minion-blue tabular-nums">
+                      <p className="text-3xl lg:text-5xl font-black text-minion-blue tabular-nums">
                         {highestBid.toLocaleString()}
-                        <span className="text-2xl ml-1">P</span>
+                        <span className="text-xl lg:text-2xl ml-1">P</span>
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-400 font-black mb-1 uppercase tracking-widest">
+                      <p className="text-[10px] lg:text-xs text-gray-400 font-black mb-1 uppercase tracking-widest">
                         최고 입찰팀
                       </p>
-                      <p className="text-2xl font-black text-gray-800">
+                      <p className="text-lg lg:text-2xl font-black text-gray-800">
                         {leadingTeam?.name || "?"}
                       </p>
                       {leadingTeam?.id === teamId && (
@@ -374,9 +374,9 @@ export function AuctionBoard({
                           <span className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">
                             배정 순서
                           </span>
-                          <span className="text-4xl font-black text-purple-700 bg-purple-50 px-8 py-2 rounded-2xl border-2 border-purple-200 shadow-sm">
+                          <span className="text-2xl lg:text-4xl font-black text-purple-700 bg-purple-50 px-6 py-2 lg:px-8 lg:py-2 rounded-2xl border-2 border-purple-200 shadow-sm">
                             {currentTurnTeam.name}{" "}
-                            <span className="text-2xl text-purple-400 ml-2">
+                            <span className="text-lg lg:text-2xl text-purple-400 ml-2">
                               ({currentTurnTeam.point_balance}P)
                             </span>
                           </span>
@@ -438,15 +438,15 @@ export function AuctionBoard({
             </div>
           ) : isAuctionFinished ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-              <div className="w-32 h-32 bg-green-50 rounded-full flex items-center justify-center mb-6 border-[8px] border-green-100 shadow-inner">
-                <span className="text-7xl animate-bounce">🎉</span>
+              <div className="w-24 h-24 lg:w-32 lg:h-32 bg-green-50 rounded-full flex items-center justify-center mb-6 border-[8px] border-green-100 shadow-inner">
+                <span className="text-5xl lg:text-7xl animate-bounce">🎉</span>
               </div>
-              <h1 className="text-5xl font-black text-green-600 mb-4 drop-shadow-sm">
+              <h1 className="text-3xl lg:text-5xl font-black text-green-600 mb-4 drop-shadow-sm">
                 모든 경매 종료!
               </h1>
               <button
                 onClick={() => setShowResultModal(true)}
-                className="bg-minion-blue text-white font-black px-12 py-5 rounded-[2.5rem] text-2xl shadow-[0_8px_0_#1a3d73] active:translate-y-1.5 transition-all animate-pulse"
+                className="bg-minion-blue text-white font-black px-8 py-4 lg:px-12 lg:py-5 rounded-[2.5rem] text-xl lg:text-2xl shadow-[0_8px_0_#1a3d73] active:translate-y-1.5 transition-all animate-pulse"
               >
                 📋 결과 최종 확인
               </button>
