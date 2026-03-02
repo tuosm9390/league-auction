@@ -24,11 +24,12 @@ export async function GET(request: NextRequest) {
   // but let's be explicit and pass null for the teamId if it's missing.
   const authData = JSON.stringify({ role, teamId: teamId || null, token })
   
-  cookieStore.set(cookieName, authData, { 
-    httpOnly: true, 
-    secure: process.env.NODE_ENV === 'production', 
-    sameSite: 'lax', 
-    path: '/' 
+  cookieStore.set(cookieName, authData, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: `/room/${roomId}`,
+    maxAge: 60 * 60 * 8, // 8시간
   })
 
   return NextResponse.redirect(new URL(`/room/${roomId}`, request.url))

@@ -412,6 +412,16 @@ export function CreateRoomModal() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
+    // 파일 크기 제한 (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("파일 크기가 2MB를 초과합니다. 더 작은 파일을 사용해주세요.");
+      return;
+    }
+    // 파일 확장자 검증 (.xlsx/.xlsm/.xls만 허용)
+    if (!/\.(xlsx|xlsm|xls)$/i.test(file.name)) {
+      alert("지원하지 않는 파일 형식입니다. .xlsx, .xlsm, .xls 파일만 업로드 가능합니다.");
+      return;
+    }
     setIsUploading(true);
     try {
       // xlsx 라이브러리를 동적으로 로드 (초기 번들 사이즈 최적화)

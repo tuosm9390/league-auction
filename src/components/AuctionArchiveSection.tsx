@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Trophy, X, RefreshCw } from 'lucide-react'
-import type { ArchiveTeam } from '@/features/auction/api/auctionActions'
+import type { ArchiveTeam } from '@/features/auction/types'
 
 interface AuctionArchiveRow {
   id: string
