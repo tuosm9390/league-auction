@@ -10,13 +10,13 @@ import {
 import { useAuctionRealtime } from "@/features/auction/hooks/useAuctionRealtime";
 import { useRoomAuth } from "@/features/auction/hooks/useRoomAuth";
 import { useAuctionControl } from "@/features/auction/hooks/useAuctionControl";
-import { supabase } from "@/lib/supabase";
 import {
   startAuction,
   deleteRoom,
   drawNextPlayer,
   saveAuctionArchive,
   pauseAuction,
+  sendNotice,
 } from "@/features/auction/api/auctionActions";
 import { AuctionBoard } from "@/features/auction/components/AuctionBoard";
 import { TeamList, UnsoldPanel } from "@/features/auction/components/TeamList";
@@ -178,14 +178,8 @@ export function RoomClient({
     if (!noticeText.trim() || !roomId || isSendingNotice) return;
     setIsSendingNotice(true);
     try {
-      await supabase.from("messages").insert([
-        {
-          room_id: roomId,
-          sender_name: "주최자",
-          sender_role: "NOTICE",
-          content: noticeText.trim(),
-        },
-      ]);
+      const { error } = await sendNotice(roomId, noticeText.trim());
+      if (error) { console.error("Failed to send notice:", error); return; }
       setNoticeText("");
     } finally {
       setIsSendingNotice(false);

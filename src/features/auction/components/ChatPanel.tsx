@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useAuctionStore, Message } from '@/features/auction/store/useAuctionStore'
-import { supabase } from '@/lib/supabase'
+import { sendChatMessage } from '@/features/auction/api/auctionActions'
 
 const MAX_MESSAGE_LENGTH = 200
 
@@ -59,15 +59,11 @@ function MessageItem({ msg }: { msg: Message }) {
 
 export function ChatPanel() {
   const roomId = useAuctionStore(s => s.roomId)
-  const role = useAuctionStore(s => s.role)
   const messages = useAuctionStore(s => s.messages)
-  const teams = useAuctionStore(s => s.teams)
-  const teamId = useAuctionStore(s => s.teamId)
 
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const lastSentAtRef = useRef(0)
   const lastMsgIdRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -84,25 +80,10 @@ export function ChatPanel() {
     e.preventDefault()
     if (!input.trim() || !roomId || isSending) return
     if (input.trim().length > MAX_MESSAGE_LENGTH) return
-    const now = Date.now()
-    if (now - lastSentAtRef.current < 1000) return
-    lastSentAtRef.current = now
 
     setIsSending(true)
     try {
-      let senderName = '관전자'
-      if (role === 'ORGANIZER') senderName = '주최자'
-      else if (role === 'LEADER') {
-        const myTeam = teams.find(t => t.id === teamId)
-        senderName = myTeam?.leader_name || myTeam?.name || '팀장'
-      }
-
-      const { error } = await supabase.from('messages').insert([{
-        room_id: roomId,
-        sender_name: senderName,
-        sender_role: role || 'VIEWER',
-        content: input.trim(),
-      }])
+      const { error } = await sendChatMessage(roomId, input.trim())
       if (error) { console.error('Failed to send message:', error); return }
       setInput('')
     } catch (err) {
