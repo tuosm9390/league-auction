@@ -65,7 +65,7 @@ export function useAuctionRealtime(roomId: string | null) {
     }
   }, [roomId, setRealtimeData, setRoomNotFound])
 
-  // 경량 폴링 함수 — rooms + teams + players만 조회 (bids/messages는 realtime INSERT로 충분)
+  // 폴링 함수 — rooms + teams + players + bids 조회 (realtime 이벤트 누락 시 복구)
   const fetchPoll = useCallback(async () => {
     if (!roomId) return
     if (fetchingRef.current) return  // fetchAll 진행 중이면 스킵
@@ -79,6 +79,15 @@ export function useAuctionRealtime(roomId: string | null) {
 
       if (!roomRes.data) return  // 일시적 오류 허용, setRoomNotFound 호출 안 함
 
+      // bids: realtime INSERT 누락 대비 — current_player_id 기준 조건부 조회
+      const currentPlayerId = roomRes.data.current_player_id
+      const bidsRes = currentPlayerId
+        ? await supabase.from('bids').select('*')
+            .eq('player_id', currentPlayerId)
+            .eq('room_id', roomId)
+            .order('created_at', { ascending: true })
+        : { data: [] }
+
       setRealtimeData({
         basePoint: roomRes.data.base_point,
         totalTeams: roomRes.data.total_teams,
@@ -89,6 +98,7 @@ export function useAuctionRealtime(roomId: string | null) {
         viewerToken: roomRes.data.viewer_token,
         teams: teamsRes.data || [],
         players: playersRes.data || [],
+        bids: bidsRes.data || [],
       })
     } catch (err) {
       console.error('fetchPoll error:', err)

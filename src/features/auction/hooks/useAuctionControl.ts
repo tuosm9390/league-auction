@@ -88,7 +88,11 @@ export function useAuctionControl({
       if (!stillActive) return
       awardLock.current = true
       try {
-        await awardPlayer(roomId, playerId)
+        const result = await awardPlayer(roomId, playerId)
+        if (result.error) {
+          console.error('[Auto-Award] 낙찰 처리 실패:', result.error)
+          alert(`낙찰 처리 오류: ${result.error}`)
+        }
       } finally {
         awardLock.current = false
       }
