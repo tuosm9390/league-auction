@@ -34,6 +34,7 @@ export function BiddingControl({
   const [bidError, setBidError] = useState<string | null>(null);
 
   const bids = useAuctionStore((s) => s.bids);
+  const setRealtimeData = useAuctionStore((s) => s.setRealtimeData);
   const playerBids = bids.filter((b) => b.player_id === currentPlayer?.id);
   const highestBid =
     playerBids.length > 0 ? Math.max(...playerBids.map((b) => b.amount)) : 0;
@@ -61,8 +62,15 @@ export function BiddingControl({
     setIsBidding(true);
     try {
       const res = await placeBid(roomId, currentPlayer.id, teamId, finalAmount);
-      if (res.error) setBidError(res.error);
-      else setBidAmount(finalAmount + 10);
+      if (res.error) {
+        setBidError(res.error);
+      } else {
+        setBidAmount(finalAmount + 10);
+        // 타이머 연장 시 실시간 이벤트 대기 없이 즉시 반영 (Optimistic Update)
+        if (res.newTimerEndsAt) {
+          setRealtimeData({ timerEndsAt: res.newTimerEndsAt });
+        }
+      }
     } finally {
       setIsBidding(false);
     }

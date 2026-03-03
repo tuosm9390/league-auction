@@ -71,6 +71,7 @@ export function RoomClient({
   const membersPerTeam = useAuctionStore((s) => s.membersPerTeam);
   const presences = useAuctionStore((s) => s.presences);
   const setRoomContext = useAuctionStore((s) => s.setRoomContext);
+  const setRealtimeData = useAuctionStore((s) => s.setRealtimeData);
   const { effectiveRole } = useRoomAuth({
     role: roleParam,
     teamId: teamIdParam || undefined,
@@ -191,7 +192,12 @@ export function RoomClient({
         isReAuctionRound || wasPausedByDisconnectRef.current ? 5000 : 10000;
       wasPausedByDisconnectRef.current = false;
       const res = await startAuction(roomId, duration);
-      if (res.error) alert(res.error);
+      if (res.error) {
+        alert(res.error);
+      } else if (res.timerEndsAt) {
+        // 실시간 이벤트 대기 없이 즉시 타이머 반영 (Optimistic Update)
+        setRealtimeData({ timerEndsAt: res.timerEndsAt });
+      }
     } finally {
       setIsStarting(false);
     }

@@ -35,26 +35,22 @@ export function useAuctionRealtime(roomId: string | null) {
         return
       }
 
-      if (roomRes.data) {
-        setRealtimeData({
-          basePoint: roomRes.data.base_point,
-          totalTeams: roomRes.data.total_teams,
-          membersPerTeam: roomRes.data.members_per_team ?? 5,
-          timerEndsAt: roomRes.data.timer_ends_at,
-          createdAt: roomRes.data.created_at,
-          roomName: roomRes.data.name,
-          organizerToken: roomRes.data.organizer_token,
-          viewerToken: roomRes.data.viewer_token,
-        })
-      }
-
       // 재경매 이력 확인
-      const hasReAuctionMsg = (messagesRes.data || []).some(m =>
+      const hasReAuctionMsg = (messagesRes.data || []).some((m: Message) =>
         m.sender_role === 'SYSTEM' && m.content.includes('재경매를 재개합니다')
       )
       if (hasReAuctionMsg) setReAuctionRound(true)
 
+      // 단일 setRealtimeData 호출로 통합 — 중간 렌더 및 깜빡임 방지
       setRealtimeData({
+        basePoint: roomRes.data.base_point,
+        totalTeams: roomRes.data.total_teams,
+        membersPerTeam: roomRes.data.members_per_team ?? 5,
+        timerEndsAt: roomRes.data.timer_ends_at,
+        createdAt: roomRes.data.created_at,
+        roomName: roomRes.data.name,
+        organizerToken: roomRes.data.organizer_token,
+        viewerToken: roomRes.data.viewer_token,
         teams: teamsRes.data || [],
         bids: bidsRes.data || [],
         players: playersRes.data || [],

@@ -103,7 +103,7 @@ export async function drawNextPlayer(roomId: string): Promise<{ error?: string }
 }
 
 /** 경매(타이머) 시작 */
-export async function startAuction(roomId: string, durationMs?: number): Promise<{ error?: string }> {
+export async function startAuction(roomId: string, durationMs?: number): Promise<{ error?: string; timerEndsAt?: string }> {
   const db = getServerClient()
   const { data: room } = await db
     .from('rooms')
@@ -128,7 +128,7 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
   if (rErr) return { error: rErr.message }
 
   await sysMsg(roomId, `▶️ ${player?.name || '현재'} 선수 경매 시작! (${duration / 1000}초)`)
-  return {}
+  return { timerEndsAt }
 }
 
 /** 경매 일시 정지 */
@@ -166,7 +166,7 @@ export async function placeBid(
   playerId: string,
   teamId: string,
   amount: number,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; newTimerEndsAt?: string }> {
   if (!Number.isInteger(amount) || amount <= 0) {
     return { error: '입찰액은 양의 정수여야 합니다.' }
   }
@@ -247,16 +247,17 @@ export async function placeBid(
   const { data: currentRoom } = await db
     .from('rooms').select('timer_ends_at').eq('id', roomId).single()
 
+  let newTimerEndsAt: string | undefined
   if (currentRoom?.timer_ends_at) {
     const remaining = new Date(currentRoom.timer_ends_at).getTime() - Date.now()
     if (remaining <= EXTEND_THRESHOLD_MS) {
-      const newEnd = new Date(Date.now() + EXTEND_DURATION_MS).toISOString()
-      await db.from('rooms').update({ timer_ends_at: newEnd }).eq('id', roomId)
+      newTimerEndsAt = new Date(Date.now() + EXTEND_DURATION_MS).toISOString()
+      await db.from('rooms').update({ timer_ends_at: newTimerEndsAt }).eq('id', roomId)
     }
   }
 
   await sysMsg(roomId, `💰 ${team.name}이(가) ${amount.toLocaleString()}P로 입찰!`)
-  return {}
+  return { newTimerEndsAt }
 }
 
 /** 타이머 만료 후 낙찰 처리. 입찰이 없으면 UNSOLD 처리 */

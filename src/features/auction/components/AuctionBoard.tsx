@@ -58,13 +58,9 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
     return () => clearInterval(iv);
   }, []);
   const target = new Date(timerEndsAt).getTime();
-  const lastTarget = useRef(target);
   useEffect(() => {
-    const diff = target - Date.now();
-    if (target !== lastTarget.current) {
-      initialDuration.current = diff;
-      lastTarget.current = target;
-    }
+    // timerEndsAt 변경(또는 최초 마운트) 시 항상 initialDuration 설정
+    initialDuration.current = target - Date.now();
   }, [target]);
   const timeLeftMs = Math.max(0, target - now);
   const timeLeftSec = Math.max(0, (timeLeftMs - 100) / 1000);
