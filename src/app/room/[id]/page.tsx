@@ -16,14 +16,12 @@ export default async function RoomPage(props: {
   const authCookie = cookieStore.get(cookieName)
   let role: Role | null = null
   let teamId: string | null = null
-  let token: string | null = null
 
   if (authCookie) {
     try {
       const parsed = JSON.parse(authCookie.value)
       role = parsed.role || null
       teamId = parsed.teamId || null
-      token = parsed.token || null
     } catch (e) {
       console.error('Failed to parse auth cookie', e)
     }
@@ -34,7 +32,6 @@ export default async function RoomPage(props: {
       roomId={roomId}
       roleParam={role}
       teamIdParam={teamId}
-      tokenParam={token}
     />
   )
 }

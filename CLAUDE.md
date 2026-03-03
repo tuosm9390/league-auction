@@ -94,13 +94,12 @@ No Supabase Auth. **HttpOnly 쿠키 기반** 인증:
    - LEADER: `&teamId={teamId}` 추가
    - VIEWER: `role=VIEWER`
 2. `/api/room-auth` Route Handler가 쿠키 `room_auth_{roomId}` (HttpOnly, `path: '/room/${roomId}'`, `maxAge: 8h`) 설정 후 `/room/{roomId}`로 리다이렉트
-3. `page.tsx` (Server Component): `cookies()`로 쿠키 파싱 → `RoomClient`에 `role`, `teamId`, `token` props 전달
-4. `useRoomAuth` 훅 (`src/features/auction/hooks/useRoomAuth.ts`): DB 데이터 로드 후 token을 DB 값과 비교, 불일치 시 `effectiveRole = null`로 강등. `tokenCheckedRef`로 1회 실행 보장.
-5. Guard UI: `effectiveRole === null`이면 차단 화면 표시
+3. `page.tsx` (Server Component): `cookies()`로 쿠키 파싱 → `RoomClient`에 `role`, `teamId` props 전달
+4. `useRoomAuth` 훅 (`src/features/auction/hooks/useRoomAuth.ts`): 단순화됨. `setRoomContext` 호출만 수행. `effectiveRole = role` (쿠키 값 그대로), `isTokenChecked = true` 즉시 반환.
+5. Guard UI: `effectiveRole === null`이면 차단 화면 표시 (쿠키 없이 직접 URL 접근 시)
 
 쿠키 속성: `httpOnly: true`, `secure: true` (production), `sameSite: 'lax'`, `path: '/room/${roomId}'`.
-방별 격리: 같은 브라우저에서 다른 방 또는 동일 방의 다른 역할로 접속해도 쿠키가 충돌하지 않음.
-Token validation: `useRoomAuth` (클라이언트) + Server Actions의 `verifyOrganizer/verifyLeader/verifyAnyRole` (서버).
+**토큰 검증 없음** (의도적 결정 — 지인용 내부 툴). 역할 구분만 사용.
 
 ### Data Flow
 
@@ -132,7 +131,7 @@ Migrations must be run manually in Supabase SQL Editor (not via CLI).
 
 ### Auction Logic (`src/features/auction/api/auctionActions.ts`)
 
-`'use server'` Server Actions. `getServerClient()` (service_role key, RLS 우회)로 DB 조작. 모든 뮤테이션 함수 진입점에서 `isValidUUID()` 입력 검증 + `verifyOrganizer()` / `verifyLeader()` / `verifyAnyRole()` 서버사이드 역할 검증 수행. 쿠키 `room_auth_{roomId}` 파싱 + DB token 비교.
+`'use server'` Server Actions. `getServerClient()` (service_role key, RLS 우회)로 DB 조작. **토큰/역할 검증 없음** (지인용 내부 툴). 제거된 항목: `isValidUUID`, `verifyOrganizer`, `verifyLeader`, `verifyAnyRole`, `sendChatMessage`, `sendLotteryClosedMessage`.
 
 Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, `EXTEND_DURATION_MS = 5_000`.
 
@@ -250,14 +249,9 @@ Defined in `src/app/globals.css` `@theme` block:
 
 `fetchingRef` deduplication으로 동시 `fetchAll` 호출 방지. `fetchAll`은 5개 테이블 전체 fetch; polling은 rooms/teams/players만.
 
-### Known Issues (미수정 버그)
+### Known Issues
 
-| # | 위치 | 증상 | 심각도 |
-|---|---|---|---|
-| 5 | `useRoomAuth.ts` LEADER 검증 | `fetchAll`이 `setRealtimeData` 2회 분리 호출 → 검증 사이클 추가 발생 | P1 |
-| 6 | `RoomClient.tsx` `BiddingControl` | `teamIdParam` (쿠키 원본값) 직접 전달 — 쿠키 충돌 시 잘못된 팀 ID로 입찰 가능 | P2 |
-
-수정 완료된 버그: #1 쿠키 path 격리, #2 setRoomContext isRoomLoaded 리셋 제거, #3 auctionActions 서버사이드 검증 전환, #4 handleNotice Server Action 전환.
+현재 미수정 버그 없음. 토큰 검증은 의도적으로 제거됨 (지인용 내부 툴).
 
 ### Key Conventions
 

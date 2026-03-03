@@ -1,6 +1,5 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { getServerClient } from '@/lib/supabase-server'
 
 const AUCTION_DURATION_MS = 10_000      // 경매 시간 10초
@@ -22,67 +21,6 @@ export interface AuctionArchivePayload {
   roomName: string
   roomCreatedAt: string
   teams: ArchiveTeam[]
-}
-
-// ---------- 유효성 검사 ----------
-
-function isValidUUID(v: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
-}
-
-// ---------- 서버사이드 역할 검증 ----------
-
-async function verifyOrganizer(roomId: string): Promise<boolean> {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get(`room_auth_${roomId}`)?.value
-  if (!raw) return false
-  try {
-    const { role, token } = JSON.parse(raw)
-    if (role !== 'ORGANIZER') return false
-    const db = getServerClient()
-    const { data } = await db.from('rooms').select('organizer_token').eq('id', roomId).single()
-    return data?.organizer_token === token
-  } catch { return false }
-}
-
-async function verifyLeader(roomId: string, teamId: string): Promise<boolean> {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get(`room_auth_${roomId}`)?.value
-  if (!raw) return false
-  try {
-    const { role, token, teamId: cookieTeamId } = JSON.parse(raw)
-    if (role !== 'LEADER' || cookieTeamId !== teamId) return false
-    const db = getServerClient()
-    const { data } = await db.from('teams').select('leader_token').eq('id', teamId).single()
-    return data?.leader_token === token
-  } catch { return false }
-}
-
-async function verifyAnyRole(roomId: string): Promise<{ valid: boolean; role: string; senderName: string }> {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get(`room_auth_${roomId}`)?.value
-  const fail = { valid: false, role: '', senderName: '' }
-  if (!raw) return fail
-  try {
-    const { role, token, teamId } = JSON.parse(raw)
-    const db = getServerClient()
-    if (role === 'ORGANIZER') {
-      const { data } = await db.from('rooms').select('organizer_token').eq('id', roomId).single()
-      if (data?.organizer_token !== token) return fail
-      return { valid: true, role, senderName: '주최자' }
-    }
-    if (role === 'LEADER') {
-      const { data } = await db.from('teams').select('leader_token, leader_name, name').eq('id', teamId).single()
-      if (!data || data.leader_token !== token) return fail
-      return { valid: true, role, senderName: data.leader_name || data.name || '팀장' }
-    }
-    if (role === 'VIEWER') {
-      const { data } = await db.from('rooms').select('viewer_token').eq('id', roomId).single()
-      if (data?.viewer_token !== token) return fail
-      return { valid: true, role, senderName: '관전자' }
-    }
-    return fail
-  } catch { return fail }
 }
 
 // ---------- 내부 헬퍼 ----------
@@ -108,8 +46,6 @@ async function clearRoomAuction(roomId: string) {
 
 /** 경매 결과를 auction_archives 테이블에 영구 저장 */
 export async function saveAuctionArchive(payload: AuctionArchivePayload): Promise<{ error?: string }> {
-  if (!isValidUUID(payload.roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(payload.roomId))) return { error: '권한 없음' }
   const db = getServerClient()
   const { error } = await db.from('auction_archives').insert([{
     room_id: payload.roomId,
@@ -122,28 +58,9 @@ export async function saveAuctionArchive(payload: AuctionArchivePayload): Promis
   return {}
 }
 
-/** 채팅 메시지 전송 (모든 역할) */
-export async function sendChatMessage(roomId: string, content: string): Promise<{ error?: string }> {
-  if (!content.trim() || content.length > 200) return { error: '유효하지 않은 메시지' }
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  const auth = await verifyAnyRole(roomId)
-  if (!auth.valid) return { error: '인증 필요' }
-  const db = getServerClient()
-  const { error } = await db.from('messages').insert([{
-    room_id: roomId,
-    sender_name: auth.senderName,
-    sender_role: auth.role,
-    content: content.trim(),
-  }])
-  if (error) return { error: error.message }
-  return {}
-}
-
-/** 공지 전송 (ORGANIZER 전용) */
+/** 공지 전송 (ORGANIZER 전용 UI) */
 export async function sendNotice(roomId: string, content: string): Promise<{ error?: string }> {
   if (!content.trim() || content.length > 200) return { error: '유효하지 않은 공지' }
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
   const db = getServerClient()
   const { error } = await db.from('messages').insert([{
     room_id: roomId,
@@ -155,19 +72,8 @@ export async function sendNotice(roomId: string, content: string): Promise<{ err
   return {}
 }
 
-/** 추첨 종료 시스템 메시지 (ORGANIZER 전용) */
-export async function sendLotteryClosedMessage(roomId: string, playerName: string): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-  await sysMsg(roomId, `🎲 ${playerName} 선수 등장! (경매 시작 전)`)
-  return {}
-}
-
 /** 랜덤으로 WAITING 선수 1명을 IN_AUCTION으로 전환 */
 export async function drawNextPlayer(roomId: string): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
   const { data: waiting } = await db
     .from('players')
@@ -198,9 +104,6 @@ export async function drawNextPlayer(roomId: string): Promise<{ error?: string }
 
 /** 경매(타이머) 시작 */
 export async function startAuction(roomId: string, durationMs?: number): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
   const { data: room } = await db
     .from('rooms')
@@ -230,9 +133,6 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
 
 /** 경매 일시 정지 */
 export async function pauseAuction(roomId: string): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
   const { error } = await db
     .from('rooms')
@@ -246,9 +146,6 @@ export async function pauseAuction(roomId: string): Promise<{ error?: string }> 
 
 /** 중단된 경매 재개 */
 export async function resumeAuction(roomId: string): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const RESUME_DURATION_MS = 5_000
   const timerEndsAt = new Date(Date.now() + RESUME_DURATION_MS).toISOString()
 
@@ -270,11 +167,6 @@ export async function placeBid(
   teamId: string,
   amount: number,
 ): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId) || !isValidUUID(playerId) || !isValidUUID(teamId)) {
-    return { error: '유효하지 않은 요청' }
-  }
-  if (!(await verifyLeader(roomId, teamId))) return { error: '권한 없음' }
-
   if (!Number.isInteger(amount) || amount <= 0) {
     return { error: '입찰액은 양의 정수여야 합니다.' }
   }
@@ -372,9 +264,6 @@ export async function awardPlayer(
   roomId: string,
   playerId: string,
 ): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId) || !isValidUUID(playerId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
 
   const { data: latestRoom } = await db
@@ -430,9 +319,6 @@ export async function draftPlayer(
   playerId: string,
   teamId: string,
 ): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId) || !isValidUUID(playerId) || !isValidUUID(teamId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
 
   const { data: player } = await db
@@ -474,9 +360,6 @@ export async function draftPlayer(
 
 /** 유찰 선수 전원을 다시 대기 상태로 전환 */
 export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
 
   const { data: unsold } = await db
@@ -503,9 +386,6 @@ export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?
 
 /** 방 종료 — 토큰 무효화 후 전체 삭제 */
 export async function deleteRoom(roomId: string): Promise<{ error?: string }> {
-  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
-  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
-
   const db = getServerClient()
 
   const { data: roomData } = await db.from('rooms').select('name').eq('id', roomId).single()

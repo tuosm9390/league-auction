@@ -53,14 +53,12 @@ interface RoomClientProps {
   roomId: string;
   roleParam: Role | null;
   teamIdParam: string | null;
-  tokenParam: string | null;
 }
 
 export function RoomClient({
   roomId,
   roleParam,
   teamIdParam,
-  tokenParam,
 }: RoomClientProps) {
   useAuctionRealtime(roomId);
   const players = useAuctionStore((s) => s.players);
@@ -72,18 +70,10 @@ export function RoomClient({
   const timerEndsAt = useAuctionStore((s) => s.timerEndsAt);
   const membersPerTeam = useAuctionStore((s) => s.membersPerTeam);
   const presences = useAuctionStore((s) => s.presences);
-  const organizerToken = useAuctionStore((s) => s.organizerToken);
-  const viewerToken = useAuctionStore((s) => s.viewerToken);
   const setRoomContext = useAuctionStore((s) => s.setRoomContext);
-  const { effectiveRole, isTokenChecked } = useRoomAuth({
+  const { effectiveRole } = useRoomAuth({
     role: roleParam,
     teamId: teamIdParam || undefined,
-    tokenParam,
-    isRoomLoaded,
-    roomExists,
-    storeOrganizerToken: organizerToken,
-    storeViewerToken: viewerToken,
-    teams,
     roomId,
     setRoomContext,
   });
@@ -267,13 +257,6 @@ export function RoomClient({
         >
           홈으로 돌아가기
         </button>
-      </div>
-    );
-
-  if (!isTokenChecked)
-    return (
-      <div className="h-screen bg-blue-50 flex items-center justify-center font-black text-minion-blue text-2xl animate-pulse tracking-tighter uppercase">
-        Syncing Data...
       </div>
     );
 
