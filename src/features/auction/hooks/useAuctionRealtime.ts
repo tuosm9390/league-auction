@@ -156,7 +156,17 @@ export function useAuctionRealtime(roomId: string | null) {
           addMessage(payload.new as Message)
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.info(`[Realtime] ✅ 채널 구독 성공: room-data:${roomId}`)
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`[Realtime] ❌ 채널 오류: room-data:${roomId}`, err)
+        } else if (status === 'TIMED_OUT') {
+          console.warn(`[Realtime] ⏱ 채널 타임아웃: room-data:${roomId}`)
+        } else if (status === 'CLOSED') {
+          console.info(`[Realtime] 🔌 채널 닫힘: room-data:${roomId}`)
+        }
+      })
 
     // 3초 폴링 fallback — realtime 이벤트 누락 시 stale 상태 방지
     const pollInterval = setInterval(fetchPoll, 3000)

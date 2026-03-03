@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { createRoom as createRoomAction } from "@/features/auction/api/auctionActions";
 import { Copy, X, Check, ExternalLink, ArrowRight, Upload } from "lucide-react";
 
 const TIERS = [
@@ -326,70 +327,41 @@ export function CreateRoomModal() {
   };
 
   const createRoom = async () => {
-    const { data: room, error: roomError } = await supabase
-      .from("rooms")
-      .insert([
-        {
-          name: basic.title,
-          total_teams: basic.teamCount,
-          base_point: basic.totalPoints,
-          members_per_team: basic.membersPerTeam,
-        },
-      ])
-      .select()
-      .single();
-    if (roomError) throw roomError;
+    const result = await createRoomAction({
+      name: basic.title,
+      totalTeams: basic.teamCount,
+      basePoint: basic.totalPoints,
+      membersPerTeam: basic.membersPerTeam,
+      captains,
+      players,
+    });
+    if (result.error) throw new Error(result.error);
 
-    const teamsData = captains.map((c) => ({
-      room_id: room.id,
-      name: c.teamName,
-      point_balance: basic.totalPoints - c.captainPoints,
-      leader_name: c.name,
-      leader_position: c.position,
-      leader_description: c.description,
-      captain_points: c.captainPoints,
-    }));
-    const { data: teamsResult, error: teamsError } = await supabase
-      .from("teams")
-      .insert(teamsData)
-      .select();
-    if (teamsError) throw teamsError;
-
-    if (players.length > 0) {
-      const playersData = players.map((p) => ({
-        room_id: room.id,
-        name: p.name,
-        tier: p.tier,
-        main_position: p.mainPosition,
-        sub_position: p.subPosition,
-        description: p.description,
-      }));
-      const { error: playersError } = await supabase
-        .from("players")
-        .insert(playersData);
-      if (playersError) throw playersError;
+    const { roomId, organizerToken, viewerToken, teams: teamsResult } = result;
+    if (!roomId || !organizerToken || !viewerToken || !teamsResult) {
+      throw new Error('방 생성 결과가 올바르지 않습니다.');
     }
 
     const baseUrl = window.location.origin;
-    const organizerPath = `/api/room-auth?roomId=${room.id}&role=ORGANIZER&token=${room.organizer_token}`;
+    const organizerPath = `/api/room-auth?roomId=${roomId}&role=ORGANIZER&token=${organizerToken}`;
 
     // localStorage에 저장
     saveRoomToStorage({
-      id: room.id,
+      id: roomId,
       name: basic.title,
       organizerPath,
       createdAt: new Date().toISOString(),
     });
 
     setLinks({
-      roomId: room.id,
+      roomId,
       organizerPath,
       organizerLink: `${baseUrl}${organizerPath}`,
-      captainLinks: (teamsResult ?? []).map((team) => ({
+      captainLinks: teamsResult.map((team) => ({
         teamName: team.name,
-        link: `${baseUrl}/api/room-auth?roomId=${room.id}&role=LEADER&teamId=${team.id}&token=${team.leader_token}`,
+        link: `${baseUrl}/api/room-auth?roomId=${roomId}&role=LEADER&teamId=${team.id}&token=${team.leader_token}`,
       })),
-      viewerLink: `${baseUrl}/api/room-auth?roomId=${room.id}&role=VIEWER&token=${room.viewer_token}`,
+      viewerLink: `${baseUrl}/api/room-auth?roomId=${roomId}&role=VIEWER&token=${viewerToken}`,
     });
   };
 

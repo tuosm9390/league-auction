@@ -8,6 +8,39 @@ const EXTEND_DURATION_MS = 5_000      // 5초 연장
 
 // ---------- 타입 ----------
 
+export interface CreateRoomCaptain {
+  teamName: string
+  name: string
+  position: string
+  description: string
+  captainPoints: number
+}
+
+export interface CreateRoomPlayer {
+  name: string
+  tier: string
+  mainPosition: string
+  subPosition: string
+  description: string
+}
+
+export interface CreateRoomPayload {
+  name: string
+  totalTeams: number
+  basePoint: number
+  membersPerTeam: number
+  captains: CreateRoomCaptain[]
+  players: CreateRoomPlayer[]
+}
+
+export interface CreateRoomResult {
+  error?: string
+  roomId?: string
+  organizerToken?: string
+  viewerToken?: string
+  teams?: { id: string; name: string; leader_token: string }[]
+}
+
 export interface ArchiveTeam {
   id: string
   name: string
@@ -33,6 +66,64 @@ async function sysMsg(roomId: string, content: string) {
     sender_role: 'SYSTEM',
     content,
   }])
+}
+
+// ---------- 방 생성 ----------
+
+/** 방 + 팀 + 선수를 service_role로 생성 (anon INSERT 불가 환경 대응) */
+export async function createRoom(payload: CreateRoomPayload): Promise<CreateRoomResult> {
+  const db = getServerClient()
+
+  const { data: room, error: roomError } = await db
+    .from('rooms')
+    .insert([{
+      name: payload.name,
+      total_teams: payload.totalTeams,
+      base_point: payload.basePoint,
+      members_per_team: payload.membersPerTeam,
+    }])
+    .select()
+    .single()
+  if (roomError) return { error: roomError.message }
+
+  const teamsData = payload.captains.map((c) => ({
+    room_id: room.id,
+    name: c.teamName,
+    point_balance: payload.basePoint - c.captainPoints,
+    leader_name: c.name,
+    leader_position: c.position,
+    leader_description: c.description,
+    captain_points: c.captainPoints,
+  }))
+  const { data: teamsResult, error: teamsError } = await db
+    .from('teams')
+    .insert(teamsData)
+    .select()
+  if (teamsError) return { error: teamsError.message }
+
+  if (payload.players.length > 0) {
+    const playersData = payload.players.map((p) => ({
+      room_id: room.id,
+      name: p.name,
+      tier: p.tier,
+      main_position: p.mainPosition,
+      sub_position: p.subPosition,
+      description: p.description,
+    }))
+    const { error: playersError } = await db.from('players').insert(playersData)
+    if (playersError) return { error: playersError.message }
+  }
+
+  return {
+    roomId: room.id,
+    organizerToken: room.organizer_token,
+    viewerToken: room.viewer_token,
+    teams: (teamsResult ?? []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      leader_token: t.leader_token,
+    })),
+  }
 }
 
 // ---------- auction_archives ----------
