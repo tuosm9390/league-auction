@@ -93,13 +93,15 @@ No Supabase Auth. **HttpOnly 쿠키 기반** 인증:
 1. 공유 링크 형식: `/api/room-auth?roomId={id}&role=ORGANIZER&token={token}`
    - LEADER: `&teamId={teamId}` 추가
    - VIEWER: `role=VIEWER`
-2. `/api/room-auth` Route Handler가 쿠키 `room_auth_{roomId}` (HttpOnly, `path: '/room/${roomId}'`, `maxAge: 8h`) 설정 후 `/room/{roomId}`로 리다이렉트
-3. `page.tsx` (Server Component): `cookies()`로 쿠키 파싱 → `RoomClient`에 `role`, `teamId` props 전달
-4. `useRoomAuth` 훅 (`src/features/auction/hooks/useRoomAuth.ts`): 단순화됨. `setRoomContext` 호출만 수행. `effectiveRole = role` (쿠키 값 그대로), `isTokenChecked = true` 즉시 반환.
-5. Guard UI: `effectiveRole === null`이면 차단 화면 표시 (쿠키 없이 직접 URL 접근 시)
+2. `/api/room-auth` Route Handler가 **역할+팀ID별 고유 쿠키** 설정 후 role/teamId를 URL 파라미터에 포함해 리다이렉트
+   - 쿠키 이름: `room_auth_{roomId}_ORGANIZER` / `room_auth_{roomId}_LEADER_{teamId}` / `room_auth_{roomId}_VIEWER`
+   - 쿠키 속성: `httpOnly: true`, `secure: true` (production), `sameSite: 'lax'`, `path: '/room/${roomId}'`, `maxAge: 8h`
+   - 리다이렉트 URL 예: `/room/{roomId}?role=LEADER&teamId={teamId}`
+3. `page.tsx` (Server Component): `searchParams.role`/`searchParams.teamId`로 쿠키 이름 결정 → 쿠키 파싱 → `RoomClient`에 `role`, `teamId` props 전달
+4. `useRoomAuth` 훅: 단순화됨. `setRoomContext` 호출만 수행. `effectiveRole = role`, `isTokenChecked = true` 즉시 반환.
+5. Guard UI: `effectiveRole === null`이면 차단 화면 표시 (URL 파라미터 없이 직접 접근 시)
 
-쿠키 속성: `httpOnly: true`, `secure: true` (production), `sameSite: 'lax'`, `path: '/room/${roomId}'`.
-**토큰 검증 없음** (의도적 결정 — 지인용 내부 툴). 역할 구분만 사용.
+**토큰 검증 없음** (의도적 결정 — 지인용 내부 툴). **같은 브라우저에서 여러 팀장 탭을 열어도 쿠키가 충돌하지 않음.**
 
 ### Data Flow
 

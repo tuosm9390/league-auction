@@ -5,25 +5,22 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const roomId = searchParams.get('roomId')
   const role = searchParams.get('role')
-  // URL parameters that are empty strings will be parsed as "" by URLSearchParams
-  // which is truthy. We want undefined/null if they aren't provided.
   let teamId = searchParams.get('teamId')
   if (teamId === 'undefined' || teamId === 'null' || teamId === '') {
     teamId = null
   }
-  const token = searchParams.get('token')
 
-  if (!roomId || !role || !token) {
+  if (!roomId || !role) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
+  // 역할+팀ID별 고유 쿠키 이름 — 같은 브라우저에서 여러 팀장이 열어도 덮어쓰지 않음
+  const cookieSuffix = role === 'LEADER' && teamId ? `LEADER_${teamId}` : role.toUpperCase()
+  const cookieName = `room_auth_${roomId}_${cookieSuffix}`
+
+  const authData = JSON.stringify({ role, teamId: teamId || null })
+
   const cookieStore = await cookies()
-  const cookieName = `room_auth_${roomId}`
-  
-  // JSON stringify converts undefined to undefined in objects, which is removed, 
-  // but let's be explicit and pass null for the teamId if it's missing.
-  const authData = JSON.stringify({ role, teamId: teamId || null, token })
-  
   cookieStore.set(cookieName, authData, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -32,5 +29,12 @@ export async function GET(request: NextRequest) {
     maxAge: 60 * 60 * 8, // 8시간
   })
 
-  return NextResponse.redirect(new URL(`/room/${roomId}`, request.url))
+  // 리다이렉트 URL에 role/teamId 포함 → page.tsx가 올바른 쿠키를 조회할 수 있음
+  const redirectUrl = new URL(`/room/${roomId}`, request.url)
+  redirectUrl.searchParams.set('role', role)
+  if (role === 'LEADER' && teamId) {
+    redirectUrl.searchParams.set('teamId', teamId)
+  }
+
+  return NextResponse.redirect(redirectUrl)
 }
