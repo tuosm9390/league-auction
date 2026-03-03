@@ -5,7 +5,6 @@ import { useAuctionStore, PresenceUser, Bid, Message, Player, Team } from '@/fea
 export function useAuctionRealtime(roomId: string | null) {
   const setRealtimeData = useAuctionStore(s => s.setRealtimeData)
   const setRoomNotFound = useAuctionStore(s => s.setRoomNotFound)
-  const setReAuctionRound = useAuctionStore(s => s.setReAuctionRound)
   const updatePlayer = useAuctionStore(s => s.updatePlayer)
   const updateTeam = useAuctionStore(s => s.updateTeam)
   const addBid = useAuctionStore(s => s.addBid)
@@ -35,12 +34,6 @@ export function useAuctionRealtime(roomId: string | null) {
         return
       }
 
-      // 재경매 이력 확인
-      const hasReAuctionMsg = (messagesRes.data || []).some((m: Message) =>
-        m.sender_role === 'SYSTEM' && m.content.includes('재경매를 재개합니다')
-      )
-      if (hasReAuctionMsg) setReAuctionRound(true)
-
       // 단일 setRealtimeData 호출로 통합 — 중간 렌더 및 깜빡임 방지
       setRealtimeData({
         basePoint: roomRes.data.base_point,
@@ -61,7 +54,7 @@ export function useAuctionRealtime(roomId: string | null) {
     } finally {
       fetchingRef.current = false
     }
-  }, [roomId, setRealtimeData, setRoomNotFound, setReAuctionRound])
+  }, [roomId, setRealtimeData, setRoomNotFound])
 
   // 경량 폴링 함수 — rooms + teams + players만 조회 (bids/messages는 realtime INSERT로 충분)
   const fetchPoll = useCallback(async () => {
@@ -151,11 +144,7 @@ export function useAuctionRealtime(roomId: string | null) {
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` },
         (payload) => {
-          const msg = payload.new as Message
-          if (msg.sender_role === 'SYSTEM' && msg.content.includes('재경매를 재개합니다')) {
-            setReAuctionRound(true)
-          }
-          addMessage(msg)
+          addMessage(payload.new as Message)
         }
       )
       .subscribe((status) => {
@@ -170,7 +159,7 @@ export function useAuctionRealtime(roomId: string | null) {
       clearInterval(pollInterval)
       supabase.removeChannel(channel)
     }
-  }, [roomId, fetchAll, fetchPoll, setRealtimeData, addBid, addMessage, setReAuctionRound, setRoomNotFound])
+  }, [roomId, fetchAll, fetchPoll, setRealtimeData, addBid, addMessage, setRoomNotFound])
 
   // ── Presence tracking ──
   useEffect(() => {

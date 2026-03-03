@@ -328,3 +328,11 @@ export async function startAuction(...): Promise<{ error?: string }> {
 ```
 
 **검사 기준**: 새 Server Action을 작성할 때 "이 변경이 UI에 즉시 반영되어야 하는가?"라는 질문을 먼저 던져라. 그렇다면 반환값에 변경된 상태를 포함시켜라.
+
+### 규칙 2 — RLS 강화 시 anon 직접 쓰기 전수 검사 의무화 (2026-03-03)
+
+> **RLS 정책을 강화(INSERT/UPDATE/DELETE 차단)하기 전에, 반드시 코드베이스 전체에서 `supabase.from(...).insert/update/delete`를 검색하여 anon key로 직접 DB에 쓰는 코드를 모두 찾아낸다. 발견된 모든 직접 쓰기를 service_role 경유 Server Action으로 교체한 후에야 RLS 정책을 배포한다. RLS 정책과 애플리케이션 코드는 반드시 동시에 배포해야 한다.**
+
+**배경**: ChatPanel과 useAuctionControl이 `supabase.from('messages').insert()`로 anon key 직접 쓰기를 수행하고 있었다. SELECT-only RLS를 배포하면 이 쓰기가 차단되어 채팅 기능이 중단된다. RLS 변경과 Server Action 전환을 동시에 수행함으로써 이 문제를 예방했다.
+
+**검사 명령**: `grep -r "supabase\.from\(.*\)\.\(insert\|update\|delete\)" src/` — Server Action 파일(`auctionActions.ts`) 이외의 파일에서 결과가 나오면 즉시 Server Action으로 전환하라.

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useAuctionStore, Message } from '@/features/auction/store/useAuctionStore'
-import { supabase } from '@/lib/supabase'
+import { sendChatMessage } from '@/features/auction/api/auctionActions'
 
 const MAX_MESSAGE_LENGTH = 200
 
@@ -97,12 +97,7 @@ export function ChatPanel() {
         senderName = myTeam?.leader_name || myTeam?.name || '팀장'
       }
 
-      const { error } = await supabase.from('messages').insert([{
-        room_id: roomId,
-        sender_name: senderName,
-        sender_role: role || 'VIEWER',
-        content: input.trim(),
-      }])
+      const { error } = await sendChatMessage(roomId, senderName, role || 'VIEWER', input.trim())
       if (error) { console.error('Failed to send message:', error); return }
       setInput('')
     } catch (err) {

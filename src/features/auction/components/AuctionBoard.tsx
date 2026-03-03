@@ -122,6 +122,7 @@ export function AuctionBoard({
   const setReadyAnimationPlayed = useAuctionStore(
     (s) => s.setReadyAnimationPlayed,
   );
+  const setReAuctionRound = useAuctionStore((s) => s.setReAuctionRound);
   const connectedLeaderIds = new Set(
     presences
       .filter((p: PresenceUser) => p.role === "LEADER")
@@ -211,6 +212,7 @@ export function AuctionBoard({
     try {
       const res = await restartAuctionWithUnsold(roomId);
       if (res.error) alert(res.error);
+      else if (res.reAuctionStarted) setReAuctionRound(true);
     } finally {
       setIsRestarting(false);
     }

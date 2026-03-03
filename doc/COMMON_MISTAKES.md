@@ -234,3 +234,29 @@ useEffect(() => {
 | 2   | Server Action 지연   | "Fire and forget" — 변경값 미반환, WebSocket만 의존 | Server Action이 변경값 반환 + Optimistic Update |
 | 3   | 이중 setState 깜빡임 | 하나의 로드 사이클을 두 번의 setState로 나눔        | 단일 setState 호출로 통합                       |
 | 4   | useRef 초기화 누락   | 초기값 비교 조건으로 인해 최초 실행 블록 스킵       | 조건 없이 effect에서 직접 설정                  |
+
+---
+
+## 이슈 #5 — 경매 로직 보안 강화 및 구조 개선 (2026-03-03)
+
+### 이슈 요약 (The Problem)
+경매 경쟁 루트(`/api/room-auth`, `drawNextPlayer`, `placeBid`, `awardPlayer`)에 다음 취약점과 버그가 동시에 존재했다:
+- **P0**: role 화이트리스트 검증 없는 쿠키 발급, drawNextPlayer에 IN_AUCTION 중복 가드 없음, placeBid의 teamId가 해당 방 소속인지 검증 없음
+- **P1**: startAuction 중복 타이머 실행, awardPlayer 비원자 처리(players/teams 업데이트 분리), 문자열 기반 isReAuctionRound 감지
+- **P1**: ChatPanel과 useAuctionControl이 anon key로 직접 messages INSERT → RLS 강화 후 차단됨
+- **P1**: page.tsx의 roleParam이 타입 캐스트만 하고 런타임 검증 없음
+
+### 실패한 접근법 (What didn't work)
+1. **anon key RLS 정책 삭제 후 방치**: SELECT 전용 RLS로 전환하면 기존 ChatPanel/useAuctionControl의 anon INSERT가 차단됨 — DB 정책 변경과 코드 변경이 반드시 함께 진행되어야 한다.
+2. **문자열 기반 재경매 감지**: `content.includes('재경매를 재개합니다')` — 메시지 텍스트가 바뀌거나 국제화되면 즉시 깨지는 취약한 패턴이다.
+3. **비원자 낙찰 처리**: `players.update(SOLD)` 후 `teams.update(point_balance)` 분리 호출 — 두 쿼리 사이에 충돌이 발생하면 데이터 불일치가 발생한다.
+
+### 최종 해결책 (What worked)
+1. **RLS 정책을 SELECT-only로 재설정** (마이그레이션 `00010`) — anon key는 읽기 전용, 모든 쓰기는 service_role(Server Actions)만 가능
+2. **모든 DB 쓰기를 Server Action 경유** — ChatPanel, useAuctionControl의 `supabase.from('messages').insert()` → `sendChatMessage()` Server Action 호출로 교체
+3. **award_player_atomic RPC** (마이그레이션 `00011`) — PostgreSQL 함수 내에서 `FOR UPDATE` 락으로 players + teams + rooms를 단일 트랜잭션으로 처리
+4. **직접 플래그 설정** — `restartAuctionWithUnsold` 반환값에 `reAuctionStarted: true` 포함, AuctionBoard.tsx에서 직접 `setReAuctionRound(true)` 호출
+5. **route.ts 토큰 DB 검증** — organizer_token, viewer_token, leader_token을 DB에서 조회하여 비교
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+> **DB 정책(RLS)과 애플리케이션 코드는 반드시 함께 변경해야 한다. RLS를 강화할 때는 "anon key로 직접 쓰기를 수행하는 코드가 있는가?"를 반드시 전체 코드베이스에서 검색하고, 발견된 모든 직접 쓰기를 service_role 경유 Server Action으로 전환한 후에야 RLS 정책을 배포한다.**

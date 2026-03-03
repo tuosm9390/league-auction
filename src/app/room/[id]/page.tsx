@@ -13,7 +13,11 @@ export default async function RoomPage(props: {
   const resolvedSearchParams = await props.searchParams
   const roomId = resolvedParams.id
 
-  const roleParam = (resolvedSearchParams.role as Role) || null
+  const VALID_ROLES = ['ORGANIZER', 'LEADER', 'VIEWER'] as const
+  const rawRole = resolvedSearchParams.role
+  const roleParam: Role = rawRole && VALID_ROLES.includes(rawRole as typeof VALID_ROLES[number])
+    ? (rawRole as Role)
+    : null
   const teamIdParam = resolvedSearchParams.teamId || null
 
   let role: Role | null = null

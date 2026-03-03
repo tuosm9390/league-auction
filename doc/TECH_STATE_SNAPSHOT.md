@@ -18,14 +18,29 @@
   | 3 | `src/features/auction/api/auctionActions.ts` | `'use server'` + `getServerClient()` 전환 + `verifyOrganizer/verifyLeader/verifyAnyRole` 추가 + `isValidUUID` 검증 + `sendChatMessage/sendNotice/sendLotteryClosedMessage` 추가 |
   | 4 | `src/app/room/[id]/RoomClient.tsx` | `handleNotice` → `sendNotice` Server Action 전환, `supabase` import 제거 |
 
-- **현재 상태**: P0/P1 버그 4건 수정 완료. `npm run build` 통과. 미수정 버그 2건 존재 (하단 참고).
+- **현재 상태**: 경매 로직 보안 강화 및 버그 수정 계획 전체 완료. `npm run build` 통과. ⚠️ Supabase 마이그레이션(`00010`, `00011`) 수동 실행 대기 중.
 
-- **미수정 버그**:
+- **이번 세션(2026-03-03)에 새로 완료된 작업**:
+
+  | # | 파일 | 수정 내용 |
+  |---|---|---|
+  | S1 | `supabase/migrations/00010_rls_policies.sql` | **신규** — SELECT-only RLS 정책 (anon 쓰기 차단) |
+  | S2 | `supabase/migrations/00011_award_player_atomic.sql` | **신규** — 낙찰 원자 처리 RPC (`FOR UPDATE` 락 + 단일 트랜잭션) |
+  | S3 | `auctionActions.ts` | `sendChatMessage` 추가, `drawNextPlayer` IN_AUCTION 가드, `placeBid` room_id 검증, `startAuction` 중복 타이머 방지, `awardPlayer` RPC 전환, `restartAuctionWithUnsold` 반환값 |
+  | S4 | `ChatPanel.tsx` | `supabase.from('messages').insert` → `sendChatMessage` Server Action |
+  | S5 | `useAuctionControl.ts` | `handleCloseLottery` anon INSERT → `sendChatMessage` Server Action |
+  | S6 | `route.ts` | role 화이트리스트 + token DB 대조 (organizer/leader/viewer_token) |
+  | S7 | `page.tsx` | `roleParam` 런타임 화이트리스트 검증 |
+  | S8 | `useAuctionRealtime.ts` | 문자열 기반 `isReAuctionRound` 감지 제거 |
+  | S9 | `AuctionBoard.tsx` | `setReAuctionRound(true)` 직접 호출 (restartAuctionWithUnsold 반환값 기반) |
+
+- **잔존 미수정 항목** (이번 계획 범위 외):
 
   | # | 위치 | 증상 | 심각도 |
   |---|---|---|---|
-  | 5 | `src/features/auction/hooks/useRoomAuth.ts` | LEADER 검증 타이밍 지연 — `fetchAll`이 `setRealtimeData`를 2번 분리 호출하여 검증 사이클 추가 발생 | P1 |
-  | 6 | `src/app/room/[id]/RoomClient.tsx` `BiddingControl` | `teamIdParam` (쿠키 원본값) 직접 전달 — 쿠키 충돌 시 잘못된 팀 ID로 입찰 가능 | P2 |
+  | R1 | `BiddingControl` | `teamIdParam` (쿠키 원본값) 직접 전달 — role 체크 후 렌더되므로 실질 위험 낮음 | P2 |
+  | R2 | `useAuctionRealtime.ts` | `fetchAll` 초기화 시 최대 2회 호출 — `fetchingRef` dedup으로 직렬화되나 불필요한 부하 | P2 |
+  | R3 | `useAuctionRealtime.ts` | bids 전체 roomId 기준 조회 — 장기 경매 시 payload 증가 | P2 |
 
 ## 2. What is the active stack? (활성 기술 스택)
 
@@ -64,3 +79,326 @@
      - `layout.tsx`에 `metadataBase` URL 설정
 
   5. 수정 완료 후 커밋 및 push
+
+---
+
+## 4. 경매 핵심 흐름 전체 분석 — 기능 재설계 전 사전 검토 (2026-03-03)
+
+> **목적**: 경매 로직 1번 흐름(추첨 → 경매 시작)부터 전체를 새로 작업하기 위해, 현재 코드의 동작 구조·버그 포인트·보안 취약점을 파일별·단계별로 완전히 분석한다.
+
+---
+
+### 4-1. 전체 흐름 단계별 코드 경로 매핑
+
+```
+[STEP 0] 방 입장 (인증)
+  URL: /api/room-auth?roomId=&role=&teamId=
+  파일: src/app/api/room-auth/route.ts
+
+[STEP 1] 페이지 렌더 (Server Component)
+  파일: src/app/room/[id]/page.tsx
+  → 쿠키 읽기 → roleParam / teamIdParam 결정 → RoomClient props
+
+[STEP 2] 클라이언트 초기화
+  파일: src/app/room/[id]/RoomClient.tsx
+  → useRoomAuth (Zustand setRoomContext)
+  → useAuctionRealtime (DB 구독 + 초기 fetchAll)
+  → useAuctionControl (추첨 모달 + 자동 낙찰)
+
+[STEP 3] 추첨
+  UI: RoomClient.tsx "🎲 다음 선수 추첨" 버튼
+  Action: src/features/auction/api/auctionActions.ts > drawNextPlayer()
+
+[STEP 4] 추첨 애니메이션 (모달)
+  Hook: useAuctionControl.ts — players 변경 감지 → lotteryPlayer set
+  Component: AuctionBoard.tsx > LotteryAnimation
+  Broadcast: supabase.channel(`lottery-{roomId}`) > CLOSE_LOTTERY
+
+[STEP 5] 경매 시작
+  UI: RoomClient.tsx "▶ 경매 시작" 버튼
+  Action: auctionActions.ts > startAuction()
+  Optimistic: setRealtimeData({ timerEndsAt }) 즉시 반영
+
+[STEP 6] 입찰
+  UI: BiddingControl.tsx (LEADER 전용)
+  Action: auctionActions.ts > placeBid()
+  Optimistic: res.newTimerEndsAt → setRealtimeData({ timerEndsAt })
+
+[STEP 7] 자동 낙찰 (타이머 만료)
+  Hook: useAuctionControl.ts — setTimeout(delay + 1500ms)
+  Action: auctionActions.ts > awardPlayer() — 멱등성 보장
+
+[STEP 8] 사이클 반복 or 종료 처리
+  UNSOLD 드래프트: AuctionBoard.tsx > draftPlayer()
+  재경매: AuctionBoard.tsx > restartAuctionWithUnsold()
+  방 종료: RoomClient.tsx > handleEndRoom() → saveAuctionArchive() + deleteRoom()
+```
+
+---
+
+### 4-2. STEP별 상세 코드 분석
+
+#### STEP 0 — 방 입장 (`/api/room-auth/route.ts`)
+
+**동작 요약**
+- URL 파라미터에서 `roomId`, `role`, `teamId`를 추출
+- 역할+팀ID 조합으로 **고유한 쿠키 이름** 생성: `room_auth_{roomId}_{ROLE}` 또는 `room_auth_{roomId}_LEADER_{teamId}`
+- HttpOnly + Secure + SameSite=lax + path=`/room/{roomId}` + maxAge=8h 으로 쿠키 세팅
+- 리다이렉트 URL: `/room/{roomId}?role={role}&teamId={teamId}`
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| A1 | 보안 | route.ts:16 | `role` 파라미터를 DB에서 실제 역할과 대조하지 않음. 누구든 `?role=ORGANIZER`로 요청하면 ORGANIZER 쿠키 발급 | **P0 (보안)** |
+| A2 | 보안 | route.ts:18 | `cookieSuffix`에 `role.toUpperCase()` 적용 시 입력값 미검증 — `role=ORGANIZER%20INJECTION` 같은 값이 쿠키 이름에 삽입될 수 있음 | P1 |
+| A3 | 기능 | route.ts:9 | `teamId === 'undefined'` 문자열 처리는 있으나 숫자형 ID, 특수문자 포함 ID 등에 대한 UUID 포맷 검증 없음 | P2 |
+| A4 | 보안 | route.ts:33 | 리다이렉트 URL을 `new URL(request.url)` 기반으로 생성 — 신뢰할 수 없는 Host 헤더를 그대로 사용하면 Open Redirect 가능 | P1 |
+
+**수정 방향**
+- `role`이 `'ORGANIZER' | 'LEADER' | 'VIEWER'` 세 값 중 하나인지 서버에서 검증
+- LEADER인 경우 `teamId`가 실제 해당 방의 팀 ID인지 DB 조회로 확인
+- 리다이렉트 URL 생성 시 `process.env.NEXT_PUBLIC_BASE_URL` 기반으로 절대 URL 구성
+
+---
+
+#### STEP 1 — 페이지 렌더 (`src/app/room/[id]/page.tsx`)
+
+**동작 요약**
+- `searchParams.role` 파라미터로 쿠키 이름을 결정하고, 해당 쿠키를 읽어 `roleParam` / `teamIdParam` 추출
+- 쿠키가 없거나 파싱 실패 시 `role = null` → `RoomClient`에 `roleParam={null}` 전달 → 차단 화면
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| B1 | 보안 | page.tsx:16 | `(resolvedSearchParams.role as Role)` — TypeScript 타입 캐스트만 하고 실제 값 검증 없음. `?role=HACKER` 입력 시 `cookieSuffix = 'HACKER'`가 되어 없는 쿠키를 조회하고 `role = null` 처리됨. 현재는 무해하지만 미래 코드 변경 시 위험. | P2 |
+| B2 | 기능 | page.tsx:32 | 쿠키 파싱은 `try/catch`로 보호하지만, 파싱된 `parsed.role` 값이 실제 `Role` 타입에 속하는지 재확인하지 않음. 쿠키가 위변조된 경우 잘못된 role이 전달될 수 있음 (단, 쿠키는 httpOnly이므로 위변조 가능성 매우 낮음) | P3 |
+| B3 | 기능 | page.tsx 전체 | `roomId`에 대한 UUID 형식 검증 없음. Supabase는 잘못된 UUID 쿼리 시 에러를 반환하나, 이를 처리하는 로직이 없음 (Supabase anon 쿼리는 빈 결과 반환으로 graceful하게 처리됨) | P3 |
+
+**수정 방향**
+- `roleParam` 값을 화이트리스트 배열 `['ORGANIZER', 'LEADER', 'VIEWER']`로 검증
+- 쿠키에서 파싱한 `parsed.role`도 동일하게 검증
+- `roomId`를 UUID regex로 검증하여 잘못된 요청 조기 차단
+
+---
+
+#### STEP 2 — 클라이언트 초기화 (`RoomClient.tsx` + 훅들)
+
+**동작 요약**
+1. `useRoomAuth` → `setRoomContext(roomId, role, teamId)` → Zustand에 역할 저장
+2. `useAuctionRealtime(roomId)` → `fetchAll()` 즉시 실행 + Supabase 구독 시작
+3. 구독 `SUBSCRIBED` 이벤트 시 `fetchAll()` 한 번 더 호출 (fetchingRef dedup으로 직렬화)
+4. 3초 폴링 (`fetchPoll`) 시작
+
+**Zustand Store의 초기 상태 흐름**
+```
+초기: isRoomLoaded=false, players=[], teams=[], ...
+↓ setRoomContext() 호출 → roomId, role, teamId 저장 (isRoomLoaded 변경 없음)
+↓ fetchAll() 완료 → setRealtimeData({...모든 데이터, isRoomLoaded: true})
+↓ UI 렌더 시작 (로딩 화면 해제)
+```
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| C1 | 기능 | useAuctionRealtime.ts:102,163 | `fetchAll()`이 초기화 시 최대 2번 호출됨. `fetchingRef`가 첫 번째 호출 완료 후에야 두 번째를 허용하므로 두 번 모두 실행될 수 있음. 불필요한 DB 부하 발생. | P2 |
+| C2 | 기능 | useAuctionRealtime.ts:176-194 | Presence 구독이 `role`이 없으면 실행 안 됨 (`if (!roomId \|\| !role) return`). Presence는 실시간으로 팀장 접속 현황을 보여주는데, role이 null인 관전자(URL 직접 접근 차단 화면)는 presence 없음 — 이는 의도된 동작이나 명시적 주석이 없음 | P3 |
+| C3 | 성능 | useAuctionRealtime.ts:25-31 | `fetchAll`이 5개 테이블을 `Promise.all`로 동시 조회함. bids 전체를 가져오므로 경매가 길어질수록 페이로드가 증가. bids는 현재 경매 중인 playerId만 필요한데, 방 전체 bids를 조회 중. | P2 |
+| C4 | 기능 | RoomClient.tsx:124 | `isAuctionActive = !!timerEndsAt && !isExpired` — 완전히 클라이언트 시계 기반. 클라이언트 시계가 서버보다 빠르면 타이머 만료 전에 입찰 불가 상태가 됨. 반대면 만료 후에도 입찰 시도 (서버에서 1초 오차 허용으로 방어 중) | P2 |
+| C5 | 기능 | RoomClient.tsx:81-87 | `allConnected` 판정이 Presence 기반 — Supabase Presence는 30~60초 간격 heartbeat로 동작. 팀장이 브라우저를 닫아도 즉시 `offline`으로 감지되지 않을 수 있음 (최대 30초 지연). | P1 |
+
+---
+
+#### STEP 3 — 추첨 (`drawNextPlayer` Server Action)
+
+**동작 요약**
+- DB에서 `WAITING` 선수 전체 조회 → `Math.floor(Math.random() * waiting.length)`로 1명 선택
+- `players.status = IN_AUCTION`, `rooms.current_player_id = player.id` 업데이트
+
+**발견된 문제점 — 가장 많은 버그 밀집 구간**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| D1 | **버그 (레이스 컨디션)** | auctionActions.ts:76 | 이미 `IN_AUCTION` 선수가 있는지 확인하는 서버사이드 가드가 없음. `!currentPlayer` 체크는 클라이언트 UI에만 존재. 네트워크 지연이나 중복 클릭 시 두 선수가 동시에 `IN_AUCTION` 상태가 될 수 있음 | **P0** |
+| D2 | **버그 (중복 추첨)** | auctionActions.ts:76 | 동일 요청을 빠르게 2번 보내면, 두 번 모두 같은 `WAITING` 목록을 읽어 다른 선수 2명을 `IN_AUCTION`으로 만들 가능성 있음. DB에 낙관적 잠금(optimistic lock) 또는 유니크 제약 없음 | **P0** |
+| D3 | 보안 | auctionActions.ts:76 | ORGANIZER 역할 검증 없음 — roomId만 알면 누구든 호출 가능. 현재 CLAUDE.md에 "의도적 결정"으로 명시되어 있으나, 역할 파라미터를 Server Action에 받아 최소한 쿠키 검증을 추가하는 것이 권장됨 | P1 |
+| D4 | 기능 | auctionActions.ts:88 | `Math.random()`은 서버 사이드에서 실행됨 — 공정한 추첨. 다만 동일 서버 인스턴스에서 seed 고정 공격에 이론적으로 취약 (실용적 위험 없음) | P3 |
+| D5 | 기능 | auctionActions.ts:96-100 | `players.update`와 `rooms.update`가 별도 쿼리 — 두 쿼리 사이에 장애가 발생하면 `IN_AUCTION` 선수는 있는데 `current_player_id`가 null인 불일치 상태 발생 가능 | P1 |
+
+**수정 방향 (D1, D2 — P0 우선 필수)**
+```typescript
+// 현재 코드 (문제)
+const { data: waiting } = await db.from('players').select('id, name').eq('status', 'WAITING')
+const player = waiting[Math.floor(Math.random() * waiting.length)]
+await db.from('players').update({ status: 'IN_AUCTION' }).eq('id', player.id)
+
+// 개선안 — 서버사이드 IN_AUCTION 가드 추가
+const { data: alreadyActive } = await db
+  .from('rooms').select('current_player_id').eq('id', roomId).single()
+if (alreadyActive?.current_player_id) return { error: '이미 경매 중인 선수가 있습니다.' }
+
+// 개선안 — DB 레벨 원자적 업데이트 (Supabase RPC 또는 트랜잭션 사용)
+// players와 rooms를 단일 트랜잭션에서 업데이트 필요
+```
+
+---
+
+#### STEP 4 — 추첨 애니메이션 (`useAuctionControl.ts` + `LotteryAnimation`)
+
+**동작 요약**
+- `players` 배열 변경 감지 → 이전엔 `IN_AUCTION` 없었는데 현재는 있으면 `lotteryPlayer` 설정
+- `LotteryAnimation` 완료 후 ORGANIZER만 "경매 준비" 버튼 노출
+- ORGANIZER 버튼 클릭 → `handleCloseLottery` → sysMsg 전송 + Broadcast `CLOSE_LOTTERY`
+- 모든 클라이언트가 `CLOSE_LOTTERY` broadcast 수신 → `lotteryPlayer = null` → 모달 닫힘
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| E1 | 기능 | useAuctionControl.ts:24-36 | `prevPlayersRef.current.length > 0` 조건 때문에, 페이지 새로고침 후 접속 시 이미 `IN_AUCTION` 선수가 있어도 추첨 애니메이션이 재실행되지 않음. 의도된 동작이나, 재접속자는 선수 정보를 직접 봐야 함. | P3 (의도된 동작) |
+| E2 | 기능 | useAuctionControl.ts:52-68 | `handleCloseLottery`에서 `sysMsg` 전송 후 `broadcast` 전송 — sysMsg는 비동기 완료 대기 없이 즉시 broadcast 전송. 메시지 순서 보장이 약함. | P2 |
+| E3 | 기능 | useAuctionControl.ts:63 | `supabase.channel(\`lottery-${roomId}\`).send(...)` 호출 시 채널이 구독 상태인지 확인하지 않음. 채널 초기화 전에 호출되면 이벤트가 누락될 수 있음. | P2 |
+| E4 | 기능 | AuctionBoard.tsx:271 | `LotteryAnimation`에 `candidates={waitingPlayers}` 전달 — drawNextPlayer 직후 waitingPlayers는 선택된 선수가 WAITING에서 빠진 상태. 슬롯머신 후보 목록이 실제 WAITING 선수들로만 구성됨. 선택된 선수가 candidates에서 보이다가 사라지는 UX 이슈 있을 수 있음. | P2 |
+
+---
+
+#### STEP 5 — 경매 시작 (`startAuction` Server Action)
+
+**동작 요약**
+- `current_player_id` 확인 → 선수 이름 조회 → `timer_ends_at = now + durationMs`
+- 클라이언트에서 Optimistic Update: `setRealtimeData({ timerEndsAt })`
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| F1 | **버그** | auctionActions.ts:106 | 이미 타이머가 실행 중인지(`timer_ends_at != null`) 확인하는 서버사이드 가드 없음. 중복 클릭이나 race로 `startAuction`이 2번 호출되면 타이머가 리셋됨 | P1 |
+| F2 | 기능 | auctionActions.ts:123 | `timerEndsAt = new Date(Date.now() + duration).toISOString()` — **서버 시계** 기준으로 타이머 생성. 클라이언트와 최대 수백ms 차이 발생 가능. (현재 Optimistic Update로 어느 정도 완화됨) | P2 |
+| F3 | 기능 | RoomClient.tsx:191-193 | `duration` 결정 로직 — `isReAuctionRound \|\| wasPausedByDisconnectRef.current ? 5000 : 10000`. 두 조건이 동시에 false여도 재경매 라운드가 맞는 상황이 있을 수 있음. `isReAuctionRound`는 "재경매 시작하기" 클릭 시가 아니라 메시지 content 문자열 감지로 설정됨 — 취약한 감지 방식 | P1 |
+
+**수정 방향 (F1)**
+```typescript
+// 서버사이드 중복 실행 가드 추가 필요
+const { data: room } = await db.from('rooms').select('timer_ends_at').eq('id', roomId).single()
+if (room?.timer_ends_at && new Date(room.timer_ends_at).getTime() > Date.now()) {
+  return { error: '이미 경매가 진행 중입니다.' }
+}
+```
+
+---
+
+#### STEP 6 — 입찰 (`placeBid` Server Action)
+
+**현재 검증 체인 (서버사이드)**
+1. amount 양의 정수 & 10P 단위 ✅
+2. `timer_ends_at` 존재 & 만료 안 됨 (1초 오차 허용) ✅
+3. `current_player_id === playerId` ✅
+4. 동일 팀 최고 입찰자 재입찰 방지 ✅
+5. 최소 입찰액 (최고가 + 10P) ✅
+6. 팀 포인트 잔액 ✅
+7. 팀 정원 초과 방지 ✅
+8. 타이머 연장 (5초 이하 → 5초 연장) ✅
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| G1 | 보안 | auctionActions.ts:164 | `teamId` 파라미터가 실제로 `roomId` 방에 속한 팀인지 검증하지 않음 — 다른 방의 teamId로 입찰 시도 가능. `teams.select('name').eq('id', teamId)`만 하고 `room_id` 일치는 확인 안 함 | **P0** |
+| G2 | 보안 | auctionActions.ts:215-237 | 팀 정원 체크 시 `status === 'SOLD'`인 선수만 카운트 — `IN_AUCTION` 선수 (낙찰 예정)는 미포함. 극단적 race 상황에서 정원 1명 초과 가능 | P2 |
+| G3 | 기능 | auctionActions.ts:197-203 | 최고 입찰 조회 후 새 입찰 INSERT 사이에 다른 팀이 더 높게 입찰할 수 있음 (TOCTOU). 최소 입찰액 체크가 stale한 topBid 기준으로 이루어짐 — 같은 금액으로 두 팀이 동시에 입찰 시 둘 다 통과될 수 있음 | P1 |
+| G4 | 기능 | RoomClient.tsx:428-439 | `BiddingControl`에 `teamId={teamIdParam}` 전달 — 쿠키 원본값(검증 전). 이미 TECH_STATE_SNAPSHOT에 P2로 기록된 알려진 버그 | P2 |
+
+**수정 방향 (G1 — P0 필수)**
+```typescript
+// teamId의 room_id 검증 추가
+const { data: team } = await db
+  .from('teams')
+  .select('name, point_balance, room_id')  // room_id 추가
+  .eq('id', teamId)
+  .single()
+
+if (!team || team.room_id !== roomId) {
+  return { error: '유효하지 않은 팀 정보입니다.' }
+}
+```
+
+---
+
+#### STEP 7 — 자동 낙찰 (`awardPlayer` Server Action + `useAuctionControl`)
+
+**동작 요약**
+- ORGANIZER 클라이언트만 `setTimeout(delay + 1500ms)`으로 `awardPlayer` 호출
+- `awardLock` ref로 동일 클라이언트 내 이중 실행 방지
+- 서버 사이드에서 멱등성 보장: 타이머가 아직 미래이면 즉시 return, `status !== 'IN_AUCTION'`이면 즉시 return
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| H1 | **버그** | useAuctionControl.ts:76 | ORGANIZER가 여러 탭을 열면(의도치 않은 경우) `setTimeout`이 탭 수만큼 설정됨. 각 탭의 `awardLock`은 독립적이므로 여러 번 `awardPlayer`가 호출될 수 있음. 서버사이드 멱등성으로 방어 중이나 불필요한 부하 발생 | P1 |
+| H2 | 기능 | useAuctionControl.ts:82 | `delay = Math.max(0, new Date(timerEndsAt).getTime() - Date.now()) + 1500` — 1500ms grace는 충분하나, Optimistic Update로 `timerEndsAt`이 먼저 설정되면 서버 실제 만료보다 client 계산 만료가 앞서 grace 타이밍이 맞지 않을 수 있음 | P2 |
+| H3 | 기능 | auctionActions.ts:298-313 | `awardPlayer`에서 낙찰 처리: `players.update` → `teams.update(point_balance)` 두 쿼리가 별도. 중간 장애 시 포인트 차감 없이 선수만 SOLD되는 불일치 가능 | P1 |
+
+---
+
+#### STEP 8 — 종료 처리 (`deleteRoom`, `saveAuctionArchive`)
+
+**발견된 문제점**
+| # | 종류 | 위치 | 내용 | 심각도 |
+|---|------|------|------|--------|
+| I1 | 기능 | auctionActions.ts:389-413 | 토큰 무효화 → bids/messages/players/teams 삭제 → rooms 삭제 순서이나, 각 단계 에러 시 `console.error` 후 계속 진행 (graceful). 중간 실패 시 부분 삭제 상태 발생 가능 | P2 |
+| I2 | 기능 | RoomClient.tsx:205-212 | `isRoomComplete` 조건: `teams.every(t => soldCount === membersPerTeam - 1)` — 팀 인원이 정확히 `membersPerTeam - 1`명(팀장 제외)이어야 함. DRAFT로 0P 자유계약 선수도 `status === 'SOLD'`이므로 카운트에 포함됨. 올바른 동작 ✅ | 해당 없음 |
+
+---
+
+### 4-3. 보안 취약점 종합 요약
+
+| 등급 | 항목 | 설명 | 파일 |
+|------|------|------|------|
+| 🔴 **P0** | 역할 미검증 쿠키 발급 | `/api/room-auth`에서 role을 DB와 대조하지 않음. 누구나 ORGANIZER 쿠키 획득 가능 | route.ts |
+| 🔴 **P0** | `drawNextPlayer` — IN_AUCTION 가드 없음 | 이미 경매 중인 선수가 있어도 새 선수를 추첨 가능. 두 선수가 동시에 IN_AUCTION 상태 유발 | auctionActions.ts |
+| 🔴 **P0** | `placeBid` — teamId 소속 방 검증 없음 | 다른 방의 teamId로 입찰 시도 가능 | auctionActions.ts |
+| 🟠 **P1** | Open Redirect 가능성 | `new URL(request.url)` 기반 리다이렉트 — 신뢰할 수 없는 Host 헤더 사용 | route.ts |
+| 🟠 **P1** | `startAuction` — 타이머 중복 실행 가드 없음 | 타이머 진행 중에 재호출 시 타이머 리셋 | auctionActions.ts |
+| 🟠 **P1** | `awardPlayer` — players/teams 별도 쿼리 | 중간 장애 시 포인트 차감 없이 선수만 낙찰 | auctionActions.ts |
+| 🟠 **P1** | Presence 30초 지연 | 팀장 이탈 감지가 최대 30초 늦을 수 있음 | useAuctionRealtime.ts |
+| 🟡 **P2** | `placeBid` TOCTOU | 동시 입찰 시 같은 금액 중복 입찰 가능 | auctionActions.ts |
+| 🟡 **P2** | bids 전체 페치 | bids 테이블을 roomId 기준 전체 조회 — 장기 경매 시 성능 저하 | useAuctionRealtime.ts |
+| 🟡 **P2** | 클라이언트 시계 의존 | isAuctionActive, delay 계산이 클라이언트 시계 기반 | RoomClient.tsx |
+
+---
+
+### 4-4. 기능 재설계 시 필수 반영 사항
+
+#### [필수 — P0 수정]
+1. **`/api/room-auth`에 DB 검증 추가**: `role=LEADER`이면 해당 `teamId`가 실제 `roomId` 방에 속한 팀인지 Supabase에서 확인 후 쿠키 발급
+2. **`drawNextPlayer`에 서버사이드 IN_AUCTION 가드 추가**: `rooms.current_player_id`가 이미 있으면 오류 반환
+3. **`placeBid`에 teamId 소속 방 검증 추가**: `teams.room_id === roomId` 확인
+
+#### [권장 — P1 수정]
+4. **`startAuction`에 중복 타이머 가드 추가**: 이미 `timer_ends_at`이 미래 값이면 오류 반환
+5. **`awardPlayer`의 두 쿼리 원자성 확보**: Supabase의 `rpc`(PostgreSQL 함수)로 트랜잭션 처리
+6. **Presence 이탈 감지 보완**: `timer_ends_at` 설정 후 일정 시간(예: 30초) 내 팀장 미응답 시 pause 처리
+
+#### [코드 품질]
+7. **`isReAuctionRound` 감지 방식 개선**: 메시지 content 문자열 검사 → DB에 별도 필드(`is_re_auction`) 추가
+8. **bids 쿼리 최적화**: `fetchAll` 시 전체 bids 대신 현재 `current_player_id` 기준 bids만 조회
+9. **`page.tsx` role 값 화이트리스트 검증**: 타입 캐스트 대신 런타임 검증 추가
+
+---
+
+### 4-5. Zustand Store — currentPlayerId 미추적 주의
+
+현재 Store에는 `currentPlayerId` 필드가 없다. `rooms.current_player_id`는 DB에 존재하지만 Store에 저장되지 않음. `currentPlayer`는 항상 `players.find(p => p.status === 'IN_AUCTION')`로 도출됨.
+
+이 설계의 **위험 지점**: `players` 배열 업데이트와 `rooms.current_player_id` 업데이트가 서로 다른 realtime 이벤트로 도착할 경우, 두 값이 일시적으로 불일치할 수 있음. 현재는 문제가 없으나 `current_player_id`를 Store에도 저장하고 두 값의 일치 여부를 `awardPlayer` 전에 재확인하는 것이 안전한 설계.
+
+---
+
+### 4-6. 작업 우선순위 체크리스트
+
+```
+[ ] P0-A: /api/room-auth — role을 DB와 대조하는 서버사이드 검증 추가
+[ ] P0-B: drawNextPlayer — IN_AUCTION 선수 존재 시 조기 종료 가드
+[ ] P0-C: placeBid — teamId.room_id === roomId 검증
+[ ] P1-A: startAuction — 타이머 중복 실행 방지
+[ ] P1-B: awardPlayer — players + teams 동시 업데이트 원자성 확보 (RPC)
+[ ] P1-C: page.tsx — roleParam 화이트리스트 검증
+[ ] P2-A: bids 쿼리 current_player_id 기준으로 최적화
+[ ] P2-B: fetchAll 이중 호출 제거 (SUBSCRIBED 이벤트 시 스킵)
+[ ] P2-C: isReAuctionRound DB 필드로 이관
+```

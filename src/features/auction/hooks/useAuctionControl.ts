@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Player, Role } from '@/features/auction/store/useAuctionStore'
-import { awardPlayer } from '@/features/auction/api/auctionActions'
+import { awardPlayer, sendChatMessage } from '@/features/auction/api/auctionActions'
 
 interface UseAuctionControlProps {
   roomId: string
@@ -52,12 +52,12 @@ export function useAuctionControl({
   const handleCloseLottery = async () => {
     if (effectiveRole !== 'ORGANIZER') return
     if (lotteryPlayer && roomId) {
-      await supabase.from('messages').insert([{
-        room_id: roomId,
-        sender_name: '시스템',
-        sender_role: 'SYSTEM',
-        content: `🎲 ${lotteryPlayer.name} 선수 등장! (경매 시작 전)`,
-      }])
+      await sendChatMessage(
+        roomId,
+        '시스템',
+        'SYSTEM',
+        `🎲 ${lotteryPlayer.name} 선수 등장! (경매 시작 전)`,
+      )
     }
     setLotteryPlayer(null)
     await supabase.channel(`lottery-${roomId}`).send({

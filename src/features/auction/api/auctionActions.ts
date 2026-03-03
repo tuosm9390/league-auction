@@ -35,13 +35,6 @@ async function sysMsg(roomId: string, content: string) {
   }])
 }
 
-async function clearRoomAuction(roomId: string) {
-  const db = getServerClient()
-  await db.from('rooms')
-    .update({ timer_ends_at: null, current_player_id: null })
-    .eq('id', roomId)
-}
-
 // ---------- auction_archives ----------
 
 /** 경매 결과를 auction_archives 테이블에 영구 저장 */
@@ -53,6 +46,27 @@ export async function saveAuctionArchive(payload: AuctionArchivePayload): Promis
     room_created_at: payload.roomCreatedAt,
     closed_at: new Date().toISOString(),
     result_snapshot: payload.teams,
+  }])
+  if (error) return { error: error.message }
+  return {}
+}
+
+/** 일반 채팅 메시지 전송 (anon key 직접 INSERT 대신 service_role 경유) */
+export async function sendChatMessage(
+  roomId: string,
+  senderName: string,
+  senderRole: string,
+  content: string,
+): Promise<{ error?: string }> {
+  if (!content.trim() || content.length > 200) return { error: '유효하지 않은 메시지' }
+  const validRoles = ['ORGANIZER', 'LEADER', 'VIEWER', 'SYSTEM', 'NOTICE']
+  const safeSenderRole = validRoles.includes(senderRole) ? senderRole : 'VIEWER'
+  const db = getServerClient()
+  const { error } = await db.from('messages').insert([{
+    room_id: roomId,
+    sender_name: senderName,
+    sender_role: safeSenderRole,
+    content: content.trim(),
   }])
   if (error) return { error: error.message }
   return {}
@@ -75,6 +89,17 @@ export async function sendNotice(roomId: string, content: string): Promise<{ err
 /** 랜덤으로 WAITING 선수 1명을 IN_AUCTION으로 전환 */
 export async function drawNextPlayer(roomId: string): Promise<{ error?: string }> {
   const db = getServerClient()
+
+  // 이미 경매 중인 선수가 있으면 중복 추첨 방지
+  const { data: currentRoom } = await db
+    .from('rooms')
+    .select('current_player_id')
+    .eq('id', roomId)
+    .single()
+  if (currentRoom?.current_player_id) {
+    return { error: '이미 경매 중인 선수가 있습니다.' }
+  }
+
   const { data: waiting } = await db
     .from('players')
     .select('id, name')
@@ -107,11 +132,16 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
   const db = getServerClient()
   const { data: room } = await db
     .from('rooms')
-    .select('current_player_id')
+    .select('current_player_id, timer_ends_at')
     .eq('id', roomId)
     .single()
 
   if (!room?.current_player_id) return { error: '진행할 선수가 없습니다.' }
+
+  // 타이머 중복 실행 방지: 아직 만료되지 않은 타이머가 있으면 재시작 차단
+  if (room.timer_ends_at && new Date(room.timer_ends_at).getTime() > Date.now()) {
+    return { error: '이미 경매가 진행 중입니다.' }
+  }
 
   const { data: player } = await db
     .from('players')
@@ -216,6 +246,7 @@ export async function placeBid(
     .from('teams')
     .select('point_balance, name')
     .eq('id', teamId)
+    .eq('room_id', roomId)  // 방 소속 검증: 다른 방 팀으로 입찰 불가
     .single()
 
   if (!team) return { error: '팀 정보를 불러올 수 없습니다.' }
@@ -260,57 +291,18 @@ export async function placeBid(
   return { newTimerEndsAt }
 }
 
-/** 타이머 만료 후 낙찰 처리. 입찰이 없으면 UNSOLD 처리 */
+/** 타이머 만료 후 낙찰 처리. 입찰이 없으면 UNSOLD 처리.
+ *  award_player_atomic RPC를 통해 단일 트랜잭션으로 원자적으로 처리. */
 export async function awardPlayer(
   roomId: string,
   playerId: string,
 ): Promise<{ error?: string }> {
   const db = getServerClient()
-
-  const { data: latestRoom } = await db
-    .from('rooms').select('timer_ends_at').eq('id', roomId).single()
-
-  if (latestRoom?.timer_ends_at) {
-    const end = new Date(latestRoom.timer_ends_at).getTime()
-    if (end > Date.now()) return {}
-  }
-
-  const { data: player } = await db
-    .from('players').select('status, name').eq('id', playerId).single()
-  if (!player || player.status !== 'IN_AUCTION') return {}
-
-  const { data: topBid } = await db
-    .from('bids')
-    .select('*')
-    .eq('player_id', playerId)
-    .eq('room_id', roomId)
-    .order('amount', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (!topBid) {
-    await db.from('players').update({ status: 'UNSOLD' }).eq('id', playerId)
-    await clearRoomAuction(roomId)
-    await sysMsg(roomId, `😔 입찰자 없음 — 최저가 입찰이 진행되지 않아 유찰되었습니다.`)
-    return {}
-  }
-
-  await db.from('players').update({
-    status: 'SOLD',
-    team_id: topBid.team_id,
-    sold_price: topBid.amount,
-  }).eq('id', playerId)
-
-  const { data: team } = await db
-    .from('teams').select('point_balance, name').eq('id', topBid.team_id).single()
-  if (team) {
-    await db.from('teams')
-      .update({ point_balance: team.point_balance - topBid.amount })
-      .eq('id', topBid.team_id)
-    await sysMsg(roomId, `🏆 ${player.name} → ${team.name} (${topBid.amount.toLocaleString()}P 낙찰!)`)
-  }
-
-  await clearRoomAuction(roomId)
+  const { error } = await db.rpc('award_player_atomic', {
+    p_room_id: roomId,
+    p_player_id: playerId,
+  })
+  if (error) return { error: error.message }
   return {}
 }
 
@@ -360,7 +352,7 @@ export async function draftPlayer(
 }
 
 /** 유찰 선수 전원을 다시 대기 상태로 전환 */
-export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?: string }> {
+export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?: string; reAuctionStarted?: boolean }> {
   const db = getServerClient()
 
   const { data: unsold } = await db
@@ -382,7 +374,7 @@ export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?
   if (pErr) return { error: pErr.message }
 
   await sysMsg(roomId, `🔄 주최자가 모든 유찰 선수를 다시 대기 명단으로 되돌리고 추첨(재경매)을 재개합니다! (${unsold.length}명)`)
-  return {}
+  return { reAuctionStarted: true }
 }
 
 /** 방 종료 — 토큰 무효화 후 전체 삭제 */
