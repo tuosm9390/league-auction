@@ -21,11 +21,11 @@ export function useAuctionRealtime(roomId: string | null) {
     if (fetchingRef.current) return  // 이미 fetch 중이면 스킵 (dedup)
     fetchingRef.current = true
     try {
-      const [roomRes, teamsRes, playersRes, bidsRes, messagesRes] = await Promise.all([
+      // bids는 current_player_id 기준으로만 필요 — rooms를 먼저 받아 이후 조건부 조회
+      const [roomRes, teamsRes, playersRes, messagesRes] = await Promise.all([
         supabase.from('rooms').select('*').eq('id', roomId).maybeSingle(),
         supabase.from('teams').select('*').eq('room_id', roomId),
         supabase.from('players').select('*').eq('room_id', roomId),
-        supabase.from('bids').select('*').eq('room_id', roomId).order('created_at', { ascending: true }),
         supabase.from('messages').select('*').eq('room_id', roomId).order('created_at', { ascending: true }).limit(200),
       ])
 
@@ -33,6 +33,15 @@ export function useAuctionRealtime(roomId: string | null) {
         setRoomNotFound()
         return
       }
+
+      // bids: 현재 경매 중인 선수의 입찰만 조회 — 방 전체 조회 대신 player 기준 필터
+      const currentPlayerId = roomRes.data.current_player_id
+      const bidsRes = currentPlayerId
+        ? await supabase.from('bids').select('*')
+            .eq('player_id', currentPlayerId)
+            .eq('room_id', roomId)
+            .order('created_at', { ascending: true })
+        : { data: [] }
 
       // 단일 setRealtimeData 호출로 통합 — 중간 렌더 및 깜빡임 방지
       setRealtimeData({
@@ -147,10 +156,7 @@ export function useAuctionRealtime(roomId: string | null) {
           addMessage(payload.new as Message)
         }
       )
-      .subscribe((status) => {
-        // 구독 성공 시 한 번 더 최신 데이터 패치
-        if (status === 'SUBSCRIBED') fetchAll()
-      })
+      .subscribe()
 
     // 3초 폴링 fallback — realtime 이벤트 누락 시 stale 상태 방지
     const pollInterval = setInterval(fetchPoll, 3000)

@@ -70,6 +70,8 @@ export function RoomClient({
   const timerEndsAt = useAuctionStore((s) => s.timerEndsAt);
   const membersPerTeam = useAuctionStore((s) => s.membersPerTeam);
   const presences = useAuctionStore((s) => s.presences);
+  const storeTeamId = useAuctionStore((s) => s.teamId);
+  const isReAuctionRound = useAuctionStore((s) => s.isReAuctionRound);
   const setRoomContext = useAuctionStore((s) => s.setRoomContext);
   const setRealtimeData = useAuctionStore((s) => s.setRealtimeData);
   const { effectiveRole } = useRoomAuth({
@@ -89,8 +91,6 @@ export function RoomClient({
   const waitingPlayers = players.filter((p) => p.status === "WAITING");
   const soldPlayers = players.filter((p) => p.status === "SOLD");
   const unsoldPlayers = players.filter((p) => p.status === "UNSOLD");
-  const isReAuctionRound =
-    unsoldPlayers.length > 0 && waitingPlayers.length === 0;
   const biddableTeams = teams.filter(
     (t) =>
       players.filter((p) => p.team_id === t.id && p.status === "SOLD").length <
@@ -122,7 +122,8 @@ export function RoomClient({
     return () => clearTimeout(t);
   }, [timerEndsAt]);
   const isAuctionActive = !!timerEndsAt && !isExpired;
-  const myTeam = teams.find((t) => t.id === teamIdParam);
+  // storeTeamId: useRoomAuth를 통해 쿠키에서 검증된 teamId (route.ts 토큰 검증 완료)
+  const myTeam = teams.find((t) => t.id === storeTeamId);
   let isTeamFull = false;
   if (myTeam)
     isTeamFull =
@@ -425,10 +426,10 @@ export function RoomClient({
               )}
             </div>
           )}
-          {effectiveRole === "LEADER" && roomId && teamIdParam && (
+          {effectiveRole === "LEADER" && roomId && storeTeamId && (
             <BiddingControl
               roomId={roomId}
-              teamId={teamIdParam}
+              teamId={storeTeamId}
               currentPlayer={currentPlayer || null}
               myTeam={myTeam || null}
               isAuctionActive={isAuctionActive}
