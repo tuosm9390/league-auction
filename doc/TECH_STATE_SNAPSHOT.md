@@ -392,13 +392,20 @@ if (!team || team.room_id !== roomId) {
 ### 4-6. 작업 우선순위 체크리스트
 
 ```
-[ ] P0-A: /api/room-auth — role을 DB와 대조하는 서버사이드 검증 추가
-[ ] P0-B: drawNextPlayer — IN_AUCTION 선수 존재 시 조기 종료 가드
-[ ] P0-C: placeBid — teamId.room_id === roomId 검증
-[ ] P1-A: startAuction — 타이머 중복 실행 방지
-[ ] P1-B: awardPlayer — players + teams 동시 업데이트 원자성 확보 (RPC)
-[ ] P1-C: page.tsx — roleParam 화이트리스트 검증
-[ ] P2-A: bids 쿼리 current_player_id 기준으로 최적화
-[ ] P2-B: fetchAll 이중 호출 제거 (SUBSCRIBED 이벤트 시 스킵)
-[ ] P2-C: isReAuctionRound DB 필드로 이관
+[x] P0-A: /api/room-auth — role 화이트리스트 + token DB 대조 (organizer/leader/viewer_token)
+[x] P0-B: drawNextPlayer — current_player_id 존재 시 조기 종료 가드
+[x] P0-C: placeBid — teamId.room_id === roomId 검증
+[x] P1-A: startAuction — timer_ends_at 미래값이면 재시작 차단
+[x] P1-B: awardPlayer — award_player_atomic RPC (FOR UPDATE 락 + 단일 트랜잭션)
+[x] P1-C: page.tsx — roleParam 런타임 화이트리스트 검증
+[x] P2-A: bids 쿼리 — rooms 조회 후 current_player_id 기준 조건부 fetch
+[x] P2-B: fetchAll 이중 호출 제거 — SUBSCRIBED 콜백 제거 (3초 폴링이 보정)
+[x] P2-C: isReAuctionRound — 스토어 직접 설정/참조로 전환 (문자열 감지 제거)
+    → RoomClient: 로컬 계산 제거, useAuctionStore(s.isReAuctionRound) 참조
+    → AuctionBoard: handleRestartAuction에서 setReAuctionRound(true) 호출
+[x] ChatPanel / useAuctionControl — anon INSERT → sendChatMessage Server Action
+[x] RoomClient.BiddingControl.teamId — teamIdParam(URL) → storeTeamId(쿠키 검증)
 ```
+
+**현재 잔존 미수정 항목**: 없음 (모든 P0/P1/P2 항목 완료)
+⚠️ **Supabase 수동 실행 필요**: `00010_rls_policies.sql`, `00011_award_player_atomic.sql`

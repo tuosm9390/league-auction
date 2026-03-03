@@ -336,3 +336,9 @@ export async function startAuction(...): Promise<{ error?: string }> {
 **배경**: ChatPanel과 useAuctionControl이 `supabase.from('messages').insert()`로 anon key 직접 쓰기를 수행하고 있었다. SELECT-only RLS를 배포하면 이 쓰기가 차단되어 채팅 기능이 중단된다. RLS 변경과 Server Action 전환을 동시에 수행함으로써 이 문제를 예방했다.
 
 **검사 명령**: `grep -r "supabase\.from\(.*\)\.\(insert\|update\|delete\)" src/` — Server Action 파일(`auctionActions.ts`) 이외의 파일에서 결과가 나오면 즉시 Server Action으로 전환하라.
+
+### 규칙 3 — Zustand Dead State 방지 (2026-03-04)
+
+> **Zustand store에 새 상태를 추가하거나 `set()` 호출을 추가할 때, `useAuctionStore(s => s.새상태명)` 패턴으로 해당 상태를 읽는 소비자가 존재하는지 반드시 grep으로 확인하라. 쓰기만 있고 읽기가 없는 "dead state"는 동명의 로컬 변수와 무음 충돌을 일으켜 버그를 유발한다.**
+
+**배경**: `isReAuctionRound`가 여러 곳에서 `setReAuctionRound(true)`로 쓰였지만, `RoomClient.tsx`는 동명의 로컬 변수(`unsoldPlayers.length > 0 && waitingPlayers.length === 0`)를 사용했다. 재경매 전환 직후 로컬값이 `false`가 되어 타이머 duration이 5초 → 10초로 잘못 계산됐다.

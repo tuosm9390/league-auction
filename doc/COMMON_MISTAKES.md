@@ -260,3 +260,21 @@ useEffect(() => {
 
 ### AI 행동 지침 (Lessons Learned & New Rules)
 > **DB 정책(RLS)과 애플리케이션 코드는 반드시 함께 변경해야 한다. RLS를 강화할 때는 "anon key로 직접 쓰기를 수행하는 코드가 있는가?"를 반드시 전체 코드베이스에서 검색하고, 발견된 모든 직접 쓰기를 service_role 경유 Server Action으로 전환한 후에야 RLS 정책을 배포한다.**
+
+---
+
+## 이슈 #6 — 상태 읽기/쓰기 불일치 (Dead State) 패턴 (2026-03-04)
+
+### 이슈 요약 (The Problem)
+Zustand store에 `isReAuctionRound` 상태가 존재하고 `setReAuctionRound()` 쓰기가 여러 곳에서 일어났지만, 실제 `useAuctionStore(s => s.isReAuctionRound)`로 읽는 컴포넌트가 없었다. `RoomClient.tsx`는 동명의 로컬 변수(`const isReAuctionRound = unsoldPlayers.length > 0 && waitingPlayers.length === 0`)를 사용했고, 이 로컬 값은 `restartAuctionWithUnsold` 호출 후 unsold → waiting 전환되는 순간 `false`가 되어 재경매 타이머를 5초 대신 10초로 잘못 계산했다.
+
+### 실패한 접근법 (What didn't work)
+1. **로컬 상태 계산 유지**: 플레이어 상태(UNSOLD/WAITING)만으로 "재경매 중"을 판단 — 상태 전환 자체가 감지 조건을 파괴하는 시간차 문제 발생
+2. **문자열 기반 메시지 감지**: `content.includes('재경매를 재개합니다')` — 텍스트 변경 시 즉시 깨지는 취약한 패턴
+
+### 최종 해결책 (What worked)
+- 로컬 계산식 제거 → `useAuctionStore(s => s.isReAuctionRound)` 참조로 통일
+- `handleRestartAuction`에서 `setReAuctionRound(true)` 직접 호출 — 상태 전환과 독립적인 명시적 플래그
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+> **Zustand store에 상태를 쓰는 코드를 추가할 때는, 그 상태를 실제로 읽는 컴포넌트가 있는지 반드시 확인하라. 스토어에 write만 하고 아무도 read하지 않는 "dead state"는 로컬 변수와 동명 충돌을 일으켜 버그의 원인이 된다. grep으로 `s\.상태명` 패턴을 검색하여 소비자가 존재하는지 확인할 것.**
