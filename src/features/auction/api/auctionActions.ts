@@ -1,10 +1,13 @@
-import { supabase } from '@/lib/supabase'
+'use server'
+
+import { cookies } from 'next/headers'
+import { getServerClient } from '@/lib/supabase-server'
 
 const AUCTION_DURATION_MS = 10_000      // 경매 시간 10초
 const EXTEND_THRESHOLD_MS = 5_000      // 5초 이하 입찰 시 연장
 const EXTEND_DURATION_MS = 5_000      // 5초 연장
 
-// ---------- auction_archives ----------
+// ---------- 타입 ----------
 
 export interface ArchiveTeam {
   id: string
@@ -21,9 +24,94 @@ export interface AuctionArchivePayload {
   teams: ArchiveTeam[]
 }
 
+// ---------- 유효성 검사 ----------
+
+function isValidUUID(v: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
+}
+
+// ---------- 서버사이드 역할 검증 ----------
+
+async function verifyOrganizer(roomId: string): Promise<boolean> {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get(`room_auth_${roomId}`)?.value
+  if (!raw) return false
+  try {
+    const { role, token } = JSON.parse(raw)
+    if (role !== 'ORGANIZER') return false
+    const db = getServerClient()
+    const { data } = await db.from('rooms').select('organizer_token').eq('id', roomId).single()
+    return data?.organizer_token === token
+  } catch { return false }
+}
+
+async function verifyLeader(roomId: string, teamId: string): Promise<boolean> {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get(`room_auth_${roomId}`)?.value
+  if (!raw) return false
+  try {
+    const { role, token, teamId: cookieTeamId } = JSON.parse(raw)
+    if (role !== 'LEADER' || cookieTeamId !== teamId) return false
+    const db = getServerClient()
+    const { data } = await db.from('teams').select('leader_token').eq('id', teamId).single()
+    return data?.leader_token === token
+  } catch { return false }
+}
+
+async function verifyAnyRole(roomId: string): Promise<{ valid: boolean; role: string; senderName: string }> {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get(`room_auth_${roomId}`)?.value
+  const fail = { valid: false, role: '', senderName: '' }
+  if (!raw) return fail
+  try {
+    const { role, token, teamId } = JSON.parse(raw)
+    const db = getServerClient()
+    if (role === 'ORGANIZER') {
+      const { data } = await db.from('rooms').select('organizer_token').eq('id', roomId).single()
+      if (data?.organizer_token !== token) return fail
+      return { valid: true, role, senderName: '주최자' }
+    }
+    if (role === 'LEADER') {
+      const { data } = await db.from('teams').select('leader_token, leader_name, name').eq('id', teamId).single()
+      if (!data || data.leader_token !== token) return fail
+      return { valid: true, role, senderName: data.leader_name || data.name || '팀장' }
+    }
+    if (role === 'VIEWER') {
+      const { data } = await db.from('rooms').select('viewer_token').eq('id', roomId).single()
+      if (data?.viewer_token !== token) return fail
+      return { valid: true, role, senderName: '관전자' }
+    }
+    return fail
+  } catch { return fail }
+}
+
+// ---------- 내부 헬퍼 ----------
+
+async function sysMsg(roomId: string, content: string) {
+  const db = getServerClient()
+  await db.from('messages').insert([{
+    room_id: roomId,
+    sender_name: '시스템',
+    sender_role: 'SYSTEM',
+    content,
+  }])
+}
+
+async function clearRoomAuction(roomId: string) {
+  const db = getServerClient()
+  await db.from('rooms')
+    .update({ timer_ends_at: null, current_player_id: null })
+    .eq('id', roomId)
+}
+
+// ---------- auction_archives ----------
+
 /** 경매 결과를 auction_archives 테이블에 영구 저장 */
 export async function saveAuctionArchive(payload: AuctionArchivePayload): Promise<{ error?: string }> {
-  const { error } = await supabase.from('auction_archives').insert([{
+  if (!isValidUUID(payload.roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(payload.roomId))) return { error: '권한 없음' }
+  const db = getServerClient()
+  const { error } = await db.from('auction_archives').insert([{
     room_id: payload.roomId,
     room_name: payload.roomName,
     room_created_at: payload.roomCreatedAt,
@@ -34,19 +122,54 @@ export async function saveAuctionArchive(payload: AuctionArchivePayload): Promis
   return {}
 }
 
-
-async function sysMsg(roomId: string, content: string) {
-  await supabase.from('messages').insert([{
+/** 채팅 메시지 전송 (모든 역할) */
+export async function sendChatMessage(roomId: string, content: string): Promise<{ error?: string }> {
+  if (!content.trim() || content.length > 200) return { error: '유효하지 않은 메시지' }
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  const auth = await verifyAnyRole(roomId)
+  if (!auth.valid) return { error: '인증 필요' }
+  const db = getServerClient()
+  const { error } = await db.from('messages').insert([{
     room_id: roomId,
-    sender_name: '시스템',
-    sender_role: 'SYSTEM',
-    content,
+    sender_name: auth.senderName,
+    sender_role: auth.role,
+    content: content.trim(),
   }])
+  if (error) return { error: error.message }
+  return {}
 }
 
-/** 랜덤으로 WAITING 선수 1명을 IN_AUCTION으로 전환하고 타이머 시작 */
+/** 공지 전송 (ORGANIZER 전용) */
+export async function sendNotice(roomId: string, content: string): Promise<{ error?: string }> {
+  if (!content.trim() || content.length > 200) return { error: '유효하지 않은 공지' }
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+  const db = getServerClient()
+  const { error } = await db.from('messages').insert([{
+    room_id: roomId,
+    sender_name: '주최자',
+    sender_role: 'NOTICE',
+    content: content.trim(),
+  }])
+  if (error) return { error: error.message }
+  return {}
+}
+
+/** 추첨 종료 시스템 메시지 (ORGANIZER 전용) */
+export async function sendLotteryClosedMessage(roomId: string, playerName: string): Promise<{ error?: string }> {
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+  await sysMsg(roomId, `🎲 ${playerName} 선수 등장! (경매 시작 전)`)
+  return {}
+}
+
+/** 랜덤으로 WAITING 선수 1명을 IN_AUCTION으로 전환 */
 export async function drawNextPlayer(roomId: string): Promise<{ error?: string }> {
-  const { data: waiting } = await supabase
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+  const { data: waiting } = await db
     .from('players')
     .select('id, name')
     .eq('room_id', roomId)
@@ -58,13 +181,13 @@ export async function drawNextPlayer(roomId: string): Promise<{ error?: string }
 
   const player = waiting[Math.floor(Math.random() * waiting.length)]
 
-  const { error: pErr } = await supabase
+  const { error: pErr } = await db
     .from('players')
     .update({ status: 'IN_AUCTION' })
     .eq('id', player.id)
   if (pErr) return { error: pErr.message }
 
-  const { error: rErr } = await supabase
+  const { error: rErr } = await db
     .from('rooms')
     .update({ current_player_id: player.id })
     .eq('id', roomId)
@@ -75,8 +198,11 @@ export async function drawNextPlayer(roomId: string): Promise<{ error?: string }
 
 /** 경매(타이머) 시작 */
 export async function startAuction(roomId: string, durationMs?: number): Promise<{ error?: string }> {
-  // 현재 경매중인 선수 조회
-  const { data: room } = await supabase
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+  const { data: room } = await db
     .from('rooms')
     .select('current_player_id')
     .eq('id', roomId)
@@ -84,7 +210,7 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
 
   if (!room?.current_player_id) return { error: '진행할 선수가 없습니다.' }
 
-  const { data: player } = await supabase
+  const { data: player } = await db
     .from('players')
     .select('name')
     .eq('id', room.current_player_id)
@@ -92,7 +218,7 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
 
   const duration = durationMs || AUCTION_DURATION_MS
   const timerEndsAt = new Date(Date.now() + duration).toISOString()
-  const { error: rErr } = await supabase
+  const { error: rErr } = await db
     .from('rooms')
     .update({ timer_ends_at: timerEndsAt })
     .eq('id', roomId)
@@ -102,9 +228,13 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
   return {}
 }
 
-/** 경매 일시 정지 (접속 장애 등) */
+/** 경매 일시 정지 */
 export async function pauseAuction(roomId: string): Promise<{ error?: string }> {
-  const { error } = await supabase
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+  const { error } = await db
     .from('rooms')
     .update({ timer_ends_at: null })
     .eq('id', roomId)
@@ -116,11 +246,14 @@ export async function pauseAuction(roomId: string): Promise<{ error?: string }> 
 
 /** 중단된 경매 재개 */
 export async function resumeAuction(roomId: string): Promise<{ error?: string }> {
-  // 재개 시 5초를 새로 부여
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
   const RESUME_DURATION_MS = 5_000
   const timerEndsAt = new Date(Date.now() + RESUME_DURATION_MS).toISOString()
 
-  const { error } = await supabase
+  const db = getServerClient()
+  const { error } = await db
     .from('rooms')
     .update({ timer_ends_at: timerEndsAt })
     .eq('id', roomId)
@@ -130,14 +263,18 @@ export async function resumeAuction(roomId: string): Promise<{ error?: string }>
   return {}
 }
 
-/** 팀장이 입찰. 5초 이하 남았으면 타이머 연장 */
+/** 팀장 입찰. 5초 이하 남았으면 타이머 연장 */
 export async function placeBid(
   roomId: string,
   playerId: string,
   teamId: string,
   amount: number,
 ): Promise<{ error?: string }> {
-  // 입찰액 기본 검증
+  if (!isValidUUID(roomId) || !isValidUUID(playerId) || !isValidUUID(teamId)) {
+    return { error: '유효하지 않은 요청' }
+  }
+  if (!(await verifyLeader(roomId, teamId))) return { error: '권한 없음' }
+
   if (!Number.isInteger(amount) || amount <= 0) {
     return { error: '입찰액은 양의 정수여야 합니다.' }
   }
@@ -145,8 +282,9 @@ export async function placeBid(
     return { error: '입찰액은 10P 단위여야 합니다.' }
   }
 
-  // 경매 진행 중인지 확인 (타이머 유효 여부)
-  const { data: room } = await supabase
+  const db = getServerClient()
+
+  const { data: room } = await db
     .from('rooms')
     .select('timer_ends_at, current_player_id')
     .eq('id', roomId)
@@ -156,7 +294,7 @@ export async function placeBid(
     return { error: '현재 경매가 진행 중이지 않습니다.' }
   }
 
-  // 통신 지연을 고려하여 1초의 오차 허용 (이미 서버에서 조금 지났어도 입찰 수락)
+  // 통신 지연 1초 오차 허용
   if (new Date(room.timer_ends_at).getTime() + 1000 <= Date.now()) {
     return { error: '경매 시간이 종료되었습니다.' }
   }
@@ -164,8 +302,7 @@ export async function placeBid(
     return { error: '현재 경매 중인 선수가 아닙니다.' }
   }
 
-  // 본인이 이미 최고 입찰자인지 확인 (+ 최솟값 검증용 amount 포함)
-  const { data: topBid } = await supabase
+  const { data: topBid } = await db
     .from('bids')
     .select('team_id, amount')
     .eq('player_id', playerId)
@@ -178,13 +315,12 @@ export async function placeBid(
     return { error: '현재 최고 입찰자입니다. 추가 입찰이 불가능합니다.' }
   }
 
-  // 서버에서 최소 입찰액 검증
   const minRequired = topBid ? topBid.amount + 10 : 10
   if (amount < minRequired) {
     return { error: `최소 입찰액은 ${minRequired.toLocaleString()}P 입니다.` }
   }
 
-  const { data: team } = await supabase
+  const { data: team } = await db
     .from('teams')
     .select('point_balance, name')
     .eq('id', teamId)
@@ -195,10 +331,9 @@ export async function placeBid(
     return { error: `포인트 부족 (보유: ${team.point_balance.toLocaleString()}P)` }
   }
 
-  // 팀 정원 초과 검증
-  const { data: roomInfo } = await supabase
+  const { data: roomInfo } = await db
     .from('rooms').select('members_per_team').eq('id', roomId).single()
-  const { count: soldCount } = await supabase
+  const { count: soldCount } = await db
     .from('players')
     .select('id', { count: 'exact', head: true })
     .eq('team_id', teamId)
@@ -208,7 +343,7 @@ export async function placeBid(
     return { error: '팀 인원이 가득 찼습니다.' }
   }
 
-  const { error: bidErr } = await supabase.from('bids').insert([{
+  const { error: bidErr } = await db.from('bids').insert([{
     room_id: roomId,
     player_id: playerId,
     team_id: teamId,
@@ -217,15 +352,14 @@ export async function placeBid(
   if (bidErr) return { error: bidErr.message }
 
   // 타이머 연장 체크
-  const { data: currentRoom } = await supabase
+  const { data: currentRoom } = await db
     .from('rooms').select('timer_ends_at').eq('id', roomId).single()
 
   if (currentRoom?.timer_ends_at) {
     const remaining = new Date(currentRoom.timer_ends_at).getTime() - Date.now()
-    // 5초 이하로 남았거나, 이미 아주 조금 지났더라도(통신지연) 연장 처리
     if (remaining <= EXTEND_THRESHOLD_MS) {
       const newEnd = new Date(Date.now() + EXTEND_DURATION_MS).toISOString()
-      await supabase.from('rooms').update({ timer_ends_at: newEnd }).eq('id', roomId)
+      await db.from('rooms').update({ timer_ends_at: newEnd }).eq('id', roomId)
     }
   }
 
@@ -233,27 +367,29 @@ export async function placeBid(
   return {}
 }
 
-/** 타이머 만료 후 낙찰 처리. 입찰이 없으면 WAITING으로 복귀 */
+/** 타이머 만료 후 낙찰 처리. 입찰이 없으면 UNSOLD 처리 */
 export async function awardPlayer(
   roomId: string,
   playerId: string,
 ): Promise<{ error?: string }> {
-  // 1. 최신 방 상태 다시 확인 (네트워크 지연으로 인해 그 사이 입찰이 들어와 연장됐을 수 있음)
-  const { data: latestRoom } = await supabase
+  if (!isValidUUID(roomId) || !isValidUUID(playerId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+
+  const { data: latestRoom } = await db
     .from('rooms').select('timer_ends_at').eq('id', roomId).single()
 
   if (latestRoom?.timer_ends_at) {
     const end = new Date(latestRoom.timer_ends_at).getTime()
-    // 현재 시간보다 미래로 연장되어 있다면, 아직 종료된 게 아님 (레이스 컨디션 방어)
     if (end > Date.now()) return {}
   }
 
-  // 2. 멱등성 보장: 이미 처리됐으면 스킵
-  const { data: player } = await supabase
+  const { data: player } = await db
     .from('players').select('status, name').eq('id', playerId).single()
   if (!player || player.status !== 'IN_AUCTION') return {}
 
-  const { data: topBid } = await supabase
+  const { data: topBid } = await db
     .from('bids')
     .select('*')
     .eq('player_id', playerId)
@@ -263,25 +399,22 @@ export async function awardPlayer(
     .maybeSingle()
 
   if (!topBid) {
-    // 입찰 없음 → UNSOLD 변경
-    await supabase.from('players').update({ status: 'UNSOLD' }).eq('id', playerId)
+    await db.from('players').update({ status: 'UNSOLD' }).eq('id', playerId)
     await clearRoomAuction(roomId)
     await sysMsg(roomId, `😔 입찰자 없음 — 최저가 입찰이 진행되지 않아 유찰되었습니다.`)
     return {}
   }
 
-  // 낙찰 처리
-  await supabase.from('players').update({
+  await db.from('players').update({
     status: 'SOLD',
     team_id: topBid.team_id,
     sold_price: topBid.amount,
   }).eq('id', playerId)
 
-  // 팀 포인트 차감
-  const { data: team } = await supabase
+  const { data: team } = await db
     .from('teams').select('point_balance, name').eq('id', topBid.team_id).single()
   if (team) {
-    await supabase.from('teams')
+    await db.from('teams')
       .update({ point_balance: team.point_balance - topBid.amount })
       .eq('id', topBid.team_id)
     await sysMsg(roomId, `🏆 ${player.name} → ${team.name} (${topBid.amount.toLocaleString()}P 낙찰!)`)
@@ -291,33 +424,33 @@ export async function awardPlayer(
   return {}
 }
 
-// skipPlayer 함수 삭제 (수동 유찰 기능 제거)
-
-/** 유찰/대기 선수 영입 (드래프트 자유계약, 0P). UNSOLD와 WAITING 선수 모두 지원 */
+/** 유찰/대기 선수 영입 (드래프트 자유계약, 0P) */
 export async function draftPlayer(
   roomId: string,
   playerId: string,
   teamId: string,
 ): Promise<{ error?: string }> {
-  // 팀 및 선수 정보 조회
-  const { data: player } = await supabase
+  if (!isValidUUID(roomId) || !isValidUUID(playerId) || !isValidUUID(teamId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+
+  const { data: player } = await db
     .from('players').select('name, status, room_id').eq('id', playerId).single()
-  const { data: team } = await supabase
+  const { data: team } = await db
     .from('teams').select('name').eq('id', teamId).single()
 
   if (!player || (player.status !== 'UNSOLD' && player.status !== 'WAITING') || !team) {
     return { error: '유효하지 않은 영입 요청입니다.' }
   }
 
-  // room_id 소속 검증
   if (player.room_id !== roomId) {
     return { error: '해당 선수는 이 방에 속하지 않습니다.' }
   }
 
-  // 팀 정원 체크
-  const { data: roomInfo } = await supabase
+  const { data: roomInfo } = await db
     .from('rooms').select('members_per_team').eq('id', roomId).single()
-  const { count: soldCount } = await supabase
+  const { count: soldCount } = await db
     .from('players')
     .select('id', { count: 'exact', head: true })
     .eq('team_id', teamId)
@@ -327,32 +460,26 @@ export async function draftPlayer(
     return { error: '팀 인원이 가득 찼습니다.' }
   }
 
-  // 선수 상태 업데이트 (SOLD, 0P)
-  const { error } = await supabase.from('players').update({
+  const { error } = await db.from('players').update({
     status: 'SOLD',
     team_id: teamId,
     sold_price: 0,
   }).eq('id', playerId)
 
-  if (error) {
-    console.error('draftPlayer error:', error)
-    return { error: '영입 처리 중 오류가 발생했습니다.' }
-  }
+  if (error) return { error: '영입 처리 중 오류가 발생했습니다.' }
 
   await sysMsg(roomId, `🤝 ${team.name}장 ${player.name} 선수를 자동 배정(유찰 계약) 했습니다. (0P)`)
   return {}
 }
 
-async function clearRoomAuction(roomId: string) {
-  await supabase.from('rooms')
-    .update({ timer_ends_at: null, current_player_id: null })
-    .eq('id', roomId)
-}
-
-/** (방장 전용) 유찰된 잉여 선수 전원을 다시 대기 상태로 되돌리고 재경매 준비 */
+/** 유찰 선수 전원을 다시 대기 상태로 전환 */
 export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?: string }> {
-  // 현재 방의 상태 UNSOLD 인 모든 선수
-  const { data: unsold } = await supabase
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+
+  const { data: unsold } = await db
     .from('players')
     .select('id')
     .eq('room_id', roomId)
@@ -362,8 +489,7 @@ export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?
     return { error: '유찰된 선수가 없습니다.' }
   }
 
-  // 일괄 업데이트
-  const { error: pErr } = await supabase
+  const { error: pErr } = await db
     .from('players')
     .update({ status: 'WAITING' })
     .eq('room_id', roomId)
@@ -375,37 +501,29 @@ export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?
   return {}
 }
 
-/** 방 종료 — 관련 데이터 전체 삭제 (bids → messages → players → teams → rooms 순) */
+/** 방 종료 — 토큰 무효화 후 전체 삭제 */
 export async function deleteRoom(roomId: string): Promise<{ error?: string }> {
-  // 1. 먼저 이름을 변경하고 토큰을 무효화하여 입장을 즉시 차단 (삭제 실패 시 대비)
-  const { data: roomData } = await supabase.from('rooms').select('name').eq('id', roomId).single()
+  if (!isValidUUID(roomId)) return { error: '유효하지 않은 요청' }
+  if (!(await verifyOrganizer(roomId))) return { error: '권한 없음' }
+
+  const db = getServerClient()
+
+  const { data: roomData } = await db.from('rooms').select('name').eq('id', roomId).single()
   const currentName = roomData?.name || '경매방'
 
-  const { error: updErr } = await supabase
-    .from('rooms')
-    .update({
-      name: `[종료된 경매] ${currentName}`,
-      organizer_token: crypto.randomUUID(),
-      viewer_token: crypto.randomUUID()
-    })
-    .eq('id', roomId)
-
-  if (updErr) {
-    console.error('Token invalidation failed:', updErr)
-    // 업데이트 실패하더라도 일단 삭제 시도는 계속함
-  }
+  await db.from('rooms').update({
+    name: `[종료된 경매] ${currentName}`,
+    organizer_token: crypto.randomUUID(),
+    viewer_token: crypto.randomUUID(),
+  }).eq('id', roomId)
 
   const tables = ['bids', 'messages', 'players', 'teams'] as const
-
   for (const table of tables) {
-    // child table들은 ON DELETE CASCADE가 설정되어 있을 수 있지만,
-    // 명시적으로 지워주는 것이 더 안전함 (RLS 정책에 따라 다를 수 있음)
-    const { error: delErr } = await supabase.from(table).delete().eq('room_id', roomId)
+    const { error: delErr } = await db.from(table).delete().eq('room_id', roomId)
     if (delErr) console.error(`deleteRoom: ${table} 삭제 실패 (계속 진행):`, delErr.message)
   }
 
-  const { error: roomErr } = await supabase.from('rooms').delete().eq('id', roomId)
-
+  const { error: roomErr } = await db.from('rooms').delete().eq('id', roomId)
   if (roomErr) {
     return { error: `방 삭제에 실패했습니다. (토큰은 무효화됨): ${roomErr.message}` }
   }

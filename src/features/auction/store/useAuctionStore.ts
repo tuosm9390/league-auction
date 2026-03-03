@@ -116,8 +116,8 @@ export const useAuctionStore = create<AuctionState>((set) => ({
   messages: [],
   presences: [],
 
-  setRoomContext: (roomId, role, teamId) => set({ 
-    roomId, role, teamId: teamId || null, roomExists: true, isRoomLoaded: false, hasPlayedReadyAnimation: false, isReAuctionRound: false 
+  setRoomContext: (roomId, role, teamId) => set({
+    roomId, role, teamId: teamId || null, roomExists: true, hasPlayedReadyAnimation: false, isReAuctionRound: false
   }),
   setRealtimeData: (data) => set((state) => ({ 
     ...state, ...data, isRoomLoaded: true 

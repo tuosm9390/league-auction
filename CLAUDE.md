@@ -5,12 +5,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Start dev server (http://localhost:3000)
-npm run build    # Production build (runs type-check)
-npm run lint     # ESLint
+npm run dev           # Start dev server (http://localhost:3000)
+npm run build         # Production build (runs type-check)
+npm run lint          # ESLint
+npm run test          # Vitest (단위 테스트)
+npm run test:watch    # Vitest watch mode
+npm run test:coverage # Vitest coverage report
 ```
 
-No test suite is configured (vitest and playwright are installed but unused).
+Tests live in `__tests__/` (Vitest + Testing Library + jsdom).
 
 ## Environment
 
@@ -19,7 +22,10 @@ Create `.env.local` with:
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY`는 Server Actions (`auctionActions.ts`)의 서버사이드 권한 검증에 필수. Vercel 배포 환경 변수에도 동일하게 추가 필요.
 
 `src/lib/supabase.ts` falls back to placeholder strings (with `console.warn`) if env vars are missing — useful for local type-checking without a real Supabase project.
 
@@ -43,7 +49,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 src/
   app/
-    api/room-auth/route.ts   # Auth Route Handler (쿠키 설정)
+    api/room-auth/route.ts   # Auth Route Handler (쿠키 설정, path: '/room/${roomId}', maxAge: 8h)
     room/[id]/
       page.tsx               # Server Component (쿠키 읽기 전용)
       RoomClient.tsx         # Client Component (경매 전체 UI + 실시간 구독)
@@ -54,22 +60,30 @@ src/
     sitemap.ts               # SEO 사이트맵
     favicon.ico
   features/auction/
-    api/        auctionActions.ts
-    components/ AuctionBoard, TeamList, ChatPanel, BiddingControl,
+    api/        auctionActions.ts  # 'use server' + getServerClient() (service_role). verifyOrganizer/verifyLeader/verifyAnyRole 서버사이드 검증 포함.
+    components/ AuctionBoard, TeamList (UnsoldPanel도 export), ChatPanel, BiddingControl,
                 LinksModal, HowToUseModal, EndRoomModal,
                 AuctionResultModal, LotteryAnimation
     hooks/      useAuctionControl.ts, useAuctionRealtime.ts, useRoomAuth.ts
     store/      useAuctionStore.ts
   components/   공통 컴포넌트 (CreateRoomModal, AuctionArchiveSection, ArchiveModalWrapper)
-  middleware.ts # 동적 CSP Nonce 생성 + 보안 헤더
+  middleware.ts # 동적 CSP Nonce 생성 + 보안 헤더 (Next.js 16에서 deprecated 경고 있으나 동작함)
   lib/
     supabase.ts
+    supabase-server.ts  # 서버 전용 service_role 클라이언트 (getServerClient())
     utils.ts    # cn() utility (clsx + tailwind-merge)
+__tests__/
+  auctionActions.test.ts
+  CreateRoomModal.test.tsx
+  optimization.test.ts
+  setup.ts
 supabase/
   migrations/
-    00001_init.sql                      # Initial DB schema
-    00002_add_room_creation_fields.sql  # members_per_team, leader info, player description
-    00003_realtime_fix.sql              # REPLICA IDENTITY FULL + publication
+    00001_init.sql                         # Initial DB schema
+    00002_add_room_creation_fields.sql     # members_per_team, leader info, player description
+    00003_realtime_fix.sql                 # REPLICA IDENTITY FULL + publication
+    00004_create_auction_archives.sql      # auction_archives 테이블 생성
+    00009_server_time_and_selfbid_fix.sql  # get_server_time() RPC + place_bid_secure RPC
 ```
 
 ### Auth Model
@@ -79,13 +93,14 @@ No Supabase Auth. **HttpOnly 쿠키 기반** 인증:
 1. 공유 링크 형식: `/api/room-auth?roomId={id}&role=ORGANIZER&token={token}`
    - LEADER: `&teamId={teamId}` 추가
    - VIEWER: `role=VIEWER`
-2. `/api/room-auth` Route Handler가 쿠키 `room_auth_{roomId}` (HttpOnly) 설정 후 `/room/{roomId}`로 리다이렉트
+2. `/api/room-auth` Route Handler가 쿠키 `room_auth_{roomId}` (HttpOnly, `path: '/room/${roomId}'`, `maxAge: 8h`) 설정 후 `/room/{roomId}`로 리다이렉트
 3. `page.tsx` (Server Component): `cookies()`로 쿠키 파싱 → `RoomClient`에 `role`, `teamId`, `token` props 전달
-4. `useRoomAuth` 훅 (`src/features/auction/hooks/useRoomAuth.ts`): DB 데이터 로드 후 token을 DB 값과 비교, 불일치 시 `effectiveRole = null`로 강등. `useRef` lock으로 1회 실행 보장.
+4. `useRoomAuth` 훅 (`src/features/auction/hooks/useRoomAuth.ts`): DB 데이터 로드 후 token을 DB 값과 비교, 불일치 시 `effectiveRole = null`로 강등. `tokenCheckedRef`로 1회 실행 보장.
 5. Guard UI: `effectiveRole === null`이면 차단 화면 표시
 
-쿠키 속성: `httpOnly: true`, `secure: true` (production), `sameSite: 'lax'`, `path: '/'`.
-Token validation은 클라이언트 사이드 (open anon RLS, 내부 툴 의도).
+쿠키 속성: `httpOnly: true`, `secure: true` (production), `sameSite: 'lax'`, `path: '/room/${roomId}'`.
+방별 격리: 같은 브라우저에서 다른 방 또는 동일 방의 다른 역할로 접속해도 쿠키가 충돌하지 않음.
+Token validation: `useRoomAuth` (클라이언트) + Server Actions의 `verifyOrganizer/verifyLeader/verifyAnyRole` (서버).
 
 ### Data Flow
 
@@ -103,12 +118,12 @@ Zustand store (useAuctionStore)
 
 ### Database Schema (6 tables)
 
-All tables have open anon RLS policies. Must have `REPLICA IDENTITY FULL` set and be in the `supabase_realtime` publication for realtime filters to work (migration `00003`).
+All tables have open anon RLS policies (SELECT/INSERT/UPDATE all open). Must have `REPLICA IDENTITY FULL` set and be in the `supabase_realtime` publication for realtime filters to work (migration `00003`).
 
 Migrations must be run manually in Supabase SQL Editor (not via CLI).
 
 - **rooms**: id, name, total_teams, base_point, members_per_team, timer_ends_at, current_player_id, organizer_token, viewer_token
-  - Note: `order_public` column was removed (feature deleted in latest commits)
+  - Note: `order_public` column was added in `00002` but is no longer used in UI
 - **teams**: id, room_id, name, point_balance, leader_token, leader_name, leader_position, leader_description, captain_points
 - **players**: id, room_id, name, tier, main_position, sub_position, status (`WAITING`/`IN_AUCTION`/`SOLD`/`UNSOLD`), team_id, sold_price, description
 - **bids**: id, room_id, player_id, team_id, amount, created_at
@@ -116,6 +131,8 @@ Migrations must be run manually in Supabase SQL Editor (not via CLI).
 - **auction_archives**: id, room_id, room_name, room_created_at, closed_at, result_snapshot (JSONB). Stores permanent post-auction results.
 
 ### Auction Logic (`src/features/auction/api/auctionActions.ts`)
+
+`'use server'` Server Actions. `getServerClient()` (service_role key, RLS 우회)로 DB 조작. 모든 뮤테이션 함수 진입점에서 `isValidUUID()` 입력 검증 + `verifyOrganizer()` / `verifyLeader()` / `verifyAnyRole()` 서버사이드 역할 검증 수행. 쿠키 `room_auth_{roomId}` 파싱 + DB token 비교.
 
 Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, `EXTEND_DURATION_MS = 5_000`.
 
@@ -129,8 +146,8 @@ Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, 
 | `awardPlayer(roomId, playerId)` | **Idempotent** — re-checks timer not extended (race condition guard), re-checks `status === 'IN_AUCTION'`. Marks `SOLD` (deducts points) or `UNSOLD` (no bids). Calls `clearRoomAuction()`. |
 | `draftPlayer(roomId, playerId, teamId)` | Assigns `UNSOLD` or `WAITING` player to team at 0P (free contract). Validates room membership and team capacity. |
 | `restartAuctionWithUnsold(roomId)` | Converts all `UNSOLD` → `WAITING` for re-auction |
-| `deleteRoom(roomId)` | Invalidates tokens first, then deletes bids → messages → players → teams → room sequentially |
-| `saveAuctionArchive(payload)` | Saves final results snapshot to `auction_archives` table |
+| `deleteRoom(roomId)` | Invalidates tokens first (room rename + new tokens), then deletes bids → messages → players → teams → room |
+| `saveAuctionArchive(payload)` | Saves final results snapshot to `auction_archives` table. `ArchiveTeam`, `AuctionArchivePayload` 타입은 이 파일 상단에 인라인 정의. |
 
 **Auto-award on timer expiry**: Organizer's client sets `setTimeout(delay + 1500ms grace)` with a `useRef` lock (`awardLock`) to prevent double execution. `playersRef` avoids stale closures.
 
@@ -138,40 +155,48 @@ Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, 
 - 소수 빈자리: ORGANIZER가 팀별로 `draftPlayer` 호출 (자유계약 영입). WAITING 선수도 가능.
 - 다수 빈자리: `restartAuctionWithUnsold` → 재경매
 
+**`handleNotice` (공지 전송)**: `RoomClient.tsx` 내부에서 `sendNotice` Server Action 호출. 서버사이드에서 ORGANIZER 역할 검증 후 DB INSERT.
+
 ### Key Components
 
-- `RoomClient` (`room/[id]/RoomClient.tsx`) — Client Component. 경매 UI 전체 + `useAuctionRealtime` 호출. `page.tsx`에서 분리된 클라이언트 로직.
+- `RoomClient` (`room/[id]/RoomClient.tsx`) — Client Component. 경매 UI 전체 + `useAuctionRealtime` 호출.
 - `CreateRoomModal` (`src/components/`) — 4-step modal: (0) basic info + previous rooms, (1) captain registration, (2) player registration (with Excel import), (3) links. Saves rooms to `localStorage` key `league_auction_rooms` (max 5). Includes sample data template button.
 - `AuctionArchiveSection` (`src/components/`) — Displays past auction results from `auction_archives` table with filtering.
 - `AuctionBoard` — Center panel. Shows captain connection grid (Presence-based) when idle, full auction UI when active. Contains `CenterTimer` (large countdown) and `NoticeBanner` (latest `NOTICE` message).
 - `ChatPanel` — Realtime chat. `SYSTEM` messages show as gray italic pills; `NOTICE` messages show as amber banners.
-- `BiddingControl` — Bid form with amount input and validation, shown to LEADER role.
+- `BiddingControl` — Bid form with amount input and validation, shown to LEADER role. `teamIdParam` (raw cookie value) 직접 사용. ⚠️ 알려진 P2 버그: 검증된 teamId 대신 쿠키 원본값 전달.
 - `LinksModal` — ORGANIZER only; regenerates all invite links from store data.
 - `HowToUseModal` — Usage guide, available in header for all roles.
 - `EndRoomModal` — Room deletion confirmation with `saveAuctionArchive` + `deleteRoom` flow.
 - `AuctionResultModal` — 경매 완료 후 최종 결과 테이블 모달.
-- `LotteryAnimation` — 슬롯머신 추첨 애니메이션 (Framer Motion). `lottery-{roomId}` broadcast 채널로 `CLOSE_LOTTERY` 이벤트 동기화 (방장이 닫으면 전 클라이언트 동시 닫힘).
-- `TeamList` — 좌측 사이드바: 팀 로스터 + UNSOLD 선수 목록 + draftPlayer UI 표시.
+- `LotteryAnimation` — 슬롯머신 추첨 애니메이션 (Framer Motion). `lottery-{roomId}` broadcast 채널로 `CLOSE_LOTTERY` 이벤트 동기화.
+- `TeamList` — 좌측 사이드바: 팀 로스터. `UnsoldPanel`도 named export.
 
 ### Security (CSP / Middleware)
 
-`src/middleware.ts`에서 요청마다 동적 Nonce 생성:
+`src/middleware.ts`에서 요청마다 동적 Nonce 생성 (Next.js 16 deprecated 경고 있으나 동작함. 선택적 개선: `src/proxy.ts`로 파일명 변경):
 
 ```
 crypto.randomUUID() → base64 → nonce
 CSP 헤더: script-src 'self' 'nonce-{nonce}' 'strict-dynamic' 'unsafe-inline'
          (dev 모드에서는 'unsafe-eval' 추가)
-connect-src: Supabase https/wss endpoints
+connect-src: 'self' https://*.supabase.co wss://*.supabase.co
 frame-ancestors: 'none'
 object-src: 'none'
 base-uri: 'none'
 ```
 
-Middleware matcher: Excludes `/api/*`, `_next/static`, `_next/image`, `favicon.ico`.
+Middleware matcher: `/((?!api|_next/static|_next/image|favicon.ico).*)` + prefetch 요청 제외.
+
+`next.config.ts` 보안 헤더 (CSP 제외, 미들웨어가 전담):
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 0`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains`
 
 - `layout.tsx`에서 `headers()`를 호출해 Dynamic Rendering 강제 (정적 캐시 방지 → CSP nonce 불일치 에러 방지)
-- `next.config.ts`에서 CSP 제거 — 미들웨어가 전담
-- `next.config.ts`에 유지되는 헤더: `X-XSS-Protection: 0`, HSTS, `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`
 - **xlsx@0.18.5 known vulns**: Prototype Pollution (CVSS 7.8) + ReDoS (CVSS 7.5). No npm fix available. Low risk: client-side only, organizer uploads own files.
 
 ### SEO / 메타데이터
@@ -186,7 +211,7 @@ Middleware matcher: Excludes `/api/*`, `_next/static`, `_next/image`, `favicon.i
 
 `RoomClient.tsx` Mobile-first 레이아웃:
 - 기본(모바일): `flex-col` — 경매보드 → 채팅 → 팀리스트 순서
-- `xl` 이상(데스크탑): 3단 그리드 (팀리스트 | 경매보드 | 채팅)
+- `lg` 이상(데스크탑): 12칼럼 그리드 (팀리스트 3 | 경매보드 6 | 채팅 3)
 
 ### Custom Tailwind Colors
 
@@ -202,8 +227,8 @@ Defined in `src/app/globals.css` `@theme` block:
 **Types**: `Role` (`'ORGANIZER' | 'LEADER' | 'VIEWER' | null`), `PlayerStatus`, `MessageRole`, `PresenceUser`, `Team`, `Player`, `Bid`, `Message`.
 
 **Key actions**:
-- `setRoomContext()` — Set roomId, role, teamId
-- `setRealtimeData()` — Merge partial DB state
+- `setRoomContext()` — Set roomId, role, teamId. `isRoomLoaded`는 리셋하지 않음 — 로딩 화면 깜빡임 없음.
+- `setRealtimeData()` — Merge partial DB state → `isRoomLoaded: true`로 설정
 - `updatePlayer()` / `updateTeam()` — Immutable update by id
 - `addBid()` / `addMessage()` — Append with dedup check
 - `setRoomNotFound()` — Mark room as deleted/inaccessible
@@ -223,10 +248,21 @@ Defined in `src/app/globals.css` `@theme` block:
 | `messages` INSERT | Immediate `addMessage()` |
 | Fallback | 3-second `setInterval` polling (rooms/teams/players only) |
 
+`fetchingRef` deduplication으로 동시 `fetchAll` 호출 방지. `fetchAll`은 5개 테이블 전체 fetch; polling은 rooms/teams/players만.
+
+### Known Issues (미수정 버그)
+
+| # | 위치 | 증상 | 심각도 |
+|---|---|---|---|
+| 5 | `useRoomAuth.ts` LEADER 검증 | `fetchAll`이 `setRealtimeData` 2회 분리 호출 → 검증 사이클 추가 발생 | P1 |
+| 6 | `RoomClient.tsx` `BiddingControl` | `teamIdParam` (쿠키 원본값) 직접 전달 — 쿠키 충돌 시 잘못된 팀 ID로 입찰 가능 | P2 |
+
+수정 완료된 버그: #1 쿠키 path 격리, #2 setRoomContext isRoomLoaded 리셋 제거, #3 auctionActions 서버사이드 검증 전환, #4 handleNotice Server Action 전환.
+
 ### Key Conventions
 
-- All Supabase mutations are done in `auctionActions.ts`, never inline in components.
+- All Supabase mutations are done in `auctionActions.ts` (Server Actions), never inline in components.
 - Components are role-gated: check `effectiveRole` from `useRoomAuth` before rendering controls.
 - Never call `awardPlayer` more than once per auction cycle — use `awardLock` ref.
-- Timer extension logic lives in both `placeBid` (server-side extend) and `useAuctionControl` (client-side setTimeout).
+- Timer extension logic lives in `placeBid` (client-side Supabase call with extend check).
 - Path alias `@/*` maps to `src/*`.

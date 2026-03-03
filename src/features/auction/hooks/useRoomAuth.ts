@@ -58,9 +58,8 @@ export function useRoomAuth({
     if (!valid) {
       console.warn('Invalid token or unauthorized access. Downgrading to null role.')
       setEffectiveRole(null)
-      setRoomContext(roomId, null, undefined)
     }
-  }, [storeOrganizerToken, storeViewerToken, teams, role, tokenParam, roomId, teamId, setRoomContext, isRoomLoaded, roomExists])
+  }, [storeOrganizerToken, storeViewerToken, teams, role, tokenParam, teamId, isRoomLoaded, roomExists])
 
   return { effectiveRole, isTokenChecked }
 }
