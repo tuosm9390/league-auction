@@ -1,6 +1,5 @@
 'use server'
 
-import { after } from 'next/server'
 import { getServerClient, broadcastEvent } from '@/lib/supabase-server'
 import type { Team, Player, Bid, Message } from '@/features/auction/store/useAuctionStore'
 
@@ -467,27 +466,25 @@ export async function placeBid(
   return { newTimerEndsAt }
 }
 
-/** 타이머 만료 후 낙찰 처리. 원자 RPC 사용 → 상태 즉시 반환 + Broadcast 비동기 전파 */
+/** 타이머 만료 후 낙찰 처리. */
 export async function awardPlayer(
   roomId: string,
   playerId: string,
 ): Promise<{ error?: string; state?: RoomStatePayload }> {
   const db = getServerClient()
-  const { error } = await db.rpc('award_player_atomic', {
+  const { data, error } = await db.rpc('award_player_atomic', {
     p_room_id: roomId,
     p_player_id: playerId,
   })
+
   if (error) return { error: error.message }
 
   // fetchRoomState 1회 호출로 broadcast + 클라이언트 반환 동시 처리
   const state = await fetchRoomState(db, roomId)
 
-  // broadcastEvent는 응답 반환 후 비동기로 실행 (블로킹 차단):
-  // broadcastEvent fetch에 타임아웃이 있더라도 응답 속도에 영향을 주지 않도록 after() 사용
+  // 개발 환경이나 Vercel 환경에서 after()가 의도대로 작동하지 않을 수 있으므로 직접 await 처리
   if (state) {
-    after(async () => {
-      await broadcastEvent(roomId, 'STATE_UPDATE', state)
-    })
+    await broadcastEvent(roomId, 'STATE_UPDATE', state)
   }
 
   return { state: state ?? undefined }

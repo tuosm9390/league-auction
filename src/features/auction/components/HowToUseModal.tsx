@@ -148,7 +148,7 @@ export function HowToUseModal({
             <div className="px-6 py-4 border-t border-gray-100 shrink-0">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                className="w-full py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-white hover:text-gray-800 transition-colors border border-gray-200 shadow-sm bg-white"
               >
                 닫기
               </button>

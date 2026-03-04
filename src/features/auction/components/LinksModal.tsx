@@ -56,22 +56,22 @@ export function LinksModal() {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="bg-white rounded-xl w-full max-w-sm shadow-md animate-in zoom-in-95 duration-200 cursor-default border border-gray-200 overflow-hidden"
+            className="bg-white rounded-xl w-full max-w-md shadow-md animate-in zoom-in-95 duration-200 cursor-default border border-gray-200 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h2 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                <Link size={14} className="text-minion-blue" /> 경매방 링크
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <h2 className="text-base font-bold text-gray-800 flex items-center gap-1.5">
+                <Link size={16} className="text-minion-blue" /> 경매방 링크
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-gray-400 hover:text-gray-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
               >
-                <X size={16} />
+                <X size={20} />
               </button>
             </div>
 
-            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
               {organizerLink && (
                 <LinkRow
                   label="👑 주최자 링크"
@@ -84,10 +84,10 @@ export function LinksModal() {
               )}
 
               <div>
-                <p className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
-                  <span className="text-sm">🛡️</span> 팀장 링크
+                <p className="text-sm font-bold text-gray-600 mb-2.5 flex items-center gap-1.5">
+                  <span className="text-base">🛡️</span> 팀장 링크
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {[...teams]
                     .sort((a, b) =>
                       a.name.localeCompare(b.name, undefined, {
@@ -116,8 +116,8 @@ export function LinksModal() {
 
               {viewerLink && (
                 <div>
-                  <p className="text-xs font-bold text-gray-600 mb-2 mt-2 flex items-center gap-1">
-                    <span className="text-sm">👀</span> 관전자 링크
+                  <p className="text-sm font-bold text-gray-600 mb-2.5 mt-3 flex items-center gap-1.5">
+                    <span className="text-base">👀</span> 관전자 링크
                   </p>
                   <LinkRow
                     label="관전자"
@@ -131,10 +131,10 @@ export function LinksModal() {
               )}
             </div>
 
-            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+            <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:text-gray-800 transition-colors border border-gray-200 shadow-sm bg-white"
+                className="w-full py-2.5 rounded-lg text-base font-bold text-gray-600 hover:bg-white hover:text-gray-800 transition-colors border border-gray-200 shadow-sm bg-white"
               >
                 닫기
               </button>
@@ -162,28 +162,28 @@ function LinkRow({
   onCopy: (text: string, key: string) => void;
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-2.5 flex items-center gap-2.5 bg-white shadow-sm relative group hover:border-minion-blue/30 transition-colors">
+    <div className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 bg-white shadow-sm relative group hover:border-minion-blue/30 transition-colors">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold text-gray-800 flex items-center gap-1">
+        <p className="text-sm font-bold text-gray-800 flex items-center gap-1">
           {label}
         </p>
-        <p className="text-[10px] text-gray-500">{desc}</p>
-        <div className="mt-0.5 bg-blue-50/50 px-1.5 py-0.5 rounded border border-blue-100/50 overflow-hidden">
-          <p className="text-[10px] text-blue-500/80 font-mono leading-tight truncate">
+        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+        <div className="mt-1.5 bg-blue-50/50 px-2 py-1 rounded border border-blue-100/50 overflow-hidden">
+          <p className="text-xs text-blue-500/80 font-mono leading-tight truncate">
             {link}
           </p>
         </div>
       </div>
       <button
         onClick={() => onCopy(link, linkKey)}
-        className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors shrink-0 ${
+        className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors shrink-0 ${
           copied === linkKey
             ? "bg-green-50 text-green-600 border border-green-200"
             : "bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 hover:text-gray-700"
         }`}
         title="복사하기"
       >
-        {copied === linkKey ? <Check size={14} /> : <Copy size={14} />}
+        {copied === linkKey ? <Check size={18} /> : <Copy size={18} />}
       </button>
     </div>
   );

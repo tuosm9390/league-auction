@@ -15,6 +15,10 @@ export function AuctionResultModal({
   const teams = useAuctionStore((state) => state.teams || []);
   const players = useAuctionStore((state) => state.players || []);
 
+  const membersPerTeam = useAuctionStore((state) => state.membersPerTeam);
+  // 팀장을 제외한 팀원 슬롯 수
+  const rosterSlots = Math.max((membersPerTeam ?? 5) - 1, 1);
+
   if (!isOpen) return null;
 
   // 1팀부터 정렬 (이름 기준 오름차순 정도)
@@ -32,7 +36,7 @@ export function AuctionResultModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Content */}
-        <div className="bg-white rounded-xl w-full max-w-3xl shadow-md overflow-hidden border border-gray-200 relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        <div className="bg-white rounded-xl w-full shadow-md overflow-hidden border border-gray-200 relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
           {/* Header */}
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white/95 rounded-t-xl z-10">
             <div className="flex items-center gap-2.5">
@@ -64,6 +68,12 @@ export function AuctionResultModal({
                     (p) => p.team_id === team.id,
                   );
 
+                  // rosterSlots 개수의 고정 행 생성 (선수가 있으면 채우고, 없으면 빈 슬롯)
+                  const slots = Array.from(
+                    { length: rosterSlots },
+                    (_, i) => teamPlayers[i] ?? null,
+                  );
+
                   return (
                     <div
                       key={team.id}
@@ -74,7 +84,7 @@ export function AuctionResultModal({
                           {/* 헤더 행 */}
                           <tr>
                             <td
-                              rowSpan={Math.max(teamPlayers.length, 1) + 2}
+                              rowSpan={rosterSlots + 2}
                               className="w-[35%] border-r border-b border-gray-200 bg-gray-50 text-center align-middle p-3"
                             >
                               <span className="text-base font-bold text-gray-800">
@@ -106,29 +116,31 @@ export function AuctionResultModal({
                             </td>
                           </tr>
 
-                          {/* 팀원 행렬 */}
-                          {teamPlayers.length > 0 ? (
-                            teamPlayers.map((p: Player, idx: number) => (
-                              <tr key={p.id}>
-                                <td
-                                  className={`w-[65%] text-center py-2 px-3 font-medium text-gray-700 relative ${idx !== teamPlayers.length - 1 ? "border-b border-gray-50" : ""}`}
-                                >
-                                  {p.name}
-                                  {p.sold_price && (
-                                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold text-blue-500 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">
-                                      {p.sold_price}P
+                          {/* 팀원 고정 슬롯 */}
+                          {slots.map((player, idx) => (
+                            <tr key={player?.id ?? `empty-${idx}`}>
+                              <td
+                                className={`w-[65%] text-center py-2 px-3 relative ${idx !== rosterSlots - 1 ? "border-b border-gray-50" : ""}`}
+                              >
+                                {player ? (
+                                  <>
+                                    <span className="font-medium text-gray-700">
+                                      {player.name}
                                     </span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td className="w-[65%] text-center py-3 text-[11px] text-gray-400 italic">
-                                빈 로스터
+                                    {player.sold_price && (
+                                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold text-blue-500 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">
+                                        {player.sold_price}P
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-[11px] text-gray-300 italic">
+                                    —
+                                  </span>
+                                )}
                               </td>
                             </tr>
-                          )}
+                          ))}
                         </tbody>
                       </table>
                     </div>
