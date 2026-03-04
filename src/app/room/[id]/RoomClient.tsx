@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -43,8 +44,8 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
     return () => clearInterval(iv);
   }, [createdAt]);
   return (
-    <div className="text-xs font-mono font-black text-blue-200 bg-blue-900/30 px-4 py-1.5 rounded-full border-2 border-blue-700/50 shadow-inner tracking-widest">
-      경과 시간 <b className="text-minion-yellow text-sm">{elapsed}</b>
+    <div className="text-[10px] font-mono font-semibold text-blue-200 bg-blue-900/30 px-3 py-1 rounded-md border border-blue-700/40 tracking-widest">
+      경과 시간 <b className="text-minion-yellow text-xs">{elapsed}</b>
     </div>
   );
 }
@@ -245,22 +246,22 @@ export function RoomClient({
 
   if (!isRoomLoaded)
     return (
-      <div className="h-screen bg-blue-50 flex items-center justify-center font-black text-minion-blue text-2xl animate-pulse tracking-tighter uppercase">
+      <div className="h-screen bg-blue-50 flex items-center justify-center font-bold text-minion-blue text-lg animate-pulse tracking-tighter uppercase">
         데이터 로딩 중...
       </div>
     );
   if (!roomExists)
     return (
       <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border-4 border-red-100">
-          <span className="text-5xl">🚫</span>
+        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-200">
+          <span className="text-3xl">🚫</span>
         </div>
-        <h2 className="text-3xl font-black text-minion-blue mb-6">
+        <h2 className="text-xl font-bold text-minion-blue mb-4">
           경매가 종료된 방이거나, 유효하지 않은 접근입니다.
         </h2>
         <button
           onClick={() => router.push("/")}
-          className="bg-minion-yellow text-minion-blue font-black px-10 py-3 rounded-2xl shadow-lg text-lg uppercase"
+          className="bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase"
         >
           홈으로 돌아가기
         </button>
@@ -270,20 +271,20 @@ export function RoomClient({
   if (effectiveRole === null)
     return (
       <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border-4 border-red-100">
-          <span className="text-5xl">🚫</span>
+        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-200">
+          <span className="text-3xl">🚫</span>
         </div>
-        <h2 className="text-3xl font-black text-red-500 mb-3">
+        <h2 className="text-xl font-bold text-red-500 mb-2">
           유효하지 않은 접근
         </h2>
-        <p className="text-base text-gray-500 font-bold mb-8 max-w-sm leading-relaxed">
+        <p className="text-sm text-gray-500 font-medium mb-6 max-w-sm leading-relaxed">
           유효한 인증 정보가 없습니다.
           <br />
           초대 링크를 통해 다시 접속해 주세요.
         </p>
         <button
           onClick={() => router.push("/")}
-          className="bg-minion-yellow text-minion-blue font-black px-10 py-3 rounded-2xl shadow-lg text-lg uppercase"
+          className="bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase"
         >
           홈으로 돌아가기
         </button>
@@ -291,61 +292,106 @@ export function RoomClient({
     );
 
   return (
-    <div className="h-screen max-h-screen flex flex-col bg-blue-50 text-foreground font-sans overflow-hidden tracking-tight">
-      <header className="h-14 shrink-0 bg-minion-blue text-white px-8 flex justify-between items-center shadow-xl relative z-[110]">
-        <div className="flex items-center gap-6">
-          <h1 className="text-lg md:text-2xl font-black text-minion-yellow tracking-tighter">
-            MINIONS 🍌
-          </h1>
-          <div className="flex items-center gap-3">
-            <span className="bg-white/20 px-4 py-1 rounded-full text-xs font-black border border-white/30 uppercase tracking-widest">
-              {effectiveRole === "ORGANIZER"
-                ? "👑 주최자"
-                : effectiveRole === "LEADER"
-                  ? "🛡️ 팀장"
-                  : "👀 관전자"}
-            </span>
-            <div className="h-4 w-px bg-white/20 mx-1" />
-            <div className="flex gap-2">
-              {effectiveRole === "ORGANIZER" && <LinksModal />}
-              <HowToUseModal variant="header" />
-              {soldPlayers.length > 0 && (
-                <button
-                  onClick={() => setShowResultModal(true)}
-                  className="bg-minion-yellow hover:bg-yellow-400 text-minion-blue px-4 py-1.5 rounded-xl text-xs font-black shadow-sm transition-all"
-                >
-                  📋 결과
-                </button>
-              )}
-              {effectiveRole === "ORGANIZER" && (
-                <button
-                  onClick={() => setIsEndRoomOpen(true)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-xl text-xs font-black shadow-sm"
-                >
-                  🚪 종료
-                </button>
-              )}
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50/50 font-pretendard">
+      <header className="h-16 shrink-0 bg-minion-blue text-white shadow-sm relative z-[110]">
+        <div className="max-w-7xl mx-auto px-6 w-full h-full flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base md:text-xl font-bold text-minion-yellow tracking-tight drop-shadow-sm">
+                MINIONS
+              </h1>
+              <Image
+                src="/favicon.png"
+                alt="Minions Icon"
+                width={28}
+                height={28}
+                className="drop-shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 bg-white/10 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 shadow-inner">
+                {effectiveRole === "ORGANIZER" ? (
+                  <>
+                    <span className="text-sm">👑</span> 주최자
+                  </>
+                ) : effectiveRole === "LEADER" ? (
+                  <>
+                    <span className="text-sm">🛡️</span> 팀장
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">👀</span> 관전자
+                  </>
+                )}
+              </div>
+              <div className="h-5 w-px bg-white/20 mx-1.5" />
+              <div className="flex gap-2">
+                {effectiveRole === "ORGANIZER" && <LinksModal />}
+                <HowToUseModal variant="header" />
+                {soldPlayers.length > 0 && (
+                  <button
+                    onClick={() => setShowResultModal(true)}
+                    className="bg-minion-yellow hover:bg-yellow-400 text-minion-blue px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+                  >
+                    <span className="text-sm">📋</span> 결과
+                  </button>
+                )}
+                {effectiveRole === "ORGANIZER" && (
+                  <button
+                    onClick={() => setIsEndRoomOpen(true)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"
+                  >
+                    <span className="text-sm">🚪</span> 종료
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+          <div className="flex items-center gap-3">
+            {createdAt && <ElapsedTimer createdAt={createdAt} />}
+            <button
+              onClick={() => router.push("/")}
+              className="bg-white/10 hover:bg-white/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 transition-colors shadow-inner flex items-center gap-1.5"
+              title="메인 홈으로 이동"
+            >
+              <span className="text-sm">🏠</span> 나가기
+            </button>
+          </div>
         </div>
-        {createdAt && <ElapsedTimer createdAt={createdAt} />}
       </header>
 
-      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-5 p-3 sm:p-4 lg:px-8 xl:px-24 overflow-y-auto lg:overflow-hidden min-h-0">
-        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 mt-4 lg:mt-0 h-[300px] sm:h-[400px] lg:h-auto">
-          <div className="bg-card rounded-[2.5rem] shadow-xl border-[3px] border-border flex-1 flex flex-col overflow-hidden min-h-0">
-            <div className="p-5 border-b-2 border-border bg-card shrink-0">
-              <h2 className="text-lg font-black text-minion-blue flex items-center gap-2 uppercase tracking-tighter">
+      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 p-2 sm:p-3 lg:px-6 overflow-y-auto lg:overflow-hidden min-h-0 max-h-[950px] w-full max-w-7xl mx-auto py-3">
+        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] sm:h-[400px] lg:h-auto lg:self-stretch">
+          <div className="bg-card rounded-xl shadow-sm border border-border flex-1 flex flex-col overflow-hidden min-h-0">
+            <div className="px-3 py-2.5 border-b border-border bg-card shrink-0">
+              <h2 className="text-sm font-semibold text-minion-blue flex items-center gap-1.5 uppercase tracking-tight">
                 👥 팀 현황
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 pr-4 mr-1 min-h-0">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pr-2 mr-0.5 min-h-0">
               <TeamList />
             </div>
           </div>
         </aside>
 
-        <section className="lg:col-span-6 flex flex-col gap-4 lg:gap-5 min-h-0 order-1 lg:order-2">
+        <section className="lg:col-span-6 flex flex-col gap-2 min-h-0 order-1 lg:order-2 lg:h-full">
+          {roomName && (
+            <div className="shrink-0 bg-[#0f1f3d] rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 border border-[#2a3f6f] relative overflow-hidden">
+              {/* 은은한 광택 오버레이 */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 pointer-events-none" />
+              <span className="text-3xl shrink-0 drop-shadow">🏆</span>
+              <h2
+                className="text-2xl font-bold truncate tracking-[0.15em] uppercase relative"
+                style={{
+                  fontFamily: "var(--font-cinzel, 'Georgia', serif)",
+                  color: "#FBE042",
+                  textShadow: "0 0 20px rgba(251,224,66,0.35)",
+                }}
+              >
+                {roomName}
+              </h2>
+            </div>
+          )}
           <AuctionBoard
             isLotteryActive={!!lotteryPlayer}
             lotteryPlayer={lotteryPlayer}
@@ -355,45 +401,45 @@ export function RoomClient({
             onCloseLottery={handleCloseLottery}
           />
           {effectiveRole === "ORGANIZER" && (
-            <div className="bg-card rounded-[2.5rem] shadow-2xl border-[3px] border-border p-5 lg:p-8 shrink-0 mt-auto">
-              <div className="flex items-center justify-between mb-5 px-2">
-                <h3 className="text-base font-black text-minion-blue uppercase tracking-widest flex items-center gap-3">
+            <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-5 shrink-0">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h3 className="text-xs font-semibold text-minion-blue uppercase tracking-wider flex items-center gap-2">
                   🎛️ 주최자 컨트롤 박스
                 </h3>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-black text-gray-400 bg-gray-50 px-4 py-1.5 rounded-full border-2 border-gray-100 shadow-inner">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-md border border-gray-100">
                     대기자: {waitingPlayers.length}명 / 낙찰자:{" "}
                     {soldPlayers.length}명
                   </span>
                 </div>
               </div>
-              <div className="flex gap-3 mb-5 pb-5 border-b-2 border-gray-100">
+              <div className="flex gap-2 mb-3 pb-3 border-b border-gray-100">
                 <input
                   type="text"
                   value={noticeText}
                   onChange={(e) => setNoticeText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleNotice()}
                   placeholder="공지 내용 입력..."
-                  className="flex-1 border-4 border-gray-50 rounded-2xl px-6 py-4 text-base font-bold focus:outline-none focus:border-minion-blue shadow-inner"
+                  className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-minion-blue focus:ring-1 focus:ring-minion-blue/20"
                   disabled={isSendingNotice}
                 />
                 <button
                   onClick={handleNotice}
                   disabled={!noticeText.trim() || isSendingNotice}
-                  className="bg-minion-yellow text-minion-blue px-8 py-4 rounded-2xl text-base font-black shadow-lg"
+                  className="bg-minion-yellow text-minion-blue px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm"
                 >
                   선포
                 </button>
               </div>
               {allDone ? (
-                <div className="text-center py-6 bg-green-50 rounded-3xl border-[3px] border-green-100">
-                  <p className="font-black text-green-600 text-2xl tracking-tighter">
+                <div className="text-center py-4 bg-green-50 rounded-lg border border-green-200">
+                  <p className="font-bold text-green-600 text-lg tracking-tight">
                     🏆 경매 완료!
                   </p>
                 </div>
               ) : !currentPlayer ? (
                 isAutoDraftMode ? (
-                  <div className="bg-indigo-50 border-4 border-indigo-100 text-indigo-800 py-6 rounded-3xl font-black text-center text-xl animate-pulse">
+                  <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 py-4 rounded-lg font-bold text-center text-base animate-pulse">
                     ⚡ 자동 드래프트 진행 중
                   </div>
                 ) : (
@@ -402,7 +448,7 @@ export function RoomClient({
                     disabled={
                       isDrawing || waitingPlayers.length === 0 || !allConnected
                     }
-                    className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-16 lg:h-20 rounded-2xl lg:rounded-3xl font-black text-lg md:text-xl lg:text-2xl shadow-[0_8px_0_#1a3d73]"
+                    className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-12 lg:h-14 rounded-lg font-bold text-sm md:text-base lg:text-lg shadow-sm"
                   >
                     🎲 다음 선수 추첨 (남은 인원 : {waitingPlayers.length}명)
                   </button>
@@ -411,16 +457,16 @@ export function RoomClient({
                 <button
                   onClick={handleStart}
                   disabled={isStarting || !allConnected}
-                  className="w-full bg-lime-500 hover:bg-lime-600 text-white h-16 lg:h-20 rounded-2xl lg:rounded-3xl font-black text-2xl lg:text-3xl shadow-[0_8px_0_#4d7c0f]"
+                  className="w-full bg-lime-500 hover:bg-lime-600 text-white h-12 lg:h-14 rounded-lg font-bold text-lg lg:text-xl shadow-sm"
                 >
                   ▶ 경매 시작
                 </button>
               ) : !timerEndsAt ? (
-                <div className="bg-minion-blue/10 border-[6px] border-minion-blue/20 text-minion-blue py-6 rounded-[2rem] font-black text-center text-2xl animate-pulse uppercase tracking-widest">
+                <div className="bg-minion-blue/10 border-2 border-minion-blue/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider">
                   🎰 추첨 진행 중
                 </div>
               ) : (
-                <div className="bg-minion-yellow/10 border-[6px] border-minion-yellow/20 text-minion-blue py-6 rounded-[2rem] font-black text-center text-2xl animate-pulse uppercase tracking-widest">
+                <div className="bg-minion-yellow/10 border-2 border-minion-yellow/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider">
                   🔥 경매 진행 중 🔥
                 </div>
               )}
@@ -440,19 +486,19 @@ export function RoomClient({
           )}
         </section>
 
-        <aside className="lg:col-span-3 flex flex-col gap-4 lg:gap-5 min-h-0 order-2 lg:order-3 mt-4 lg:mt-0 h-[400px] sm:h-[500px] lg:h-auto">
-          <div className="bg-card rounded-[2.5rem] shadow-xl border-[3px] border-border flex-none max-h-[160px] flex flex-col overflow-hidden min-h-0 relative">
-            <div className="p-3 border-b-2 border-border bg-card shrink-0">
-              <h2 className="text-sm font-black text-red-500 flex items-center gap-2 uppercase px-1">
+        <aside className="lg:col-span-3 flex flex-col gap-2 lg:gap-3 min-h-0 order-2 lg:order-3 h-[400px] sm:h-[500px] lg:h-auto lg:self-stretch">
+          <div className="bg-card rounded-xl shadow-sm border border-border flex-none max-h-[140px] flex flex-col overflow-hidden min-h-0 relative">
+            <div className="px-3 py-2 border-b border-border bg-card shrink-0">
+              <h2 className="text-xs font-semibold text-red-500 flex items-center gap-1.5 uppercase px-0.5">
                 👻 유찰 대기석
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pr-3 mr-1 min-h-0">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 pr-2 mr-0.5 min-h-0">
               <UnsoldPanel />
             </div>
           </div>
-          <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-card rounded-[2.5rem] shadow-xl border-[3px] border-border relative">
-            <div className="flex-1 flex flex-col min-h-0 mr-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-card rounded-xl shadow-sm border border-border relative">
+            <div className="flex-1 flex flex-col min-h-0 mr-0.5 overflow-hidden">
               <ChatPanel />
             </div>
           </div>

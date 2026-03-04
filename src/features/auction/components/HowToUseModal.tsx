@@ -50,55 +50,75 @@ export function HowToUseModal({
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const trigger =
-    variant === "header" ? (
+  const renderTriggerButton = () => {
+    if (variant === "header") {
+      return (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+        >
+          <span className="text-sm">❓</span> 사용법
+        </button>
+      );
+    }
+
+    return (
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-xl text-sm font-bold transition-colors border border-white/30"
+        className="w-full bg-white border border-minion-blue text-minion-blue py-3 rounded-xl font-bold text-base mt-4 hover:bg-blue-50 transition-colors shadow-sm active:translate-y-0.5"
       >
-        <HelpCircle size={14} /> 이용법
-      </button>
-    ) : (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="text-sm text-gray-400 hover:text-minion-blue transition-colors underline underline-offset-2"
-      >
-        이용 방법 보기
+        사용법 보기
       </button>
     );
-
+  };
   return (
     <>
-      {trigger}
+      {renderTriggerButton()}
 
       {isOpen && (
         <div
           className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
         >
+          {/* Modal Content */}
           <div
-            className="bg-white rounded-3xl w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 cursor-default"
+            className="bg-blue-50 rounded-xl w-full max-w-2xl shadow-md overflow-hidden border border-minion-blue relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-              <h2 className="text-lg font-black text-minion-blue">
-                🍌 이용 방법
+            {/* Header - Fixed */}
+            <div className="bg-minion-blue px-4 py-3 flex items-center justify-between shrink-0 top-0 z-10">
+              <h2 className="text-sm font-bold text-minion-yellow flex items-center gap-1.5">
+                <span className="text-xl pb-1">💡</span>
+                이렇게 진행됩니다!
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                className="text-white hover:text-minion-yellow transition-colors p-1"
               >
-                <X size={18} />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            {/* Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {HOW_TO_USE.map((item) => (
                 <div
                   key={item.step}
-                  className="flex gap-4 bg-gray-50 rounded-2xl p-4 border border-gray-100"
+                  className="flex gap-3 bg-white rounded-lg p-3 border border-blue-100 shadow-sm"
                 >
-                  <div className="text-2xl shrink-0 mt-0.5">{item.icon}</div>
+                  <div className="text-xl shrink-0 mt-0.5">{item.icon}</div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-black text-minion-blue bg-minion-yellow/30 px-2 py-0.5 rounded-full">

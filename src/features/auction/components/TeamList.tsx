@@ -89,7 +89,7 @@ export function TeamList() {
         return (
           <div
             key={team.id}
-            className={`p-3.5 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden ${isTeamComplete ? "border-green-400 bg-green-50/50 shadow-md" : isMyTeam ? "border-minion-blue bg-blue-50/50 shadow-md ring-2 ring-minion-blue/10" : "border-gray-100 bg-gray-50/30"}`}
+            className={`p-2.5 rounded-lg border transition-all duration-300 relative overflow-hidden ${isTeamComplete ? "border-green-400 bg-green-50/50 shadow-sm" : isMyTeam ? "border-minion-blue bg-blue-50/50 shadow-sm ring-1 ring-minion-blue/10" : "border-gray-200 bg-gray-50/30"}`}
           >
             {isTeamComplete && (
               <div className="absolute top-0 right-0 w-12 h-12 pointer-events-none">
@@ -98,26 +98,26 @@ export function TeamList() {
                 </div>
               </div>
             )}
-            <div className="flex justify-between items-start mb-2.5">
+            <div className="flex justify-between items-start mb-2">
               <h3
-                className={`font-black text-base flex items-center gap-1.5 ${isTeamComplete ? "text-green-700" : isMyTeam ? "text-minion-blue" : "text-gray-800"}`}
+                className={`font-bold text-sm flex items-center gap-1 ${isTeamComplete ? "text-green-700" : isMyTeam ? "text-minion-blue" : "text-gray-800"}`}
               >
                 {isMyTeam && (
-                  <span className="text-minion-yellow text-xl drop-shadow-sm">
+                  <span className="text-minion-yellow text-base drop-shadow-sm">
                     ★
                   </span>
                 )}
                 {team.name}
               </h3>
               <div
-                className={`font-mono font-black px-2 py-1 rounded-lg text-sm shadow-sm border ${isTeamComplete ? "bg-green-100 text-green-700 border-green-200" : "bg-white text-minion-blue border-gray-200"}`}
+                className={`font-mono font-bold px-1.5 py-0.5 rounded-md text-xs shadow-sm border ${isTeamComplete ? "bg-green-100 text-green-700 border-green-200" : "bg-white text-minion-blue border-gray-200"}`}
               >
                 {team.point_balance.toLocaleString()}P
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1.5 flex justify-between items-center px-0.5">
+            <div className="space-y-1">
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1 flex justify-between items-center px-0.5">
                 <span>Roster</span>
                 <span
                   className={
@@ -136,12 +136,12 @@ export function TeamList() {
                   {teamPlayers.map((p: Player) => (
                     <div
                       key={p.id}
-                      className="flex justify-between items-center text-[13px] bg-white/80 p-2 rounded-xl border border-gray-100/50 shadow-sm group hover:border-minion-blue/30 transition-colors"
+                      className="flex justify-between items-center text-[12px] bg-white/80 p-1.5 rounded-md border border-gray-100/50 shadow-sm group hover:border-minion-blue/30 transition-colors"
                     >
-                      <span className="font-bold text-gray-700 truncate">
+                      <span className="font-medium text-gray-700 truncate">
                         {p.name}
                       </span>
-                      <span className="font-black text-minion-blue bg-blue-50 px-1.5 py-0.5 rounded-md text-[10px]">
+                      <span className="font-bold text-minion-blue bg-blue-50 px-1 py-0.5 rounded text-[9px]">
                         {p.sold_price || 0}P
                       </span>
                     </div>
