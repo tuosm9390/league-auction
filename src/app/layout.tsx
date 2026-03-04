@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { Cinzel } from "next/font/google";
 import "./globals.css";
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
+  variable: "--font-cinzel",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Minions Bid",
@@ -58,7 +66,9 @@ export default async function RootLayout({
           content="MDjk5WdTY8Pl_7kx3O84WmAebWeKmh2-1BK39ZzeGWA"
         />
       </head>
-      <body className="antialiased min-h-screen">{children}</body>
+      <body className={`antialiased min-h-screen ${cinzel.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

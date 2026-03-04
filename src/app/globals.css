@@ -12,6 +12,8 @@
   --color-minion-grey: #808080;
   --color-minion-skin: #FFC09A;
 
+  --font-cinzel: var(--font-cinzel, 'Cinzel', serif);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -108,7 +110,7 @@
     --border: #E5E7EB;
     --input: #E5E7EB;
     --ring: #FBE042;
-    --radius: 1rem;
+    --radius: 0.5rem;
   }
 
   .dark {

@@ -1,111 +1,148 @@
-'use client'
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react'
-import { useAuctionStore, Message } from '@/features/auction/store/useAuctionStore'
-import { sendChatMessage } from '@/features/auction/api/auctionActions'
+import React, { useState, useRef, useEffect } from "react";
+import {
+  useAuctionStore,
+  Message,
+} from "@/features/auction/store/useAuctionStore";
+import { sendChatMessage } from "@/features/auction/api/auctionActions";
 
-const MAX_MESSAGE_LENGTH = 200
+const MAX_MESSAGE_LENGTH = 200;
 
 function MessageItem({ msg }: { msg: Message }) {
-  const role = msg.sender_role
+  const role = msg.sender_role;
 
   // ── 시스템 메시지 ──
-  if (role === 'SYSTEM') {
+  if (role === "SYSTEM") {
     return (
       <div className="flex justify-center my-1">
         <span className="text-[12px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium italic">
           {msg.content}
         </span>
       </div>
-    )
+    );
   }
 
   // ── 공지 메시지 ──
-  if (role === 'NOTICE') {
+  if (role === "NOTICE") {
     return (
       <div className="bg-minion-yellow/20 border border-minion-yellow rounded-lg px-2 py-1.5 my-0.5">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm font-black text-amber-700">📢 공지</span>
           <span className="text-[9px] text-gray-400 ml-auto font-mono">
-            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(msg.created_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </span>
         </div>
-        <p className="text-md font-bold text-amber-900 break-words">{msg.content}</p>
+        <p className="text-md font-bold text-amber-900 break-words">
+          {msg.content}
+        </p>
       </div>
-    )
+    );
   }
 
   // ── 일반 채팅 ──
   const BADGE: Record<string, React.ReactElement> = {
-    ORGANIZER: <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded border border-red-200">주최</span>,
-    LEADER: <span className="text-[9px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded border border-blue-200">팀장</span>,
-    VIEWER: <span className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">관전</span>,
-  }
-  const badge = BADGE[role] ?? <span className="text-[9px] bg-gray-100 text-gray-400 px-1 py-0.5 rounded">{role}</span>
+    ORGANIZER: (
+      <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded border border-red-200">
+        주최
+      </span>
+    ),
+    LEADER: (
+      <span className="text-[9px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded border border-blue-200">
+        팀장
+      </span>
+    ),
+    VIEWER: (
+      <span className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">
+        관전
+      </span>
+    ),
+  };
+  const badge = BADGE[role] ?? (
+    <span className="text-[9px] bg-gray-100 text-gray-400 px-1 py-0.5 rounded">
+      {role}
+    </span>
+  );
 
   return (
     <div className="text-sm bg-gray-50 hover:bg-gray-100/70 p-1.5 rounded-lg transition-colors leading-normal">
       <div className="flex items-center gap-1 mb-0.5">
         {badge}
-        <span className="font-bold text-gray-800 text-[11px]">{msg.sender_name}</span>
+        <span className="font-bold text-gray-800 text-[11px]">
+          {msg.sender_name}
+        </span>
         <span className="text-[9px] text-gray-400 ml-auto font-mono">
-          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(msg.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </span>
       </div>
       <p className="text-gray-700 pl-0.5 break-words">{msg.content}</p>
     </div>
-  )
+  );
 }
 
 export function ChatPanel() {
-  const roomId = useAuctionStore(s => s.roomId)
-  const role = useAuctionStore(s => s.role)
-  const messages = useAuctionStore(s => s.messages)
-  const teams = useAuctionStore(s => s.teams)
-  const teamId = useAuctionStore(s => s.teamId)
+  const roomId = useAuctionStore((s) => s.roomId);
+  const role = useAuctionStore((s) => s.role);
+  const messages = useAuctionStore((s) => s.messages);
+  const teams = useAuctionStore((s) => s.teams);
+  const teamId = useAuctionStore((s) => s.teamId);
 
-  const [input, setInput] = useState('')
-  const [isSending, setIsSending] = useState(false)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const lastSentAtRef = useRef(0)
-  const lastMsgIdRef = useRef<string | null>(null)
+  const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastSentAtRef = useRef(0);
+  const lastMsgIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const lastMsg = messages[messages.length - 1]
-    if (!lastMsg) return
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg) return;
     if (lastMsg.id !== lastMsgIdRef.current) {
-      lastMsgIdRef.current = lastMsg.id
-      const el = scrollContainerRef.current
-      if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+      lastMsgIdRef.current = lastMsg.id;
+      const el = scrollContainerRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
-  }, [messages])
+  }, [messages]);
 
   const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || !roomId || isSending) return
-    if (input.trim().length > MAX_MESSAGE_LENGTH) return
-    const now = Date.now()
-    if (now - lastSentAtRef.current < 1000) return
-    lastSentAtRef.current = now
+    e.preventDefault();
+    if (!input.trim() || !roomId || isSending) return;
+    if (input.trim().length > MAX_MESSAGE_LENGTH) return;
+    const now = Date.now();
+    if (now - lastSentAtRef.current < 1000) return;
+    lastSentAtRef.current = now;
 
-    setIsSending(true)
+    setIsSending(true);
     try {
-      let senderName = '관전자'
-      if (role === 'ORGANIZER') senderName = '주최자'
-      else if (role === 'LEADER') {
-        const myTeam = teams.find(t => t.id === teamId)
-        senderName = myTeam?.leader_name || myTeam?.name || '팀장'
+      let senderName = "관전자";
+      if (role === "ORGANIZER") senderName = "주최자";
+      else if (role === "LEADER") {
+        const myTeam = teams.find((t) => t.id === teamId);
+        senderName = myTeam?.leader_name || myTeam?.name || "팀장";
       }
 
-      const { error } = await sendChatMessage(roomId, senderName, role || 'VIEWER', input.trim())
-      if (error) { console.error('Failed to send message:', error); return }
-      setInput('')
+      const { error } = await sendChatMessage(
+        roomId,
+        senderName,
+        role || "VIEWER",
+        input.trim(),
+      );
+      if (error) {
+        console.error("Failed to send message:", error);
+        return;
+      }
+      setInput("");
     } catch (err) {
-      console.error('Failed to send message:', err)
+      console.error("Failed to send message:", err);
     } finally {
-      setIsSending(false)
+      setIsSending(false);
     }
-  }
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -115,7 +152,10 @@ export function ChatPanel() {
         </h2>
       </div>
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-2 py-1.5 flex flex-col gap-1 custom-scrollbar min-h-0">
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto px-2 py-1.5 flex flex-col gap-1 custom-scrollbar min-h-0"
+      >
         {messages.length === 0 ? (
           <div className="text-muted-foreground text-[11px] text-center py-6 my-auto">
             대화를 시작하세요.
@@ -125,11 +165,14 @@ export function ChatPanel() {
         )}
       </div>
 
-      <form onSubmit={handleSend} className="p-2 px-6 border-t bg-gray-50 flex gap-3">
+      <form
+        onSubmit={handleSend}
+        className="p-2 px-3 border-t bg-gray-50 flex gap-2"
+      >
         <input
           type="text"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="메시지..."
           maxLength={MAX_MESSAGE_LENGTH}
           className="flex-1 bg-white border border-gray-200 px-2.5 py-1.5 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-minion-yellow transition-shadow"
@@ -144,5 +187,5 @@ export function ChatPanel() {
         </button>
       </form>
     </div>
-  )
+  );
 }

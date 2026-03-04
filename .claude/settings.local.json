@@ -14,7 +14,8 @@
       "Bash(cmd:*)",
       "Bash(git:*)",
       "Bash(npm:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(echo:*)"
     ]
   }
 }
