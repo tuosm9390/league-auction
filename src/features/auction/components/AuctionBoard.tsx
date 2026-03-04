@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useRef, memo } from "react";
 import {
   useAuctionStore,
@@ -26,7 +27,8 @@ const TIER_COLOR: Record<string, string> = {
   골드: "text-yellow-500",
   실버: "text-gray-400",
   브론즈: "text-amber-700",
-  언랭: "text-gray-500",
+  아이언: "text-gray-500",
+  언랭: "text-black",
   Challenger: "text-cyan-500",
   Grandmaster: "text-red-500",
   Master: "text-purple-500",
@@ -36,6 +38,56 @@ const TIER_COLOR: Record<string, string> = {
   Gold: "text-yellow-500",
   Silver: "text-gray-400",
   Bronze: "text-amber-700",
+  Iron: "text-gray-500",
+  Unranked: "text-black",
+};
+
+/** 한글 티어명을 영문 파일명으로 매핑 */
+export const getTierImage = (tier: string) => {
+  const map: Record<string, string> = {
+    챌린저: "Challenger",
+    그랜드마스터: "Grandmaster",
+    마스터: "Master",
+    다이아: "Diamond",
+    에메랄드: "Emerald",
+    플래티넘: "Platinum",
+    골드: "Gold",
+    실버: "Silver",
+    브론즈: "Bronze",
+    아이언: "Iron",
+    언랭: "Iron",
+  };
+  const englishTier = map[tier] || tier;
+  return `/Rank=${englishTier}.png`;
+};
+
+/** 한글/영문 포지션을 영문 파일명으로 매핑 */
+export const getPositionImage = (pos: string) => {
+  const normalized = pos.trim().toLowerCase();
+  if (normalized.includes("탑") || normalized.includes("top"))
+    return "/main_position_top.svg";
+  if (
+    normalized.includes("정글") ||
+    normalized.includes("jg") ||
+    normalized.includes("jungle")
+  )
+    return "/main_position_jg.svg";
+  if (normalized.includes("미드") || normalized.includes("mid"))
+    return "/main_position_mid.svg";
+  if (
+    normalized.includes("원딜") ||
+    normalized.includes("bot") ||
+    normalized.includes("ad") ||
+    normalized.includes("adc")
+  )
+    return "/main_position_bot.svg";
+  if (
+    normalized.includes("서폿") ||
+    normalized.includes("서포터") ||
+    normalized.includes("sup")
+  )
+    return "/main_position_sup.svg";
+  return "/main_position_top.svg"; // 예비용
 };
 
 const NoticeBanner = memo(function NoticeBanner({ msg }: { msg: Message }) {
@@ -296,14 +348,39 @@ export function AuctionBoard({
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight drop-shadow-sm leading-none">
                   {currentPlayer.name}
                 </h2>
-                <div className="flex gap-1.5 lg:gap-2 items-center justify-center">
-                  <div
-                    className={`text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
-                  >
-                    {currentPlayer.tier}
+                <div className="flex gap-4 lg:gap-6 items-center justify-center my-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center">
+                      <Image
+                        src={getTierImage(currentPlayer.tier)}
+                        alt={currentPlayer.tier}
+                        width={64}
+                        height={64}
+                        className="object-contain drop-shadow-md"
+                      />
+                    </div>
+                    <div
+                      className={`text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
+                    >
+                      {currentPlayer.tier}
+                    </div>
                   </div>
-                  <div className="text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 text-gray-700">
-                    {currentPlayer.main_position}
+
+                  <div className="text-gray-300 mx-2 text-2xl font-light border border-gray-200 h-20" />
+
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center">
+                      <Image
+                        src={getPositionImage(currentPlayer.main_position)}
+                        alt={currentPlayer.main_position}
+                        width={50}
+                        height={50}
+                        className="object-contain drop-shadow-md opacity-90"
+                      />
+                    </div>
+                    <div className="text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 text-gray-700">
+                      {currentPlayer.main_position}
+                    </div>
                   </div>
                 </div>
                 {currentPlayer.description && (
