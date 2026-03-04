@@ -116,12 +116,8 @@ export function AuctionBoard({
   const roomId = useAuctionStore((s) => s.roomId);
   const timerEndsAt = useAuctionStore((s) => s.timerEndsAt);
   const membersPerTeam = useAuctionStore((s) => s.membersPerTeam);
-  const hasPlayedReadyAnimation = useAuctionStore(
-    (s) => s.hasPlayedReadyAnimation,
-  );
-  const setReadyAnimationPlayed = useAuctionStore(
-    (s) => s.setReadyAnimationPlayed,
-  );
+  const [hasPlayedReadyAnimation, setHasPlayedReadyAnimation] = useState(false);
+  const setReadyAnimationPlayed = (played: boolean) => setHasPlayedReadyAnimation(played);
   const setReAuctionRound = useAuctionStore((s) => s.setReAuctionRound);
   const connectedLeaderIds = new Set(
     presences

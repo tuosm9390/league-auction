@@ -278,3 +278,26 @@ Zustand store에 `isReAuctionRound` 상태가 존재하고 `setReAuctionRound()`
 
 ### AI 행동 지침 (Lessons Learned & New Rules)
 > **Zustand store에 상태를 쓰는 코드를 추가할 때는, 그 상태를 실제로 읽는 컴포넌트가 있는지 반드시 확인하라. 스토어에 write만 하고 아무도 read하지 않는 "dead state"는 로컬 변수와 동명 충돌을 일으켜 버그의 원인이 된다. grep으로 `s\.상태명` 패턴을 검색하여 소비자가 존재하는지 확인할 것.**
+
+---
+
+## 이슈 #7 — Broadcast-primary 아키텍처 전환 시 스토어 상태 제거 부작용 (2026-03-04)
+
+### 이슈 요약 (The Problem)
+Broadcast-primary 아키텍처로 전환하면서 Zustand store에서 `hasPlayedReadyAnimation`, `addBid`, `addMessage`, `updatePlayer`, `updateTeam` 등을 제거했다. 그러나 `AuctionBoard.tsx`가 `hasPlayedReadyAnimation`과 `setReadyAnimationPlayed`를 store에서 읽고 있어 빌드 시 TypeScript 에러 발생.
+
+### 실패한 접근법 (What didn't work)
+1. **store에서 상태 제거 후 곧바로 빌드**: 상태를 제거하기 전에 어떤 파일이 해당 상태를 소비하는지 확인하지 않아 빌드 에러 발생
+2. **"단순히 쓰기만 있는 상태다"라는 가정**: `setReadyAnimationPlayed` 호출이 store에서 `hasPlayedReadyAnimation`을 읽는 곳과 동일 컴포넌트 내에 존재했음
+
+### 최종 해결책 (What worked)
+- `AuctionBoard.tsx`에서 store 의존성을 제거하고 `useState`로 로컬 상태 전환:
+  ```typescript
+  // Before: const hasPlayedReadyAnimation = useAuctionStore(s => s.hasPlayedReadyAnimation)
+  const [hasPlayedReadyAnimation, setHasPlayedReadyAnimation] = useState(false)
+  const setReadyAnimationPlayed = (played: boolean) => setHasPlayedReadyAnimation(played)
+  ```
+- Store 상태 제거 전 `grep -r "hasPlayedReadyAnimation" src/` 실행하여 소비자 위치 확인이 선행되었어야 했음
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+> **Zustand store에서 상태를 제거할 때는, 반드시 먼저 `grep -r "s\.상태명\|상태명" src/` 명령으로 모든 소비 위치를 파악하고, 각 소비자를 로컬 상태나 props로 전환한 뒤에 store에서 제거해야 한다. 제거와 소비자 전환을 동시에 수행하지 않으면 빌드 에러가 발생한다.**

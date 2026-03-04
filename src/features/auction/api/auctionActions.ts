@@ -1,6 +1,24 @@
 'use server'
 
-import { getServerClient } from '@/lib/supabase-server'
+import { after } from 'next/server'
+import { getServerClient, broadcastEvent } from '@/lib/supabase-server'
+import type { Team, Player, Bid, Message } from '@/features/auction/store/useAuctionStore'
+
+/** broadcastState가 서버에서 fetch한 방 상태 — awardPlayer 반환값으로도 사용 */
+export type RoomStatePayload = {
+  basePoint: number
+  totalTeams: number
+  membersPerTeam: number
+  timerEndsAt: string | null
+  createdAt: string
+  roomName: string
+  organizerToken: string
+  viewerToken: string
+  teams: Team[]
+  bids: Bid[]
+  players: Player[]
+  messages: Message[]
+}
 
 const AUCTION_DURATION_MS = 10_000      // 경매 시간 10초
 const EXTEND_THRESHOLD_MS = 5_000      // 5초 이하 입찰 시 연장
@@ -58,8 +76,50 @@ export interface AuctionArchivePayload {
 
 // ---------- 내부 헬퍼 ----------
 
-async function sysMsg(roomId: string, content: string) {
-  const db = getServerClient()
+/** 전체 방 상태를 DB에서 읽어 Broadcast payload 형태로 반환 */
+async function fetchRoomState(db: ReturnType<typeof getServerClient>, roomId: string): Promise<RoomStatePayload | null> {
+  const [roomRes, teamsRes, playersRes, messagesRes] = await Promise.all([
+    db.from('rooms').select('*').eq('id', roomId).single(),
+    db.from('teams').select('*').eq('room_id', roomId),
+    db.from('players').select('*').eq('room_id', roomId),
+    db.from('messages').select('*').eq('room_id', roomId)
+      .order('created_at', { ascending: true }).limit(200),
+  ])
+
+  const room = roomRes.data
+  if (!room) return null
+
+  const currentPlayerId = room.current_player_id
+  const bidsRes = currentPlayerId
+    ? await db.from('bids').select('*')
+        .eq('player_id', currentPlayerId)
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+    : { data: [] }
+
+  return {
+    basePoint: room.base_point,
+    totalTeams: room.total_teams,
+    membersPerTeam: room.members_per_team ?? 5,
+    timerEndsAt: room.timer_ends_at,
+    createdAt: room.created_at,
+    roomName: room.name,
+    organizerToken: room.organizer_token,
+    viewerToken: room.viewer_token,
+    teams: teamsRes.data || [],
+    bids: bidsRes.data || [],
+    players: playersRes.data || [],
+    messages: messagesRes.data || [],
+  }
+}
+
+/** DB 쓰기 완료 후 전체 상태를 Broadcast로 전파 */
+async function broadcastState(roomId: string, db: ReturnType<typeof getServerClient>) {
+  const state = await fetchRoomState(db, roomId)
+  if (state) await broadcastEvent(roomId, 'STATE_UPDATE', state)
+}
+
+async function sysMsg(db: ReturnType<typeof getServerClient>, roomId: string, content: string) {
   await db.from('messages').insert([{
     room_id: roomId,
     sender_name: '시스템',
@@ -70,7 +130,7 @@ async function sysMsg(roomId: string, content: string) {
 
 // ---------- 방 생성 ----------
 
-/** 방 + 팀 + 선수를 service_role로 생성 (anon INSERT 불가 환경 대응) */
+/** 방 + 팀 + 선수를 service_role로 생성 (구독자가 없으므로 Broadcast 없음) */
 export async function createRoom(payload: CreateRoomPayload): Promise<CreateRoomResult> {
   const db = getServerClient()
 
@@ -128,7 +188,7 @@ export async function createRoom(payload: CreateRoomPayload): Promise<CreateRoom
 
 // ---------- auction_archives ----------
 
-/** 경매 결과를 auction_archives 테이블에 영구 저장 */
+/** 경매 결과를 auction_archives 테이블에 영구 저장 (Broadcast 없음 — 방 종료 직전) */
 export async function saveAuctionArchive(payload: AuctionArchivePayload): Promise<{ error?: string }> {
   const db = getServerClient()
   const { error } = await db.from('auction_archives').insert([{
@@ -142,7 +202,9 @@ export async function saveAuctionArchive(payload: AuctionArchivePayload): Promis
   return {}
 }
 
-/** 일반 채팅 메시지 전송 (anon key 직접 INSERT 대신 service_role 경유) */
+// ---------- 채팅 ----------
+
+/** 일반 채팅 메시지 전송 → Broadcast STATE_UPDATE */
 export async function sendChatMessage(
   roomId: string,
   senderName: string,
@@ -160,10 +222,11 @@ export async function sendChatMessage(
     content: content.trim(),
   }])
   if (error) return { error: error.message }
+  await broadcastState(roomId, db)
   return {}
 }
 
-/** 공지 전송 (ORGANIZER 전용 UI) */
+/** 공지 전송 (ORGANIZER 전용 UI) → Broadcast STATE_UPDATE */
 export async function sendNotice(roomId: string, content: string): Promise<{ error?: string }> {
   if (!content.trim() || content.length > 200) return { error: '유효하지 않은 공지' }
   const db = getServerClient()
@@ -174,14 +237,16 @@ export async function sendNotice(roomId: string, content: string): Promise<{ err
     content: content.trim(),
   }])
   if (error) return { error: error.message }
+  await broadcastState(roomId, db)
   return {}
 }
 
-/** 랜덤으로 WAITING 선수 1명을 IN_AUCTION으로 전환 */
+// ---------- 경매 흐름 ----------
+
+/** 랜덤으로 WAITING 선수 1명을 IN_AUCTION으로 전환 → Broadcast STATE_UPDATE */
 export async function drawNextPlayer(roomId: string): Promise<{ error?: string }> {
   const db = getServerClient()
 
-  // 이미 경매 중인 선수가 있으면 중복 추첨 방지
   const { data: currentRoom } = await db
     .from('rooms')
     .select('current_player_id')
@@ -215,11 +280,29 @@ export async function drawNextPlayer(roomId: string): Promise<{ error?: string }
     .eq('id', roomId)
   if (rErr) return { error: rErr.message }
 
+  await broadcastState(roomId, db)
   return {}
 }
 
-/** 경매(타이머) 시작 */
-export async function startAuction(roomId: string, durationMs?: number): Promise<{ error?: string; timerEndsAt?: string }> {
+/** 추첨 모달 닫기 — 시스템 메시지 전송 + CLOSE_LOTTERY 브로드캐스트 + STATE_UPDATE */
+export async function closeLotteryAction(
+  roomId: string,
+  playerName: string,
+): Promise<{ error?: string }> {
+  const db = getServerClient()
+  await sysMsg(db, roomId, `🎲 ${playerName} 선수 등장! (경매 시작 전)`)
+  // STATE_UPDATE를 먼저 보내 메시지가 반영된 전체 상태를 클라이언트에 전달
+  await broadcastState(roomId, db)
+  // CLOSE_LOTTERY는 모달 닫기 전용 — 상태 payload 없음
+  await broadcastEvent(roomId, 'CLOSE_LOTTERY', {})
+  return {}
+}
+
+/** 경매(타이머) 시작 → Broadcast STATE_UPDATE */
+export async function startAuction(
+  roomId: string,
+  durationMs?: number,
+): Promise<{ error?: string; timerEndsAt?: string }> {
   const db = getServerClient()
   const { data: room } = await db
     .from('rooms')
@@ -229,7 +312,6 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
 
   if (!room?.current_player_id) return { error: '진행할 선수가 없습니다.' }
 
-  // 타이머 중복 실행 방지: 아직 만료되지 않은 타이머가 있으면 재시작 차단
   if (room.timer_ends_at && new Date(room.timer_ends_at).getTime() > Date.now()) {
     return { error: '이미 경매가 진행 중입니다.' }
   }
@@ -248,24 +330,26 @@ export async function startAuction(roomId: string, durationMs?: number): Promise
     .eq('id', roomId)
   if (rErr) return { error: rErr.message }
 
-  await sysMsg(roomId, `▶️ ${player?.name || '현재'} 선수 경매 시작! (${duration / 1000}초)`)
+  await sysMsg(db, roomId, `▶️ ${player?.name || '현재'} 선수 경매 시작! (${duration / 1000}초)`)
+  await broadcastState(roomId, db)
   return { timerEndsAt }
 }
 
-/** 경매 일시 정지 */
+/** 경매 일시 정지 → Broadcast STATE_UPDATE */
 export async function pauseAuction(roomId: string): Promise<{ error?: string }> {
   const db = getServerClient()
   const { error } = await db
     .from('rooms')
     .update({ timer_ends_at: null })
     .eq('id', roomId)
-
   if (error) return { error: error.message }
-  await sysMsg(roomId, `⚠️ 팀장 접속 이탈로 인해 경매가 일시 중단되었습니다.`)
+
+  await sysMsg(db, roomId, `⚠️ 팀장 접속 이탈로 인해 경매가 일시 중단되었습니다.`)
+  await broadcastState(roomId, db)
   return {}
 }
 
-/** 중단된 경매 재개 */
+/** 중단된 경매 재개 → Broadcast STATE_UPDATE */
 export async function resumeAuction(roomId: string): Promise<{ error?: string }> {
   const RESUME_DURATION_MS = 5_000
   const timerEndsAt = new Date(Date.now() + RESUME_DURATION_MS).toISOString()
@@ -275,13 +359,14 @@ export async function resumeAuction(roomId: string): Promise<{ error?: string }>
     .from('rooms')
     .update({ timer_ends_at: timerEndsAt })
     .eq('id', roomId)
-
   if (error) return { error: error.message }
-  await sysMsg(roomId, `▶️ 모든 팀장이 재접속하여 경매를 재개합니다! (${RESUME_DURATION_MS / 1000}초)`)
+
+  await sysMsg(db, roomId, `▶️ 모든 팀장이 재접속하여 경매를 재개합니다! (${RESUME_DURATION_MS / 1000}초)`)
+  await broadcastState(roomId, db)
   return {}
 }
 
-/** 팀장 입찰. 5초 이하 남았으면 타이머 연장 */
+/** 팀장 입찰. 5초 이하 남았으면 타이머 연장 → Broadcast STATE_UPDATE */
 export async function placeBid(
   roomId: string,
   playerId: string,
@@ -307,8 +392,7 @@ export async function placeBid(
     return { error: '현재 경매가 진행 중이지 않습니다.' }
   }
 
-  // 통신 지연 1초 오차 허용
-  if (new Date(room.timer_ends_at).getTime() + 1000 <= Date.now()) {
+  if (new Date(room.timer_ends_at).getTime() + 500 <= Date.now()) {
     return { error: '경매 시간이 종료되었습니다.' }
   }
   if (room.current_player_id !== playerId) {
@@ -337,7 +421,7 @@ export async function placeBid(
     .from('teams')
     .select('point_balance, name')
     .eq('id', teamId)
-    .eq('room_id', roomId)  // 방 소속 검증: 다른 방 팀으로 입찰 불가
+    .eq('room_id', roomId)
     .single()
 
   if (!team) return { error: '팀 정보를 불러올 수 없습니다.' }
@@ -378,26 +462,38 @@ export async function placeBid(
     }
   }
 
-  await sysMsg(roomId, `💰 ${team.name}이(가) ${amount.toLocaleString()}P로 입찰!`)
+  await sysMsg(db, roomId, `💰 ${team.name}이(가) ${amount.toLocaleString()}P로 입찰!`)
+  await broadcastState(roomId, db)
   return { newTimerEndsAt }
 }
 
-/** 타이머 만료 후 낙찰 처리. 입찰이 없으면 UNSOLD 처리.
- *  award_player_atomic RPC를 통해 단일 트랜잭션으로 원자적으로 처리. */
+/** 타이머 만료 후 낙찰 처리. 원자 RPC 사용 → 상태 즉시 반환 + Broadcast 비동기 전파 */
 export async function awardPlayer(
   roomId: string,
   playerId: string,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; state?: RoomStatePayload }> {
   const db = getServerClient()
   const { error } = await db.rpc('award_player_atomic', {
     p_room_id: roomId,
     p_player_id: playerId,
   })
   if (error) return { error: error.message }
-  return {}
+
+  // fetchRoomState 1회 호출로 broadcast + 클라이언트 반환 동시 처리
+  const state = await fetchRoomState(db, roomId)
+
+  // broadcastEvent는 응답 반환 후 비동기로 실행 (블로킹 차단):
+  // broadcastEvent fetch에 타임아웃이 있더라도 응답 속도에 영향을 주지 않도록 after() 사용
+  if (state) {
+    after(async () => {
+      await broadcastEvent(roomId, 'STATE_UPDATE', state)
+    })
+  }
+
+  return { state: state ?? undefined }
 }
 
-/** 유찰/대기 선수 영입 (드래프트 자유계약, 0P) */
+/** 유찰/대기 선수 영입 (드래프트 자유계약, 0P) → Broadcast STATE_UPDATE */
 export async function draftPlayer(
   roomId: string,
   playerId: string,
@@ -438,11 +534,12 @@ export async function draftPlayer(
 
   if (error) return { error: '영입 처리 중 오류가 발생했습니다.' }
 
-  await sysMsg(roomId, `🤝 ${team.name}장 ${player.name} 선수를 자동 배정(유찰 계약) 했습니다. (0P)`)
+  await sysMsg(db, roomId, `🤝 ${team.name}장 ${player.name} 선수를 자동 배정(유찰 계약) 했습니다. (0P)`)
+  await broadcastState(roomId, db)
   return {}
 }
 
-/** 유찰 선수 전원을 다시 대기 상태로 전환 */
+/** 유찰 선수 전원을 다시 대기 상태로 전환 → Broadcast STATE_UPDATE */
 export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?: string; reAuctionStarted?: boolean }> {
   const db = getServerClient()
 
@@ -464,22 +561,27 @@ export async function restartAuctionWithUnsold(roomId: string): Promise<{ error?
 
   if (pErr) return { error: pErr.message }
 
-  await sysMsg(roomId, `🔄 주최자가 모든 유찰 선수를 다시 대기 명단으로 되돌리고 추첨(재경매)을 재개합니다! (${unsold.length}명)`)
+  await sysMsg(db, roomId, `🔄 주최자가 모든 유찰 선수를 다시 대기 명단으로 되돌리고 추첨(재경매)을 재개합니다! (${unsold.length}명)`)
+  await broadcastState(roomId, db)
   return { reAuctionStarted: true }
 }
 
-/** 방 종료 — 토큰 무효화 후 전체 삭제 */
+/** 방 종료 — 토큰 무효화 후 전체 삭제 → Broadcast { roomDeleted: true } */
 export async function deleteRoom(roomId: string): Promise<{ error?: string }> {
   const db = getServerClient()
 
   const { data: roomData } = await db.from('rooms').select('name').eq('id', roomId).single()
   const currentName = roomData?.name || '경매방'
 
+  // 토큰 무효화 (입장 링크 차단)
   await db.from('rooms').update({
     name: `[종료된 경매] ${currentName}`,
     organizer_token: crypto.randomUUID(),
     viewer_token: crypto.randomUUID(),
   }).eq('id', roomId)
+
+  // 방 삭제 전 모든 클라이언트에 알림
+  await broadcastEvent(roomId, 'STATE_UPDATE', { roomDeleted: true })
 
   const tables = ['bids', 'messages', 'players', 'teams'] as const
   for (const table of tables) {

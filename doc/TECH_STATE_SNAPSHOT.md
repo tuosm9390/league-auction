@@ -34,13 +34,25 @@
   | S8 | `useAuctionRealtime.ts` | 문자열 기반 `isReAuctionRound` 감지 제거 |
   | S9 | `AuctionBoard.tsx` | `setReAuctionRound(true)` 직접 호출 (restartAuctionWithUnsold 반환값 기반) |
 
-- **잔존 미수정 항목** (이번 계획 범위 외):
+- **잔존 미수정 항목** → **모두 후속 세션에서 완료** (R1~R3 전원 해소)
 
-  | # | 위치 | 증상 | 심각도 |
-  |---|---|---|---|
-  | R1 | `BiddingControl` | `teamIdParam` (쿠키 원본값) 직접 전달 — role 체크 후 렌더되므로 실질 위험 낮음 | P2 |
-  | R2 | `useAuctionRealtime.ts` | `fetchAll` 초기화 시 최대 2회 호출 — `fetchingRef` dedup으로 직렬화되나 불필요한 부하 | P2 |
-  | R3 | `useAuctionRealtime.ts` | bids 전체 roomId 기준 조회 — 장기 경매 시 payload 증가 | P2 |
+---
+
+- **이번 세션(2026-03-04) — Broadcast-primary 전면 재작성 + 성능/안정성 개선**:
+
+  | # | 파일 | 수정 내용 |
+  |---|---|---|
+  | T1 | `useAuctionRealtime.ts` | **전면 재작성** — postgres_changes CDC 제거, 3초 폴링 제거. `auction-${roomId}` 단일 채널에 Broadcast `STATE_UPDATE` + `CLOSE_LOTTERY` + Presence 통합 |
+  | T2 | `useAuctionRealtime.ts` | `fetchAll` 반환 (`return { fetchAll }`) — 외부(useAuctionControl)에서 예외 복구 경로로 사용 가능 |
+  | T3 | `auctionActions.ts` | `after()` 도입 — `awardPlayer`의 `broadcastEvent` 호출을 응답 반환 후 백그라운드 실행으로 전환 |
+  | T4 | `auctionActions.ts` | `RoomStatePayload` 타입 정의 + `awardPlayer` 반환값에 최신 DB 상태 포함 (Rule 1 Optimistic Update 패턴 적용) |
+  | T5 | `auctionActions.ts` | `placeBid` tolerance: `+1000ms` → `+500ms` |
+  | T6 | `supabase-server.ts` | `broadcastEvent`에 `AbortController` 3초 타임아웃 추가 — 이전엔 무한 대기 → Vercel 30초 함수 한계 도달 시 전체 Server Action 블로킹 |
+  | T7 | `useAuctionControl.ts` | grace period `1500ms → 800ms` + `result.state` 즉시 `setRealtimeData` + `catch` 블록에 `fetchAll()` fallback 추가 |
+  | T8 | `RoomClient.tsx` | `useAuctionRealtime` 반환값에서 `fetchAll` 추출 → `useAuctionControl`에 전달 |
+
+- **이번 세션에서 분석 완료 (미처리)**:
+  - **낙찰 후 UI 반영 지연 원인 파악**: 타이머 `0` 표시 후 실제 상태 변경까지 ~1~1.5초 공백 발생. 원인: ① 800ms grace ② Server Action 왕복(~200~500ms) ③ `after()` broadcast 전파. `CenterTimer`는 `timerEndsAt`이 store에서 `null`이 될 때까지 사라지지 않아 사용자는 타이머 `0`이 정지된 채 대기하는 것처럼 인지.
 
 ## 2. What is the active stack? (활성 기술 스택)
 
@@ -58,27 +70,35 @@
 
 ## 3. What is the next step? (다음 단계 및 최우선 목표)
 
-- **목표**: 미수정 버그 처리 및 기능 개선
+- **목표**: 낙찰 후 UI 반영 지연 개선 (UX)
 
-- **세부 지시사항**:
+### 배경 — 지연 구조
 
-  1. **[P1] 버그 5 수정 — fetchAll 단일 호출로 통합**
-     - `src/features/auction/hooks/useAuctionRealtime.ts`의 `fetchAll` 내에서 `setRealtimeData`를 2번 분리 호출하는 구조를 1번 통합 호출로 변경
-     - LEADER 검증이 `isRoomLoaded: true` + `teams` 동시에 설정된 상태에서 1회만 실행되도록 보장
+```
+[화면 타이머 = 0]
+  ① +800ms grace (in-flight 입찰 대기)
+  ② +200~500ms Server Action 왕복 (RPC + fetchRoomState)
+  ③ ORGANIZER: setRealtimeData(result.state) 즉시 반영
+     나머지: after() → broadcastEvent → WebSocket → setRealtimeData (+100~200ms)
+```
 
-  2. **[P2] 버그 6 수정 — BiddingControl teamId 검증 강화**
-     - `RoomClient.tsx`에서 `BiddingControl`에 전달하는 `teamId`를 `teamIdParam` (쿠키 원본) 대신 `useRoomAuth`에서 검증된 값 기반으로 전달
-     - 현재 `effectiveRole === 'LEADER'` 검증 후 렌더링되므로 실질적 위험은 낮으나, 명시적으로 검증된 teamId를 전달하는 것이 안전
+타이머 0 표시 후 `timerEndsAt`이 store에서 `null`이 될 때까지 CenterTimer가 사라지지 않아 약 **1~1.5초** 동안 UI가 멈춘 것처럼 보임.
 
-  3. **환경 변수 설정 안내**
-     - `.env.local`에 `SUPABASE_SERVICE_ROLE_KEY` 추가 필요 (Server Actions 동작을 위한 필수 값)
-     - Vercel 배포 환경 변수에도 추가 필요
+### 개선 옵션 3가지 (택 1 또는 조합)
 
-  4. **빌드 경고 해결 (선택)**
-     - `src/middleware.ts` → Next.js 16에서 deprecated. `src/proxy.ts`로 파일명 변경 검토
-     - `layout.tsx`에 `metadataBase` URL 설정
+| 옵션 | 내용 | 위험도 | 기대 개선 |
+|------|------|--------|-----------|
+| **[옵션 1] UX — 타이머 0 시 "처리 중..." 표시** | `CenterTimer` 또는 배너를 `timeLeftMs === 0` 시점에 "처리 중..." 상태로 교체. 로직 변경 없음. | 없음 | 지연은 그대로지만 사용자 인지 개선 |
+| **[옵션 2] grace period 단축** | `800ms → 600ms`. 현재 `placeBid` tolerance 500ms 기준으로 안전 여유 100ms 확보. 네트워크 지연 큰 환경에서 in-flight 입찰 누락 가능성 소폭 증가. | 낮음 | 약 200ms 단축 |
+| **[옵션 3] fetchRoomState 제거** | `award_player_atomic` RPC가 변경된 전체 상태를 JSONB로 반환하도록 확장 → `fetchRoomState` (5개 DB 쿼리) 왕복 제거. migration 변경 필요. | 중간 (migration) | 약 200~400ms 단축 |
 
-  5. 수정 완료 후 커밋 및 push
+**권장**: 옵션 1(즉시 적용, 리스크 없음) + 필요 시 옵션 2 병행.
+
+### 그 외 잔존 작업
+
+- `supabase/migrations/00010_rls_policies.sql`, `00011_award_player_atomic.sql`, `00101_award_player_atomic.sql` Supabase SQL Editor 수동 실행 확인
+- 전체 E2E 흐름 테스트: 추첨 → 경매 → 낙찰/유찰 → 재경매 → 드래프트 → 방 종료
+- 커밋 및 push
 
 ---
 
@@ -409,3 +429,95 @@ if (!team || team.room_id !== roomId) {
 
 **현재 잔존 미수정 항목**: 없음 (모든 P0/P1/P2 항목 완료)
 ⚠️ **Supabase 수동 실행 필요**: `00010_rls_policies.sql`, `00011_award_player_atomic.sql`
+
+---
+
+## 5. Supabase Realtime 아키텍처 분석 결과 (2026-03-04)
+
+> **목적**: 전면 재작성(REWRITE_PLAN.md) 전 현재 실시간 통신 구조의 설계 결함을 정량적으로 분석하여, Broadcast-primary 전환 결정의 기술적 근거를 확보.
+
+---
+
+### 5-1. 현재 채널 구조 — 다중화 실패
+
+현재 `useAuctionRealtime.ts`는 사용자 1명당 **3개의 독립 채널**을 생성한다:
+
+| 채널 이름 | 용도 | 이벤트 수 |
+|-----------|------|----------|
+| `realtime:room-${roomId}` | postgres_changes (rooms/teams/players/bids/messages) | 5개 테이블 구독 |
+| `presence:${roomId}` | Presence (팀장 접속 현황) | heartbeat 30~60s |
+| `lottery-${roomId}` | Broadcast (CLOSE_LOTTERY 동기화) | 1개 이벤트 |
+
+**문제**: 참여자 N명 기준으로 `3 × N`개의 WebSocket 채널이 생성된다. Supabase 무료 플랜 채널 상한(200개)과 유료 플랜 과금 구조를 고려할 때, 동시 접속자가 많아질수록 비효율이 증폭된다. Supabase 공식 문서는 **단일 채널에 여러 이벤트 타입을 혼합 구독(multiplexing)**하는 방식을 권장한다.
+
+**개선 방향**: `auction-${roomId}` 단일 채널에 Broadcast + Presence를 모두 수용.
+
+---
+
+### 5-2. fetchAll 과적합 — INSERT/DELETE마다 전체 테이블 재조회
+
+현재 구독 이벤트별 처리 전략:
+
+| 이벤트 | 현재 처리 | 문제 |
+|--------|-----------|------|
+| `rooms` UPDATE | store 즉시 업데이트 ✅ | 없음 |
+| `players` UPDATE | store 즉시 업데이트 ✅ | 없음 |
+| `players` INSERT/DELETE | `fetchAll()` 전체 재조회 ⚠️ | 5개 테이블 전체 재fetch |
+| `teams` INSERT/DELETE | `fetchAll()` 전체 재조회 ⚠️ | 5개 테이블 전체 재fetch |
+| `bids` INSERT | `addBid()` + `fetchAll()` ⚠️ | 즉시 반영 후 이중 재조회 |
+
+**핵심 문제**: INSERT/DELETE 이벤트는 payload에 변경된 레코드 전체가 포함된다(`REPLICA IDENTITY FULL` 설정 시). 이를 무시하고 매번 5개 테이블 전체를 재조회하는 것은 불필요한 DB 부하를 유발한다.
+
+**올바른 패턴**:
+```typescript
+// INSERT: payload.new를 배열에 push
+players: INSERT → store.players.push(payload.new)
+
+// DELETE: payload.old.id를 기준으로 filter
+players: DELETE → store.players.filter(p => p.id !== payload.old.id)
+
+// UPDATE: payload.new로 해당 항목만 교체
+players: UPDATE → store.players.map(p => p.id === payload.new.id ? payload.new : p)
+```
+
+---
+
+### 5-3. 3초 폴링 상시 가동 — WebSocket 정상 시에도 무조건 실행
+
+현재 `setInterval(fetchPoll, 3000)`은 WebSocket 연결 상태와 무관하게 **항상 실행**된다.
+
+**실측 영향**:
+- WebSocket 정상 작동 시에도 3초마다 DB 쿼리 (rooms + teams + players) 실행
+- 참여자 10명 기준: 10명 × 20회/분 = **분당 200회 불필요한 DB 쿼리**
+- Supabase 무료 플랜 500MB DB 대역폭 소모 가속
+
+**설계 의도**:  원래 WebSocket 연결 실패 시 상태 복원을 위한 fallback 목적이었다. 그러나 `fetchingRef` dedup이 있어 WebSocket 이벤트와 폴링이 동시에 `fetchAll`을 호출해도 직렬화되는 구조이므로, 폴링이 실제 "백업" 역할을 하는 상황은 WebSocket이 완전히 끊긴 경우뿐이다.
+
+**개선 방향**: 폴링 완전 제거 + 재연결 이벤트(`channel.subscribe()` 재구독 완료 시) 시점에만 `fetchAll()` 1회 호출.
+
+---
+
+### 5-4. CDC vs Broadcast vs Presence — 용도 구분 기준
+
+| 메커니즘 | 지연 | 보장성 | 적합한 용도 |
+|---------|------|--------|-----------|
+| **postgres_changes (CDC)** | 300ms ~ 2,000ms | DB 커밋 완료 보장 | 감사 로그, 외부 시스템 연동 |
+| **Broadcast** | < 100ms | 최선형 전달 (비영속) | 실시간 상태 동기화, 게임 이벤트 |
+| **Presence** | heartbeat 30~60s | 채널 내 상태 공유 | 접속자 현황, 타이핑 인디케이터 |
+
+**현재 코드의 CDC 사용 판단**:
+- 경매 시스템의 핵심 요구사항은 "입찰/낙찰/타이머를 모든 탭에서 실시간 동기화"임
+- 이는 **Broadcast** 영역이 적합 (< 100ms, 게임형 이벤트)
+- CDC는 DB 영속성을 보장하지만 경매 UX에 필요한 속도를 제공하지 못함
+- Presence는 현재 용도(팀장 접속 확인)에 적합하나, 지연 특성상 즉각 이탈 감지 불가 (의도된 한계)
+
+---
+
+### 5-5. 분석 결과 → REWRITE_PLAN.md 의사결정 매핑
+
+| 분석 결과 | REWRITE_PLAN.md 결정 |
+|-----------|---------------------|
+| 3개 채널 × N명 = 커넥션 낭비 | `auction-${roomId}` 단일 채널에 Broadcast + Presence 통합 |
+| fetchAll 과적합 (INSERT/DELETE) | payload merge 패턴 전환 (INSERT→push, DELETE→filter) |
+| 3초 폴링 상시 가동 | 폴링 완전 제거 + 재연결 시 fetchAll 1회 |
+| CDC 지연(300ms~2s) | postgres_changes 구독 제거 → Broadcast-primary 전환 |

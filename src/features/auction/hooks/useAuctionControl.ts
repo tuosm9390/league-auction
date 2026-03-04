@@ -1,23 +1,29 @@
-import { useEffect, useRef, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Player, Role } from '@/features/auction/store/useAuctionStore'
-import { awardPlayer, sendChatMessage } from '@/features/auction/api/auctionActions'
+import { useEffect, useRef } from 'react'
+import { useAuctionStore, Player, Role } from '@/features/auction/store/useAuctionStore'
+import { awardPlayer, closeLotteryAction, type RoomStatePayload } from '@/features/auction/api/auctionActions'
 
 interface UseAuctionControlProps {
   roomId: string
   effectiveRole: Role
   players: Player[]
   timerEndsAt: string | null
+  fetchAll?: () => Promise<void>
 }
 
 export function useAuctionControl({
   roomId,
   effectiveRole,
   players,
-  timerEndsAt
+  timerEndsAt,
+  fetchAll,
 }: UseAuctionControlProps) {
-  // 1. 추첨 모달 상태 관리
-  const [lotteryPlayer, setLotteryPlayer] = useState<Player | null>(null)
+  const setLotteryPlayer = useAuctionStore(s => s.setLotteryPlayer)
+  const lotteryPlayer = useAuctionStore(s => s.lotteryPlayer)
+  const setRealtimeData = useAuctionStore(s => s.setRealtimeData)
+
+  // 1. IN_AUCTION 전환 감지 → 추첨 모달 표시
+  // lotteryPlayer는 Zustand store로 관리됨.
+  // CLOSE_LOTTERY는 useAuctionRealtime에서 setLotteryPlayer(null) 처리.
   const prevPlayersRef = useRef<Player[]>([])
 
   useEffect(() => {
@@ -33,41 +39,19 @@ export function useAuctionControl({
       }
     }
     prevPlayersRef.current = curr
-  }, [players])
+  }, [players, setLotteryPlayer])
 
-  // 2. 전역 추첨 모달 닫기 동기화
-  useEffect(() => {
-    if (!roomId) return
-    const channel = supabase.channel(`lottery-${roomId}`)
-      .on('broadcast', { event: 'CLOSE_LOTTERY' }, () => {
-        setLotteryPlayer(null)
-      })
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [roomId])
-
+  // 2. 추첨 모달 닫기 — Server Action 경유로 CLOSE_LOTTERY 브로드캐스트
+  //    (서버에서 시스템 메시지 전송 + STATE_UPDATE + CLOSE_LOTTERY 일괄 처리)
   const handleCloseLottery = async () => {
     if (effectiveRole !== 'ORGANIZER') return
-    if (lotteryPlayer && roomId) {
-      await sendChatMessage(
-        roomId,
-        '시스템',
-        'SYSTEM',
-        `🎲 ${lotteryPlayer.name} 선수 등장! (경매 시작 전)`,
-      )
-    }
-    setLotteryPlayer(null)
-    await supabase.channel(`lottery-${roomId}`).send({
-      type: 'broadcast',
-      event: 'CLOSE_LOTTERY',
-      payload: {}
-    })
+    if (!lotteryPlayer || !roomId) return
+    await closeLotteryAction(roomId, lotteryPlayer.name)
+    // CLOSE_LOTTERY 브로드캐스트를 받아 useAuctionRealtime이 setLotteryPlayer(null) 호출
+    // 로컬에서는 별도 처리 불필요
   }
 
-  // 3. 타이머 만료 시 자동 낙찰 처리
+  // 3. 타이머 만료 시 자동 낙찰 처리 (ORGANIZER 클라이언트만 실행)
   const awardLock = useRef(false)
   const playersRef = useRef(players)
   playersRef.current = players
@@ -79,7 +63,8 @@ export function useAuctionControl({
     if (!cp) return
 
     const playerId = cp.id
-    const delay = Math.max(0, new Date(timerEndsAt).getTime() - Date.now()) + 1500
+    // grace 800ms: 마지막 in-flight 입찰(서버 도달 ≤ T+600ms) 처리 후 여유 있게 실행
+    const delay = Math.max(0, new Date(timerEndsAt).getTime() - Date.now()) + 800
 
     let cancelled = false
     const t = setTimeout(async () => {
@@ -92,7 +77,16 @@ export function useAuctionControl({
         if (result.error) {
           console.error('[Auto-Award] 낙찰 처리 실패:', result.error)
           alert(`낙찰 처리 오류: ${result.error}`)
+        } else if (result.state) {
+          // Server Action이 반환한 최신 상태로 즉시 업데이트
+          setRealtimeData(result.state as Parameters<typeof setRealtimeData>[0])
+        } else {
+          fetchAll?.()
         }
+      } catch (err) {
+        // Server Action 타임아웃/예외: DB는 이미 업데이트됐을 수 있으므로 fetchAll로 복원
+        console.error('[Auto-Award] Server Action 예외:', err)
+        fetchAll?.()
       } finally {
         awardLock.current = false
       }
@@ -103,7 +97,6 @@ export function useAuctionControl({
 
   return {
     lotteryPlayer,
-    setLotteryPlayer,
     handleCloseLottery
   }
 }

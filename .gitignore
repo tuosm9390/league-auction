@@ -48,3 +48,8 @@ next-env.d.ts
 
 # skills
 /skills
+
+# gemini
+.gemini/
+gha-creds-*.json
+.github/

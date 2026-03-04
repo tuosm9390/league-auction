@@ -110,6 +110,10 @@ supabase/
     00003_realtime_fix.sql                 # REPLICA IDENTITY FULL + publication
     00004_create_auction_archives.sql      # auction_archives 테이블 생성
     00009_server_time_and_selfbid_fix.sql  # get_server_time() RPC + place_bid_secure RPC
+    00010_rls_policies.sql                 # SELECT-only RLS (anon 쓰기 차단, writes via service_role)
+    00011_award_player_atomic.sql          # award_player_atomic RPC (FOR UPDATE 락 + 단일 트랜잭션)
+    00100_full_schema.sql                  # 전체 스키마 재생성용 참조 파일
+    00101_award_player_atomic.sql          # 00011과 동일 내용 (00100 이후 실행용)
 ```
 
 ### Auth Model
@@ -132,20 +136,23 @@ No Supabase Auth. **HttpOnly 쿠키 기반** 인증:
 ### Data Flow
 
 ```
-Supabase DB
-  ↕ postgres_changes subscriptions (via useAuctionRealtime)
-  ↕ 3-second polling fallback
-  ↕ Presence tracking (supabase.channel `presence:{roomId}`)
-  ↕ Broadcast channel `lottery-{roomId}` (CLOSE_LOTTERY event sync)
+Server Action (auctionActions.ts)
+  → DB write (getServerClient / service_role)
+  → broadcastEvent() via after()  ← non-blocking, 3s AbortController timeout
+      ↓ REST API
+Supabase Realtime — single channel `auction-{roomId}`
+  ↕ Broadcast STATE_UPDATE  (<100ms, 전체 방 상태 스냅샷)
+  ↕ Broadcast CLOSE_LOTTERY  (추첨 모달 닫기 동기화)
+  ↕ Presence               (팀장 접속 현황, heartbeat 30~60s)
 Zustand store (useAuctionStore)
   → React components
 ```
 
-`useAuctionRealtime(roomId)` (`src/features/auction/hooks/useAuctionRealtime.ts`) manages all subscriptions and is called once in `room/[id]/RoomClient.tsx`. It uses `useCallback` for `fetchAll` stability so it can be safely used in both subscriptions and a `setInterval`.
+**Broadcast-primary 아키텍처**: CDC(postgres_changes) 및 3초 폴링 완전 제거. `auction-{roomId}` 단일 채널로 Broadcast + Presence 통합. `useAuctionRealtime(roomId)` (`src/features/auction/hooks/useAuctionRealtime.ts`)가 모든 구독을 관리하며 `RoomClient.tsx`에서 1회 호출. 재연결(SUBSCRIBED) 시 `fetchAll()` 1회 — 비연결 구간 동안 놓친 상태 복원. `fetchAll` 반환값으로 `useAuctionControl`에서 예외 복구 경로로 사용 가능.
 
 ### Database Schema (6 tables)
 
-All tables have open anon RLS policies (SELECT/INSERT/UPDATE all open). Must have `REPLICA IDENTITY FULL` set and be in the `supabase_realtime` publication for realtime filters to work (migration `00003`).
+RLS 정책: anon은 SELECT만 허용. INSERT/UPDATE/DELETE는 service_role(Server Actions)만 가능 (migration `00010`). Must have `REPLICA IDENTITY FULL` set and be in the `supabase_realtime` publication (migration `00003`).
 
 Migrations must be run manually in Supabase SQL Editor (not via CLI).
 
@@ -159,7 +166,7 @@ Migrations must be run manually in Supabase SQL Editor (not via CLI).
 
 ### Auction Logic (`src/features/auction/api/auctionActions.ts`)
 
-`'use server'` Server Actions. `getServerClient()` (service_role key, RLS 우회)로 DB 조작. **토큰/역할 검증 없음** (지인용 내부 툴). 제거된 항목: `isValidUUID`, `verifyOrganizer`, `verifyLeader`, `verifyAnyRole`, `sendChatMessage`, `sendLotteryClosedMessage`.
+`'use server'` Server Actions. `getServerClient()` (service_role key, RLS 우회)로 DB 조작. **토큰/역할 검증 없음** (지인용 내부 툴). 제거된 항목: `isValidUUID`, `verifyOrganizer`, `verifyLeader`, `verifyAnyRole`, `sendLotteryClosedMessage`. 추가된 항목: `sendChatMessage`, `sendNotice`, `RoomStatePayload` 타입.
 
 Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, `EXTEND_DURATION_MS = 5_000`.
 
@@ -169,14 +176,16 @@ Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, 
 | `startAuction(roomId, durationMs?)`          | Sets `timer_ends_at = now + 10s` (or custom), sends system message                                                                                                                          |
 | `pauseAuction(roomId)`                       | Sets `timer_ends_at = null` (on team leader disconnect), sends warning system message                                                                                                       |
 | `resumeAuction(roomId)`                      | Sets `timer_ends_at = now + 5s` (on reconnect), sends resume message                                                                                                                        |
-| `placeBid(roomId, playerId, teamId, amount)` | Validates 10P units, point balance, team capacity, timer active (1s tolerance for network lag), not already top bidder; inserts bid; extends timer to 5s if <5s remaining                   |
-| `awardPlayer(roomId, playerId)`              | **Idempotent** — re-checks timer not extended (race condition guard), re-checks `status === 'IN_AUCTION'`. Marks `SOLD` (deducts points) or `UNSOLD` (no bids). Calls `clearRoomAuction()`. |
+| `sendChatMessage(roomId, name, role, content)` | Inserts message via service_role; broadcasts STATE_UPDATE |
+| `sendNotice(roomId, content)`                | ORGANIZER 전용 공지. NOTICE role로 메시지 삽입 + STATE_UPDATE |
+| `placeBid(roomId, playerId, teamId, amount)` | Validates 10P units, point balance, team capacity, timer active (**0.5s** tolerance), not already top bidder; inserts bid; extends timer to 5s if <5s remaining                             |
+| `awardPlayer(roomId, playerId)`              | **Idempotent** — `award_player_atomic` RPC (FOR UPDATE 락). SOLD 또는 UNSOLD 처리 + `timer_ends_at=null` + `current_player_id=null`. 최신 `RoomStatePayload` 반환 + `after()`로 broadcast 비동기 전파. |
 | `draftPlayer(roomId, playerId, teamId)`      | Assigns `UNSOLD` or `WAITING` player to team at 0P (free contract). Validates room membership and team capacity.                                                                            |
 | `restartAuctionWithUnsold(roomId)`           | Converts all `UNSOLD` → `WAITING` for re-auction                                                                                                                                            |
 | `deleteRoom(roomId)`                         | Invalidates tokens first (room rename + new tokens), then deletes bids → messages → players → teams → room                                                                                  |
 | `saveAuctionArchive(payload)`                | Saves final results snapshot to `auction_archives` table. `ArchiveTeam`, `AuctionArchivePayload` 타입은 이 파일 상단에 인라인 정의.                                                         |
 
-**Auto-award on timer expiry**: Organizer's client sets `setTimeout(delay + 1500ms grace)` with a `useRef` lock (`awardLock`) to prevent double execution. `playersRef` avoids stale closures.
+**Auto-award on timer expiry**: ORGANIZER 클라이언트만 `setTimeout(delay + 800ms grace)`로 `awardPlayer` 호출. `awardLock` ref로 동일 클라이언트 내 이중 실행 방지. `playersRef`로 stale closure 방지. 성공 시 `result.state`로 즉시 `setRealtimeData`, 예외 시 `fetchAll()` fallback.
 
 **Post-auction UNSOLD handling:**
 
@@ -192,12 +201,12 @@ Timer constants: `AUCTION_DURATION_MS = 10_000`, `EXTEND_THRESHOLD_MS = 5_000`, 
 - `AuctionArchiveSection` (`src/components/`) — Displays past auction results from `auction_archives` table with filtering.
 - `AuctionBoard` — Center panel. Shows captain connection grid (Presence-based) when idle, full auction UI when active. Contains `CenterTimer` (large countdown) and `NoticeBanner` (latest `NOTICE` message).
 - `ChatPanel` — Realtime chat. `SYSTEM` messages show as gray italic pills; `NOTICE` messages show as amber banners.
-- `BiddingControl` — Bid form with amount input and validation, shown to LEADER role. `teamIdParam` (raw cookie value) 직접 사용. ⚠️ 알려진 P2 버그: 검증된 teamId 대신 쿠키 원본값 전달.
+- `BiddingControl` — Bid form with amount input and validation, shown to LEADER role. `storeTeamId` (쿠키 검증된 값, `useRoomAuth` 경유) 사용.
 - `LinksModal` — ORGANIZER only; regenerates all invite links from store data.
 - `HowToUseModal` — Usage guide, available in header for all roles.
 - `EndRoomModal` — Room deletion confirmation with `saveAuctionArchive` + `deleteRoom` flow.
 - `AuctionResultModal` — 경매 완료 후 최종 결과 테이블 모달.
-- `LotteryAnimation` — 슬롯머신 추첨 애니메이션 (Framer Motion). `lottery-{roomId}` broadcast 채널로 `CLOSE_LOTTERY` 이벤트 동기화.
+- `LotteryAnimation` — 슬롯머신 추첨 애니메이션 (Framer Motion). `auction-{roomId}` 단일 채널 Broadcast `CLOSE_LOTTERY` 이벤트로 모달 닫기 동기화.
 - `TeamList` — 좌측 사이드바: 팀 로스터. `UnsoldPanel`도 named export.
 
 ### Security (CSP / Middleware)
@@ -268,29 +277,30 @@ Defined in `src/app/globals.css` `@theme` block:
 
 ### Realtime Subscription Strategy (`useAuctionRealtime.ts`)
 
-| Event                   | Strategy                                                  |
-| ----------------------- | --------------------------------------------------------- |
-| `rooms` UPDATE          | Immediate store update                                    |
-| `players` UPDATE        | Immediate store update                                    |
-| `players` INSERT/DELETE | `fetchAll()` (full refresh)                               |
-| `teams` UPDATE          | Immediate store update                                    |
-| `teams` INSERT/DELETE   | `fetchAll()` (full refresh)                               |
-| `bids` INSERT           | Immediate `addBid()` + `fetchAll()`                       |
-| `messages` INSERT       | Immediate `addMessage()`                                  |
-| Fallback                | 3-second `setInterval` polling (rooms/teams/players only) |
+**Broadcast-primary**: CDC(postgres_changes) 제거. Server Action이 DB 쓰기 후 전체 상태를 Broadcast로 전파.
 
-`fetchingRef` deduplication으로 동시 `fetchAll` 호출 방지. `fetchAll`은 5개 테이블 전체 fetch; polling은 rooms/teams/players만.
+| 이벤트 | 전략 |
+| ------ | ---- |
+| Broadcast `STATE_UPDATE` | `setRealtimeData(payload)` — 전체 방 상태 스냅샷 즉시 반영 |
+| Broadcast `CLOSE_LOTTERY` | `setLotteryPlayer(null)` — 추첨 모달 닫기 |
+| Presence `sync` | `setRealtimeData({ presences })` — 팀장 접속 현황 |
+| 재연결 (`SUBSCRIBED`) | `fetchAll()` 1회 — 비연결 구간 놓친 상태 복원 |
+| 초기 로드 | `fetchAll()` 1회 |
+
+`fetchingRef` deduplication으로 동시 `fetchAll` 호출 방지. `fetchAll`은 rooms + teams + players + messages 병렬 조회 후 `current_player_id` 기준 bids 순차 조회 (5개 쿼리).
 
 ### Known Issues
 
-현재 미수정 버그 없음. 토큰 검증은 의도적으로 제거됨 (지인용 내부 툴).
+- **낙찰 후 UI 반영 지연** (~1~1.5초): 타이머 `0` 표시 후 `CenterTimer`가 사라지기까지 grace(800ms) + Server Action 왕복 시간만큼 공백 발생. 의도된 설계이나 UX 개선 여지 있음 (처리 중 상태 표시 검토 중).
+- 토큰 검증 없음 (의도적 결정 — 지인용 내부 툴).
 
 ### Key Conventions
 
 - All Supabase mutations are done in `auctionActions.ts` (Server Actions), never inline in components.
 - Components are role-gated: check `effectiveRole` from `useRoomAuth` before rendering controls.
 - Never call `awardPlayer` more than once per auction cycle — use `awardLock` ref.
-- Timer extension logic lives in `placeBid` (client-side Supabase call with extend check).
+- Timer extension logic lives in `placeBid` Server Action (server-side check).
+- `broadcastEvent` is always called via `after()` in Server Actions to avoid blocking the response.
 - Path alias `@/*` maps to `src/*`.
 
 ---
@@ -340,5 +350,9 @@ export async function startAuction(...): Promise<{ error?: string }> {
 ### 규칙 3 — Zustand Dead State 방지 (2026-03-04)
 
 > **Zustand store에 새 상태를 추가하거나 `set()` 호출을 추가할 때, `useAuctionStore(s => s.새상태명)` 패턴으로 해당 상태를 읽는 소비자가 존재하는지 반드시 grep으로 확인하라. 쓰기만 있고 읽기가 없는 "dead state"는 동명의 로컬 변수와 무음 충돌을 일으켜 버그를 유발한다.**
+
+### 규칙 4 — Store 상태 제거 시 소비자 전환 선행 의무 (2026-03-04)
+
+> **Zustand store에서 상태를 제거할 때는, 반드시 먼저 `grep -r "상태명" src/`로 모든 소비 위치를 파악하고, 각 소비자를 로컬 상태나 props로 전환한 뒤에 store에서 제거해야 한다. 제거와 소비자 전환을 동시에 하지 않으면 TypeScript 빌드 에러가 발생한다.**
 
 **배경**: `isReAuctionRound`가 여러 곳에서 `setReAuctionRound(true)`로 쓰였지만, `RoomClient.tsx`는 동명의 로컬 변수(`unsoldPlayers.length > 0 && waitingPlayers.length === 0`)를 사용했다. 재경매 전환 직후 로컬값이 `false`가 되어 타이머 duration이 5초 → 10초로 잘못 계산됐다.

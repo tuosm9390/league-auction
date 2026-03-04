@@ -60,7 +60,7 @@ export function RoomClient({
   roleParam,
   teamIdParam,
 }: RoomClientProps) {
-  useAuctionRealtime(roomId);
+  const { fetchAll } = useAuctionRealtime(roomId);
   const players = useAuctionStore((s) => s.players);
   const teams = useAuctionStore((s) => s.teams);
   const roomName = useAuctionStore((s) => s.roomName);
@@ -130,13 +130,14 @@ export function RoomClient({
       players.filter((p) => p.team_id === myTeam.id && p.status === "SOLD")
         .length >=
       membersPerTeam - 1;
-  const { lotteryPlayer, setLotteryPlayer, handleCloseLottery } =
-    useAuctionControl({
-      roomId,
-      effectiveRole: effectiveRole ?? "VIEWER",
-      players,
-      timerEndsAt,
-    });
+  const lotteryPlayer = useAuctionStore((s) => s.lotteryPlayer);
+  const { handleCloseLottery } = useAuctionControl({
+    roomId,
+    effectiveRole: effectiveRole ?? "VIEWER",
+    players,
+    timerEndsAt,
+    fetchAll,
+  });
 
   // Pause/resume auction on team leader disconnect/reconnect (ORGANIZER only)
   const prevAllConnectedRef = useRef<boolean | null>(null);
@@ -188,7 +189,6 @@ export function RoomClient({
   const handleStart = async () => {
     setIsStarting(true);
     try {
-      setLotteryPlayer(null);
       const duration =
         isReAuctionRound || wasPausedByDisconnectRef.current ? 5000 : 10000;
       wasPausedByDisconnectRef.current = false;
