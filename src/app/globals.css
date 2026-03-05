@@ -85,7 +85,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--border, var(--color-gray-200, currentColor));
   }
 }
 
@@ -165,7 +165,7 @@
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #333333 #181818;
+    scrollbar-color: var(--muted-foreground) transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -174,17 +174,19 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #181818;
+    background: transparent;
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #333333;
+    background: var(--muted-foreground);
     border-radius: 10px;
+    opacity: 0.5;
     transition: background 0.2s;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555555;
+    background: var(--foreground);
+    opacity: 0.8;
   }
 }

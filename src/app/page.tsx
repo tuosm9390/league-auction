@@ -1,5 +1,6 @@
 import { CreateRoomModal } from "@/components/CreateRoomModal";
 import { ArchiveModalWrapper } from "@/components/ArchiveModalWrapper";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 
 const HOW_TO_USE = [
@@ -43,7 +44,12 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col items-center px-4 py-16 gap-16">
         {/* Hero Card */}
-        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 relative">
+          {/* Theme Toggle Button */}
+          <div className="absolute top-4 right-4">
+            <ThemeToggle />
+          </div>
+
           <h1 className="text-5xl font-black text-minion-blue drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
             <Image
               src="/favicon.png"
@@ -77,7 +83,7 @@ export default function Home() {
 
         {/* How to use */}
         <div className="max-w-7xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-          <h2 className="text-2xl font-black text-minion-blue text-center mb-8">
+          <h2 className="text-2xl font-black text-foreground text-center mb-8">
             이용 방법
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
