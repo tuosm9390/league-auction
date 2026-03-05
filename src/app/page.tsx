@@ -74,11 +74,11 @@ export default function Home() {
         </div>
 
         {/* How to use */}
-        <div className="max-w-4xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
+        <div className="max-w-7xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
           <h2 className="text-2xl font-black text-minion-blue text-center mb-8">
             이용 방법
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {HOW_TO_USE.map((item) => (
               <div
                 key={item.step}
@@ -99,7 +99,7 @@ export default function Home() {
           </div>
 
           {/* Tips */}
-          <div className="mt-6 bg-minion-blue/5 border border-minion-blue/20 rounded-2xl p-5">
+          <div className="mt-8 bg-minion-blue/5 border border-minion-blue/20 rounded-2xl p-6 max-w-3xl mx-auto shadow-sm">
             <p className="text-sm font-black text-minion-blue mb-2">
               💡 알아두면 좋은 점
             </p>
@@ -124,6 +124,14 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 text-center py-8 text-sm text-gray-400 w-full mt-auto">
+        <p>
+          Copyright © {new Date().getFullYear()} MINIONS(소모임). All rights
+          reserved.
+        </p>
+      </footer>
     </div>
   );
 }
