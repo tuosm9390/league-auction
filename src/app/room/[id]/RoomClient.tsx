@@ -28,6 +28,7 @@ import { HowToUseModal } from "@/features/auction/components/HowToUseModal";
 import { EndRoomModal } from "@/features/auction/components/EndRoomModal";
 import { AuctionResultModal } from "@/features/auction/components/AuctionResultModal";
 import { LeaveRoomModal } from "@/features/auction/components/LeaveRoomModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 function ElapsedTimer({ createdAt }: { createdAt: string }) {
   const [elapsed, setElapsed] = useState("");
@@ -350,6 +351,7 @@ export function RoomClient({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             {createdAt && <ElapsedTimer createdAt={createdAt} />}
             <button
               onClick={() => setIsLeaveRoomOpen(true)}
