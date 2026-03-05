@@ -126,7 +126,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 text-center py-8 text-sm text-gray-400 w-full mt-auto">
+      <footer className="relative z-1 text-center py-8 text-sm text-gray-400 w-full mt-auto">
         <p>
           Copyright © {new Date().getFullYear()} MINIONS(소모임). All rights
           reserved.
