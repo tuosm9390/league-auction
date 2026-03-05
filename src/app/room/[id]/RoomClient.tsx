@@ -351,7 +351,6 @@ export function RoomClient({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             {createdAt && <ElapsedTimer createdAt={createdAt} />}
             <button
               onClick={() => setIsLeaveRoomOpen(true)}
@@ -360,6 +359,7 @@ export function RoomClient({
             >
               <span className="text-sm">🏠</span> 나가기
             </button>
+            <ThemeToggle />
           </div>
         </div>
       </header>

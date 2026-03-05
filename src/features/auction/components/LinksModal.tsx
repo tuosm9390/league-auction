@@ -45,7 +45,7 @@ export function LinksModal() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors border border-white/20 shadow-inner"
+        className="flex items-center gap-1.5 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors border border-border shadow-sm"
       >
         <Link size={14} /> 링크 확인
       </button>
