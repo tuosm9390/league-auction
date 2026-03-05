@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import {
-  useAuctionStore,
-  Player,
-  Team,
+  type Player,
+  type Team,
 } from "@/features/auction/store/useAuctionStore";
-import { placeBid } from "@/features/auction/api/auctionActions";
+import { useBiddingControl } from "@/features/auction/hooks/useBiddingControl";
 
 interface BiddingControlProps {
   roomId: string;
@@ -19,75 +17,30 @@ interface BiddingControlProps {
   isTeamFull: boolean;
 }
 
-export function BiddingControl({
-  roomId,
-  teamId,
-  currentPlayer,
-  myTeam,
-  isAuctionActive,
-  timerEndsAt,
-  minBid,
-  isTeamFull,
-}: BiddingControlProps) {
-  const [bidAmount, setBidAmount] = useState<number | string>(minBid);
-  const [isBidding, setIsBidding] = useState(false);
-  const [bidError, setBidError] = useState<string | null>(null);
+export function BiddingControl(props: BiddingControlProps) {
+  const {
+    bidAmount,
+    setBidAmount,
+    bidError,
+    isLeading,
+    numericBidAmount,
+    canBid,
+    waitingCount,
+    soldCount,
+    isBidding,
+    handleBid,
+    incrementBid,
+    decrementBid,
+  } = useBiddingControl(props);
 
-  const bids = useAuctionStore((s) => s.bids);
-  const setRealtimeData = useAuctionStore((s) => s.setRealtimeData);
-  const playerBids = bids.filter((b) => b.player_id === currentPlayer?.id);
-  const highestBid =
-    playerBids.length > 0 ? Math.max(...playerBids.map((b) => b.amount)) : 0;
-  const topBid = playerBids.find((b) => b.amount === highestBid);
-  const isLeading = topBid?.team_id === teamId;
-
-  useEffect(() => {
-    setBidAmount((prev) => {
-      const val = typeof prev === "string" ? parseInt(prev) || 0 : prev;
-      return Math.max(val, minBid);
-    });
-  }, [minBid]);
-
-  useEffect(() => {
-    setBidAmount(minBid);
-    setBidError(null);
-  }, [currentPlayer?.id, minBid]);
-
-  const handleBid = async () => {
-    if (!currentPlayer || !roomId || !teamId) return;
-    const numericAmount =
-      typeof bidAmount === "string" ? parseInt(bidAmount) || 0 : bidAmount;
-    const finalAmount = Math.max(numericAmount, minBid);
-    setBidError(null);
-    setIsBidding(true);
-    try {
-      const res = await placeBid(roomId, currentPlayer.id, teamId, finalAmount);
-      if (res.error) {
-        setBidError(res.error);
-      } else {
-        setBidAmount(finalAmount + 10);
-        // 타이머 연장 시 실시간 이벤트 대기 없이 즉시 반영 (Optimistic Update)
-        if (res.newTimerEndsAt) {
-          setRealtimeData({ timerEndsAt: res.newTimerEndsAt });
-        }
-      }
-    } finally {
-      setIsBidding(false);
-    }
-  };
-
-  const numericBidAmount =
-    typeof bidAmount === "string" ? parseInt(bidAmount) || 0 : bidAmount;
-  const canBid =
-    isAuctionActive &&
-    !isBidding &&
-    !!currentPlayer &&
-    !isLeading &&
-    !isTeamFull;
-
-  const players = useAuctionStore((s) => s.players);
-  const waitingCount = players.filter((p) => p.status === "WAITING").length;
-  const soldCount = players.filter((p) => p.status === "SOLD").length;
+  const {
+    currentPlayer,
+    isAuctionActive,
+    timerEndsAt,
+    minBid,
+    isTeamFull,
+    myTeam,
+  } = props;
 
   return (
     <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-4 shrink-0">
@@ -143,14 +96,7 @@ export function BiddingControl({
         )}
 
         <button
-          onClick={() =>
-            setBidAmount((v) =>
-              Math.max(
-                minBid,
-                (typeof v === "string" ? parseInt(v) || 0 : v) - 10,
-              ),
-            )
-          }
+          onClick={decrementBid}
           disabled={!canBid || numericBidAmount <= minBid}
           className="bg-white hover:bg-gray-50 text-gray-700 w-10 lg:w-12 h-full rounded-lg font-bold text-xl lg:text-2xl border border-gray-200 transition-all active:scale-90 disabled:opacity-20 shadow-sm"
         >
@@ -174,11 +120,7 @@ export function BiddingControl({
         </div>
 
         <button
-          onClick={() =>
-            setBidAmount(
-              (v) => (typeof v === "string" ? parseInt(v) || 0 : v) + 10,
-            )
-          }
+          onClick={incrementBid}
           disabled={!canBid}
           className="bg-white hover:bg-gray-50 text-gray-700 w-10 lg:w-12 h-full rounded-lg font-bold text-xl lg:text-2xl border border-gray-200 transition-all active:scale-90 disabled:opacity-20 shadow-sm"
         >

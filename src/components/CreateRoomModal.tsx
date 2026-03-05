@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { createRoom as createRoomAction } from "@/features/auction/api/auctionActions";
 import { Copy, X, Check, ExternalLink, ArrowRight, Upload } from "lucide-react";
+import Image from "next/image";
 
 const TIERS = [
   "챌린저",
@@ -21,8 +22,70 @@ const TIERS = [
 const POSITIONS = ["탑", "정글", "미드", "원딜", "서포터", "무관"];
 const LS_KEY = "league_auction_rooms";
 
-const LAST_NAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권", "황", "안", "송", "홍", "고"];
-const FIRST_NAMES_LIST = ["민준", "서준", "도윤", "예준", "시우", "주원", "하준", "지호", "준서", "준혁", "도현", "지훈", "건우", "우진", "현우", "민재", "준우", "민호", "준영", "민규", "지민", "서연", "서윤", "지윤", "수아", "하윤", "소윤", "예린", "지아", "채원", "수빈", "다은", "지은", "예원", "나은", "수현", "지현", "유진", "다연", "아린"];
+const LAST_NAMES = [
+  "김",
+  "이",
+  "박",
+  "최",
+  "정",
+  "강",
+  "조",
+  "윤",
+  "장",
+  "임",
+  "한",
+  "오",
+  "서",
+  "신",
+  "권",
+  "황",
+  "안",
+  "송",
+  "홍",
+  "고",
+];
+const FIRST_NAMES_LIST = [
+  "민준",
+  "서준",
+  "도윤",
+  "예준",
+  "시우",
+  "주원",
+  "하준",
+  "지호",
+  "준서",
+  "준혁",
+  "도현",
+  "지훈",
+  "건우",
+  "우진",
+  "현우",
+  "민재",
+  "준우",
+  "민호",
+  "준영",
+  "민규",
+  "지민",
+  "서연",
+  "서윤",
+  "지윤",
+  "수아",
+  "하윤",
+  "소윤",
+  "예린",
+  "지아",
+  "채원",
+  "수빈",
+  "다은",
+  "지은",
+  "예원",
+  "나은",
+  "수현",
+  "지현",
+  "유진",
+  "다연",
+  "아린",
+];
 const CAPTAIN_INTROS = [
   "팀원들을 이끌어 우승을 가져가겠습니다!",
   "최선을 다해 팀을 운영하겠습니다.",
@@ -83,7 +146,8 @@ const STEPS = ["기본 정보", "팀장 등록", "선수 등록", "링크 발급
 function generateKoreanName(usedNames: Set<string>): string {
   for (let i = 0; i < 100; i++) {
     const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-    const first = FIRST_NAMES_LIST[Math.floor(Math.random() * FIRST_NAMES_LIST.length)];
+    const first =
+      FIRST_NAMES_LIST[Math.floor(Math.random() * FIRST_NAMES_LIST.length)];
     const name = `${last}${first}`;
     if (!usedNames.has(name)) {
       usedNames.add(name);
@@ -180,7 +244,7 @@ export function CreateRoomModal() {
 
   const [basic, setBasic] = useState<BasicInfo>({
     title: "",
-    teamCount: 5,
+    teamCount: 2,
     membersPerTeam: 5,
     totalPoints: 1000,
   });
@@ -339,7 +403,7 @@ export function CreateRoomModal() {
 
     const { roomId, organizerToken, viewerToken, teams: teamsResult } = result;
     if (!roomId || !organizerToken || !viewerToken || !teamsResult) {
-      throw new Error('방 생성 결과가 올바르지 않습니다.');
+      throw new Error("방 생성 결과가 올바르지 않습니다.");
     }
 
     const baseUrl = window.location.origin;
@@ -612,9 +676,16 @@ export function CreateRoomModal() {
           >
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-              <div>
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/favicon.png"
+                  alt="Minions Icon"
+                  width={28}
+                  height={28}
+                  className="drop-shadow-sm"
+                />
                 <h2 className="text-xl font-black text-minion-blue">
-                  🍌 경매방 만들기
+                  경매방 만들기
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {STEPS[step]} ({step + 1}/{STEPS.length})
@@ -728,7 +799,7 @@ export function CreateRoomModal() {
                       onChange={(e) =>
                         setBasic((p) => ({ ...p, title: e.target.value }))
                       }
-                      placeholder="예: 롤 리그 시즌 1 선수 경매"
+                      placeholder="예시) 제 14회 미니언즈 정규 리그전"
                       className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                     />
                   </div>
@@ -761,8 +832,8 @@ export function CreateRoomModal() {
                       </label>
                       <input
                         type="number"
-                        min={2}
-                        max={20}
+                        min={5}
+                        max={5}
                         value={basic.membersPerTeam}
                         onChange={(e) =>
                           setBasic((p) => ({
@@ -805,9 +876,10 @@ export function CreateRoomModal() {
                       경매 진행 방식
                     </label>
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
-                      경매는 주최자가 무작위로 선수를 추첨하여 시작됩니다. 
-                      팀장들은 한정된 포인트를 사용하여 입찰하며, 가장 높은 금액을 부른 팀장이 선수를 영입합니다. 
-                      모든 팀이 인원을 모두 채울 때까지 경매가 진행됩니다.
+                      경매는 주최자가 무작위로 선수를 추첨하여 시작됩니다.
+                      팀장들은 한정된 포인트를 사용하여 입찰하며, 가장 높은
+                      금액을 부른 팀장이 선수를 영입합니다. 모든 팀이 인원을
+                      모두 채울 때까지 경매가 진행됩니다.
                     </div>
                   </div>
 

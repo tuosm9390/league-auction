@@ -162,7 +162,7 @@ export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, on
         onClick={onClose}
       >
         <div
-          className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 cursor-default"
+          className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 cursor-default overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
 
