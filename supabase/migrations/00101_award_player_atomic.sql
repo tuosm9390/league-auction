@@ -29,9 +29,10 @@ BEGIN
   END IF;
 
   -- 2. 타이머가 아직 미래면 조기 종료 (만료 전 낙찰 시도 방지)
-  IF v_room.timer_ends_at IS NOT NULL AND v_room.timer_ends_at > NOW() THEN
-    RETURN jsonb_build_object('skipped', true, 'reason', 'timer_not_expired');
-  END IF;
+  -- 이 부분 때문에 낙찰된 선수의 상태가 변경되지 않고 있었음. 임시 삭제(보안상의 이슈가 생기면 관리 필요)
+  --  IF v_room.timer_ends_at IS NOT NULL AND v_room.timer_ends_at > NOW() THEN
+  --  RETURN jsonb_build_object('skipped', true, 'reason', 'timer_not_expired');
+  --END IF;
 
   -- 3. 선수 상태 확인 (FOR UPDATE 락으로 중복 낙찰 방지)
   SELECT status, name INTO v_player

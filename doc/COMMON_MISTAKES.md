@@ -240,18 +240,22 @@ useEffect(() => {
 ## 이슈 #5 — 경매 로직 보안 강화 및 구조 개선 (2026-03-03)
 
 ### 이슈 요약 (The Problem)
+
 경매 경쟁 루트(`/api/room-auth`, `drawNextPlayer`, `placeBid`, `awardPlayer`)에 다음 취약점과 버그가 동시에 존재했다:
+
 - **P0**: role 화이트리스트 검증 없는 쿠키 발급, drawNextPlayer에 IN_AUCTION 중복 가드 없음, placeBid의 teamId가 해당 방 소속인지 검증 없음
 - **P1**: startAuction 중복 타이머 실행, awardPlayer 비원자 처리(players/teams 업데이트 분리), 문자열 기반 isReAuctionRound 감지
 - **P1**: ChatPanel과 useAuctionControl이 anon key로 직접 messages INSERT → RLS 강화 후 차단됨
 - **P1**: page.tsx의 roleParam이 타입 캐스트만 하고 런타임 검증 없음
 
 ### 실패한 접근법 (What didn't work)
+
 1. **anon key RLS 정책 삭제 후 방치**: SELECT 전용 RLS로 전환하면 기존 ChatPanel/useAuctionControl의 anon INSERT가 차단됨 — DB 정책 변경과 코드 변경이 반드시 함께 진행되어야 한다.
 2. **문자열 기반 재경매 감지**: `content.includes('재경매를 재개합니다')` — 메시지 텍스트가 바뀌거나 국제화되면 즉시 깨지는 취약한 패턴이다.
 3. **비원자 낙찰 처리**: `players.update(SOLD)` 후 `teams.update(point_balance)` 분리 호출 — 두 쿼리 사이에 충돌이 발생하면 데이터 불일치가 발생한다.
 
 ### 최종 해결책 (What worked)
+
 1. **RLS 정책을 SELECT-only로 재설정** (마이그레이션 `00010`) — anon key는 읽기 전용, 모든 쓰기는 service_role(Server Actions)만 가능
 2. **모든 DB 쓰기를 Server Action 경유** — ChatPanel, useAuctionControl의 `supabase.from('messages').insert()` → `sendChatMessage()` Server Action 호출로 교체
 3. **award_player_atomic RPC** (마이그레이션 `00011`) — PostgreSQL 함수 내에서 `FOR UPDATE` 락으로 players + teams + rooms를 단일 트랜잭션으로 처리
@@ -259,6 +263,7 @@ useEffect(() => {
 5. **route.ts 토큰 DB 검증** — organizer_token, viewer_token, leader_token을 DB에서 조회하여 비교
 
 ### AI 행동 지침 (Lessons Learned & New Rules)
+
 > **DB 정책(RLS)과 애플리케이션 코드는 반드시 함께 변경해야 한다. RLS를 강화할 때는 "anon key로 직접 쓰기를 수행하는 코드가 있는가?"를 반드시 전체 코드베이스에서 검색하고, 발견된 모든 직접 쓰기를 service_role 경유 Server Action으로 전환한 후에야 RLS 정책을 배포한다.**
 
 ---
@@ -266,17 +271,21 @@ useEffect(() => {
 ## 이슈 #6 — 상태 읽기/쓰기 불일치 (Dead State) 패턴 (2026-03-04)
 
 ### 이슈 요약 (The Problem)
+
 Zustand store에 `isReAuctionRound` 상태가 존재하고 `setReAuctionRound()` 쓰기가 여러 곳에서 일어났지만, 실제 `useAuctionStore(s => s.isReAuctionRound)`로 읽는 컴포넌트가 없었다. `RoomClient.tsx`는 동명의 로컬 변수(`const isReAuctionRound = unsoldPlayers.length > 0 && waitingPlayers.length === 0`)를 사용했고, 이 로컬 값은 `restartAuctionWithUnsold` 호출 후 unsold → waiting 전환되는 순간 `false`가 되어 재경매 타이머를 5초 대신 10초로 잘못 계산했다.
 
 ### 실패한 접근법 (What didn't work)
+
 1. **로컬 상태 계산 유지**: 플레이어 상태(UNSOLD/WAITING)만으로 "재경매 중"을 판단 — 상태 전환 자체가 감지 조건을 파괴하는 시간차 문제 발생
 2. **문자열 기반 메시지 감지**: `content.includes('재경매를 재개합니다')` — 텍스트 변경 시 즉시 깨지는 취약한 패턴
 
 ### 최종 해결책 (What worked)
+
 - 로컬 계산식 제거 → `useAuctionStore(s => s.isReAuctionRound)` 참조로 통일
 - `handleRestartAuction`에서 `setReAuctionRound(true)` 직접 호출 — 상태 전환과 독립적인 명시적 플래그
 
 ### AI 행동 지침 (Lessons Learned & New Rules)
+
 > **Zustand store에 상태를 쓰는 코드를 추가할 때는, 그 상태를 실제로 읽는 컴포넌트가 있는지 반드시 확인하라. 스토어에 write만 하고 아무도 read하지 않는 "dead state"는 로컬 변수와 동명 충돌을 일으켜 버그의 원인이 된다. grep으로 `s\.상태명` 패턴을 검색하여 소비자가 존재하는지 확인할 것.**
 
 ---
@@ -284,20 +293,47 @@ Zustand store에 `isReAuctionRound` 상태가 존재하고 `setReAuctionRound()`
 ## 이슈 #7 — Broadcast-primary 아키텍처 전환 시 스토어 상태 제거 부작용 (2026-03-04)
 
 ### 이슈 요약 (The Problem)
+
 Broadcast-primary 아키텍처로 전환하면서 Zustand store에서 `hasPlayedReadyAnimation`, `addBid`, `addMessage`, `updatePlayer`, `updateTeam` 등을 제거했다. 그러나 `AuctionBoard.tsx`가 `hasPlayedReadyAnimation`과 `setReadyAnimationPlayed`를 store에서 읽고 있어 빌드 시 TypeScript 에러 발생.
 
 ### 실패한 접근법 (What didn't work)
+
 1. **store에서 상태 제거 후 곧바로 빌드**: 상태를 제거하기 전에 어떤 파일이 해당 상태를 소비하는지 확인하지 않아 빌드 에러 발생
 2. **"단순히 쓰기만 있는 상태다"라는 가정**: `setReadyAnimationPlayed` 호출이 store에서 `hasPlayedReadyAnimation`을 읽는 곳과 동일 컴포넌트 내에 존재했음
 
 ### 최종 해결책 (What worked)
+
 - `AuctionBoard.tsx`에서 store 의존성을 제거하고 `useState`로 로컬 상태 전환:
   ```typescript
   // Before: const hasPlayedReadyAnimation = useAuctionStore(s => s.hasPlayedReadyAnimation)
-  const [hasPlayedReadyAnimation, setHasPlayedReadyAnimation] = useState(false)
-  const setReadyAnimationPlayed = (played: boolean) => setHasPlayedReadyAnimation(played)
+  const [hasPlayedReadyAnimation, setHasPlayedReadyAnimation] = useState(false);
+  const setReadyAnimationPlayed = (played: boolean) =>
+    setHasPlayedReadyAnimation(played);
   ```
 - Store 상태 제거 전 `grep -r "hasPlayedReadyAnimation" src/` 실행하여 소비자 위치 확인이 선행되었어야 했음
 
 ### AI 행동 지침 (Lessons Learned & New Rules)
+
 > **Zustand store에서 상태를 제거할 때는, 반드시 먼저 `grep -r "s\.상태명\|상태명" src/` 명령으로 모든 소비 위치를 파악하고, 각 소비자를 로컬 상태나 props로 전환한 뒤에 store에서 제거해야 한다. 제거와 소비자 전환을 동시에 수행하지 않으면 빌드 에러가 발생한다.**
+
+---
+
+## 이슈 #8 — 모바일 뷰 Flex 레이아웃에서 자식 요소 수축(Shrink) 현상에 의한 겹침 버그 (2026-03-05)
+
+### 이슈 요약 (The Problem)
+
+모바일 기기 등 높이가 작은 화면에서 `RoomClient.tsx`의 `<main>` 컨테이너 내부의 패널들(경매정보, 실시간 채팅, 팀 현황)이 서로 겹치거나 영역 밖으로 튀어나오는 현상이 발생함. "1. 경매정보 2. 실시간채팅, 유찰정보 3. 팀 현황" 순으로 정상적으로 나열되어 스크롤되어야 하나 요소들이 강제로 찌그러지고 겹쳐진 상태로 노출됨.
+
+### 실패한 접근법 (What didn't work)
+
+1. 부모 컨테이너에 `flex-col`, `overflow-y-auto`만 지정하고 자식 요소들의 `flex-shrink`를 제어하지 않음.
+2. 자식 요소들에 고정 높이나 최소 높이(`h-[400px]`, `min-h-[460px]`)를 선언했지만, `flex` 박스에서 자식의 기본 속성인 `flex-shrink: 1`이 여전히 적용되어 있어 좁은 화면에서 지정한 최소 치수가 무시됨.
+
+### 최종 해결책 (What worked)
+
+- 부모 엘리먼트(`flex-col`) 아래에서 고유의 높이를 유지해야 하는 자식 요소들(1뎁스의 `<aside>`, `<section>`)에 `shrink-0` (`flex-shrink: 0`) Tailwind 클래스를 일괄 추가.
+- 이렇게 하면 부모 영역 높이가 모바일 디바이스 해상도로 인해 짧아지더라도, 자식들은 찌그러지지 않고 원래 지정한 크기를 유지하며 부모 트랙 내에서 정상적으로 수직 스크롤 됨.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+
+> **Flex 컨테이너 내부에서 스크롤이 가능한 세로형 레이아웃(`flex-col` + `overflow-y-auto`)을 구축할 때, 각 자식 컴포넌트가 최소한의 높이를 보장받아야 한다면 반드시 `shrink-0` 속성을 부여하라. 그렇지 않으면 브라우저는 좁은 화면 배율에서 자식 요소를 우선적으로 수축(`shrink`)시켜, 레이아웃 겹침(Overflow overlap) 등 치명적인 UI 버그를 유발한다.**

@@ -361,7 +361,7 @@ export function RoomClient({
       </header>
 
       <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 p-2 sm:p-3 lg:px-6 overflow-y-auto lg:overflow-hidden min-h-0 max-h-[950px] w-full max-w-7xl mx-auto py-3">
-        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] sm:h-[400px] lg:h-auto lg:self-stretch">
+        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] sm:h-[400px] lg:h-auto lg:self-stretch shrink-0">
           <div className="bg-card rounded-xl shadow-sm border border-border flex-1 flex flex-col overflow-hidden min-h-0">
             <div className="px-3 py-2.5 border-b border-border bg-card shrink-0">
               <h2 className="text-sm font-semibold text-minion-blue flex items-center gap-1.5 uppercase tracking-tight">
@@ -374,7 +374,7 @@ export function RoomClient({
           </div>
         </aside>
 
-        <section className="lg:col-span-6 flex flex-col gap-2 min-h-0 order-1 lg:order-2 lg:h-full">
+        <section className="lg:col-span-6 flex flex-col gap-2 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
           {roomName && (
             <div className="shrink-0 bg-[#0f1f3d] rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 border border-[#2a3f6f] relative overflow-hidden">
               {/* 은은한 광택 오버레이 */}
@@ -486,7 +486,7 @@ export function RoomClient({
           )}
         </section>
 
-        <aside className="lg:col-span-3 flex flex-col gap-2 lg:gap-3 min-h-0 order-2 lg:order-3 h-[400px] sm:h-[500px] lg:h-auto lg:self-stretch">
+        <aside className="lg:col-span-3 flex flex-col gap-2 lg:gap-3 min-h-0 order-2 lg:order-3 h-[400px] sm:h-[500px] lg:h-auto lg:self-stretch shrink-0">
           <div className="bg-card rounded-xl shadow-sm border border-border flex-none max-h-[140px] flex flex-col overflow-hidden min-h-0 relative">
             <div className="px-3 py-2 border-b border-border bg-card shrink-0">
               <h2 className="text-xs font-semibold text-red-500 flex items-center gap-1.5 uppercase px-0.5">
