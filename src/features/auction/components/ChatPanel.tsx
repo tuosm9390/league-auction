@@ -16,7 +16,7 @@ function MessageItem({ msg }: { msg: Message }) {
   if (role === "SYSTEM") {
     return (
       <div className="flex justify-center my-1">
-        <span className="text-[12px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium italic">
+        <span className="text-[12px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-medium italic">
           {msg.content}
         </span>
       </div>
@@ -26,62 +26,61 @@ function MessageItem({ msg }: { msg: Message }) {
   // ── 공지 메시지 ──
   if (role === "NOTICE") {
     return (
-      <div className="bg-minion-yellow/20 border border-minion-yellow rounded-lg px-2 py-1.5 my-0.5">
+      <div className="bg-primary/10 border border-primary/20 rounded-lg px-2 py-1.5 my-0.5">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-sm font-black text-amber-700">📢 공지</span>
-          <span className="text-[9px] text-gray-400 ml-auto font-mono">
+          <span className="text-sm font-black text-primary">📢 공지</span>
+          <span className="text-[9px] text-muted-foreground ml-auto font-mono">
             {new Date(msg.created_at).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}
           </span>
         </div>
-        <p className="text-md font-bold text-amber-900 break-words">
+        <p className="text-md font-bold text-foreground break-words">
           {msg.content}
         </p>
       </div>
     );
   }
 
-  // ── 일반 채팅 ──
   const BADGE: Record<string, React.ReactElement> = {
     ORGANIZER: (
-      <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded border border-red-200">
+      <span className="text-[9px] bg-destructive/10 text-destructive px-1 py-0.5 rounded border border-destructive/20">
         주최
       </span>
     ),
     LEADER: (
-      <span className="text-[9px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded border border-blue-200">
+      <span className="text-[9px] bg-primary/10 text-primary px-1 py-0.5 rounded border border-primary/20">
         팀장
       </span>
     ),
     VIEWER: (
-      <span className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">
+      <span className="text-[9px] bg-muted text-muted-foreground px-1 py-0.5 rounded">
         관전
       </span>
     ),
   };
   const badge = BADGE[role] ?? (
-    <span className="text-[9px] bg-gray-100 text-gray-400 px-1 py-0.5 rounded">
+    <span className="text-[9px] bg-muted text-muted-foreground px-1 py-0.5 rounded">
       {role}
     </span>
   );
 
   return (
-    <div className="text-sm bg-gray-50 hover:bg-gray-100/70 p-1.5 rounded-lg transition-colors leading-normal">
+    <div className="text-sm bg-muted/30 hover:bg-muted/50 p-1.5 rounded-lg transition-colors leading-normal border border-transparent hover:border-border">
       <div className="flex items-center gap-1 mb-0.5">
         {badge}
-        <span className="font-bold text-gray-800 text-[11px]">
+        <span className="font-bold text-foreground text-[11px]">
           {msg.sender_name}
         </span>
-        <span className="text-[9px] text-gray-400 ml-auto font-mono">
+        <span className="text-[9px] text-muted-foreground ml-auto font-mono">
           {new Date(msg.created_at).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           })}
         </span>
       </div>
-      <p className="text-gray-700 pl-0.5 break-words">{msg.content}</p>
+      <p className="text-foreground/90 pl-0.5 break-words">{msg.content}</p>
     </div>
   );
 }
@@ -146,8 +145,8 @@ export function ChatPanel() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-      <div className="p-2 border-b border-border bg-card shrink-0">
-        <h2 className="text-sm font-bold text-minion-blue flex items-center gap-2 uppercase tracking-tighter">
+      <div className="p-2 border-b border-border bg-muted/50 shrink-0">
+        <h2 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-tighter">
           <span className="text-xl">💬</span> 실시간 채팅
         </h2>
       </div>
@@ -167,7 +166,7 @@ export function ChatPanel() {
 
       <form
         onSubmit={handleSend}
-        className="p-2 px-3 border-t bg-gray-50 flex gap-2"
+        className="p-2 px-3 border-t border-border bg-muted/30 flex gap-2"
       >
         <input
           type="text"
@@ -175,13 +174,13 @@ export function ChatPanel() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="메시지..."
           maxLength={MAX_MESSAGE_LENGTH}
-          className="flex-1 bg-white border border-gray-200 px-2.5 py-1.5 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-minion-yellow transition-shadow"
+          className="flex-1 bg-background border border-input px-2.5 py-1.5 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-ring transition-shadow text-foreground"
           disabled={isSending}
         />
         <button
           type="submit"
           disabled={isSending || !input.trim()}
-          className="bg-minion-blue text-white px-3 py-1.5 rounded-md font-bold text-xs hover:bg-minion-blue-hover transition-colors disabled:opacity-50"
+          className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-bold text-xs hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           전송
         </button>

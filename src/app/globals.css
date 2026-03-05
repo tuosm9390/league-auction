@@ -91,48 +91,48 @@
 
 @layer base {
   :root {
-    --background: #FAFAFA;
-    --foreground: #111827;
-    --card: #FFFFFF;
-    --card-foreground: #111827;
-    --popover: #FFFFFF;
-    --popover-foreground: #111827;
-    --primary: #FBE042;
-    --primary-foreground: #111827;
-    --secondary: #2358A4;
-    --secondary-foreground: #FAFAFA;
-    --muted: #F3F4F6;
-    --muted-foreground: #6B7280;
-    --accent: #FFC09A;
-    --accent-foreground: #111827;
-    --destructive: #EF4444;
-    --destructive-foreground: #FAFAFA;
-    --border: #E5E7EB;
-    --input: #E5E7EB;
-    --ring: #FBE042;
+    --background: #ffffff;
+    --foreground: #09090b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --popover: #ffffff;
+    --popover-foreground: #09090b;
+    --primary: #18181b;
+    --primary-foreground: #fafafa;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+    --destructive: #ef4444;
+    --destructive-foreground: #fafafa;
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #18181b;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: #111827;
-    --foreground: #F9FAFB;
-    --card: #1F2937;
-    --card-foreground: #F9FAFB;
-    --popover: #1F2937;
-    --popover-foreground: #F9FAFB;
-    --primary: #FBE042;
-    --primary-foreground: #111827;
-    --secondary: #2358A4;
-    --secondary-foreground: #FAFAFA;
-    --muted: #374151;
-    --muted-foreground: #9CA3AF;
-    --accent: #FFC09A;
-    --accent-foreground: #111827;
-    --destructive: #7F1D1D;
-    --destructive-foreground: #F9FAFB;
-    --border: #374151;
-    --input: #374151;
-    --ring: #FBE042;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #09090b;
+    --card-foreground: #fafafa;
+    --popover: #09090b;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #fafafa;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #d4d4d8;
   }
 }
 
