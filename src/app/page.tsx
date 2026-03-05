@@ -37,13 +37,13 @@ const HOW_TO_USE = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Decorative background */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-minion-yellow/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-minion-yellow/15 rounded-full blur-[400px] pointer-events-none" />
 
       <div className="relative z-10 flex flex-col items-center px-4 py-16 gap-16">
         {/* Hero Card */}
-        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 border-minion-blue max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
           <h1 className="text-5xl font-black text-minion-blue drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
             <Image
               src="/favicon.png"
@@ -55,7 +55,9 @@ export default function Home() {
               <span className="text-minion-yellow block drop-shadow-sm">
                 M I N I O N S
               </span>
-              <span className="block drop-shadow-sm">auction</span>
+              <span className="text-foreground block drop-shadow-sm">
+                auction
+              </span>
             </div>
             <Image
               src="/favicon.png"
@@ -82,15 +84,17 @@ export default function Home() {
             {HOW_TO_USE.map((item) => (
               <div
                 key={item.step}
-                className="bg-card rounded-2xl p-5 border-2 border-gray-100 hover:border-minion-yellow transition-colors shadow-sm"
+                className="bg-card rounded-2xl p-5 border-2 hover:border-minion-yellow transition-colors shadow-sm"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{item.icon}</span>
-                  <span className="text-xs font-black text-minion-blue bg-minion-yellow/30 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-black text-foreground bg-minion-yellow/30 px-2 py-0.5 rounded-full">
                     STEP {item.step}
                   </span>
                 </div>
-                <h3 className="font-black text-gray-800 mb-1">{item.title}</h3>
+                <h3 className="font-black text-foreground mb-1">
+                  {item.title}
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {item.desc}
                 </p>
@@ -100,10 +104,10 @@ export default function Home() {
 
           {/* Tips */}
           <div className="mt-8 bg-minion-blue/5 border border-minion-blue/20 rounded-2xl p-6 max-w-3xl mx-auto shadow-sm">
-            <p className="text-sm font-black text-minion-blue mb-2">
+            <p className="text-sm font-black text-foreground mb-2">
               💡 알아두면 좋은 점
             </p>
-            <ul className="text-sm text-gray-600 space-y-1.5 list-none">
+            <ul className="text-sm text-gray-500 space-y-1.5 list-none">
               <li>
                 · 팀장 링크와 주최자 링크는{" "}
                 <span className="font-bold">다른 주소</span>입니다. 링크를

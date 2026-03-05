@@ -201,7 +201,7 @@ export function AuctionBoard({
           </div>
         </div>
       )}
-      <div className="absolute top-0 right-0 w-60 h-60 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-60 h-60 bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
       <div className="z-10 flex flex-col flex-1 p-3 lg:p-4 gap-2 lg:gap-3 min-h-0">
         <div className="flex justify-center min-h-[32px]">
           {currentPlayer ? (

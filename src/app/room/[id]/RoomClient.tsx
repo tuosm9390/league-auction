@@ -27,6 +27,7 @@ import { LinksModal } from "@/features/auction/components/LinksModal";
 import { HowToUseModal } from "@/features/auction/components/HowToUseModal";
 import { EndRoomModal } from "@/features/auction/components/EndRoomModal";
 import { AuctionResultModal } from "@/features/auction/components/AuctionResultModal";
+import { LeaveRoomModal } from "@/features/auction/components/LeaveRoomModal";
 
 function ElapsedTimer({ createdAt }: { createdAt: string }) {
   const [elapsed, setElapsed] = useState("");
@@ -45,7 +46,7 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
   }, [createdAt]);
   return (
     <div className="text-[10px] font-mono font-semibold text-primary-foreground/80 bg-primary/20 px-3 py-1 rounded-md border border-primary-foreground/20 tracking-widest">
-      경과 시간 <b className="text-secondary text-xs">{elapsed}</b>
+      경과 시간 <b className="text-minion-yellow/70 text-xs">{elapsed}</b>
     </div>
   );
 }
@@ -164,6 +165,7 @@ export function RoomClient({
   const [isStarting, setIsStarting] = useState(false);
   const router = useRouter();
   const [isEndRoomOpen, setIsEndRoomOpen] = useState(false);
+  const [isLeaveRoomOpen, setIsLeaveRoomOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [noticeText, setNoticeText] = useState("");
@@ -293,11 +295,11 @@ export function RoomClient({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background font-pretendard">
-      <header className="h-16 shrink-0 bg-primary text-primary-foreground shadow-sm relative z-[110] border-b border-border">
+      <header className="h-16 shrink-0 bg-card text-card-foreground shadow-sm relative z-[110] border-b border-border">
         <div className="max-w-7xl mx-auto px-6 w-full h-full flex justify-between items-center">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <h1 className="text-base md:text-xl font-bold text-primary-foreground tracking-tight drop-shadow-sm">
+              <h1 className="text-base md:text-xl font-bold text-foreground tracking-tight drop-shadow-sm">
                 MINIONS
               </h1>
               <Image
@@ -350,7 +352,7 @@ export function RoomClient({
           <div className="flex items-center gap-3">
             {createdAt && <ElapsedTimer createdAt={createdAt} />}
             <button
-              onClick={() => router.push("/")}
+              onClick={() => setIsLeaveRoomOpen(true)}
               className="bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border px-3.5 py-1.5 rounded-md text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
               title="메인 홈으로 이동"
             >
@@ -502,6 +504,11 @@ export function RoomClient({
         </aside>
       </main>
 
+      <LeaveRoomModal
+        isOpen={isLeaveRoomOpen}
+        onClose={() => setIsLeaveRoomOpen(false)}
+        onConfirm={() => router.push("/")}
+      />
       <EndRoomModal
         isOpen={isEndRoomOpen}
         isCompleted={allDone}
