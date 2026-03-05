@@ -127,11 +127,11 @@ export function AuctionResultModal({
                                     <span className="font-medium text-foreground">
                                       {player.name}
                                     </span>
-                                    {player.sold_price != null && (
-                                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold text-secondary-foreground bg-secondary px-1 py-0.5 rounded border border-border">
-                                        {player.sold_price}P
-                                      </span>
-                                    )}
+                                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold text-secondary-foreground bg-secondary px-1 py-0.5 rounded border border-border">
+                                      {player.sold_price != null
+                                        ? player.sold_price + "P"
+                                        : "유찰"}
+                                    </span>
                                   </>
                                 ) : (
                                   <span className="text-[11px] text-muted-foreground/50 italic">

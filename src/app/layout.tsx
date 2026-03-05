@@ -71,6 +71,7 @@ export default async function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
+          themes={["light", "dark", "minions"]}
           enableSystem
           disableTransitionOnChange
         >
