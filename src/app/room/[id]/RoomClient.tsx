@@ -27,6 +27,7 @@ import { LinksModal } from "@/features/auction/components/LinksModal";
 import { HowToUseModal } from "@/features/auction/components/HowToUseModal";
 import { EndRoomModal } from "@/features/auction/components/EndRoomModal";
 import { AuctionResultModal } from "@/features/auction/components/AuctionResultModal";
+import { LeaveRoomModal } from "@/features/auction/components/LeaveRoomModal";
 
 function ElapsedTimer({ createdAt }: { createdAt: string }) {
   const [elapsed, setElapsed] = useState("");
@@ -68,6 +69,7 @@ export function RoomClient({
   const createdAt = useAuctionStore((s) => s.createdAt);
   const roomExists = useAuctionStore((s) => s.roomExists);
   const isRoomLoaded = useAuctionStore((s) => s.isRoomLoaded);
+  const [isLeaveRoomOpen, setIsLeaveRoomOpen] = useState(false);
   const timerEndsAt = useAuctionStore((s) => s.timerEndsAt);
   const membersPerTeam = useAuctionStore((s) => s.membersPerTeam);
   const presences = useAuctionStore((s) => s.presences);
@@ -350,7 +352,7 @@ export function RoomClient({
           <div className="flex items-center gap-3">
             {createdAt && <ElapsedTimer createdAt={createdAt} />}
             <button
-              onClick={() => router.push("/")}
+              onClick={() => setIsLeaveRoomOpen(true)}
               className="bg-white/10 hover:bg-white/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 transition-colors shadow-inner flex items-center gap-1.5"
               title="메인 홈으로 이동"
             >
@@ -505,6 +507,11 @@ export function RoomClient({
         </aside>
       </main>
 
+      <LeaveRoomModal
+        isOpen={isLeaveRoomOpen}
+        onClose={() => setIsLeaveRoomOpen(false)}
+        onConfirm={() => router.push("/")}
+      />
       <EndRoomModal
         isOpen={isEndRoomOpen}
         isCompleted={allDone}
