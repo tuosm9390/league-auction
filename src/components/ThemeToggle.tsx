@@ -21,7 +21,7 @@ export function ThemeToggle() {
 
   const cycleTheme = () => {
     if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("minions");
+    // else if (theme === "dark") setTheme("minions");
     else setTheme("light");
   };
 
@@ -32,9 +32,9 @@ export function ThemeToggle() {
       title={
         theme === "light"
           ? "다크 모드로 전환"
-          : theme === "dark"
-            ? "미니언즈 테마로 전환"
-            : "라이트 모드로 전환"
+          : // : theme === "dark"
+            //   ? "미니언즈 테마로 전환"
+            "라이트 모드로 전환"
       }
       aria-label="테마 변경"
     >
