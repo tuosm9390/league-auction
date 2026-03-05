@@ -92,47 +92,47 @@
 @layer base {
   :root {
     --background: #ffffff;
-    --foreground: #09090b;
+    --foreground: #111111;
     --card: #ffffff;
-    --card-foreground: #09090b;
+    --card-foreground: #111111;
     --popover: #ffffff;
-    --popover-foreground: #09090b;
-    --primary: #18181b;
-    --primary-foreground: #fafafa;
+    --popover-foreground: #111111;
+    --primary: #111111;
+    --primary-foreground: #ffffff;
     --secondary: #f4f4f5;
-    --secondary-foreground: #18181b;
+    --secondary-foreground: #111111;
     --muted: #f4f4f5;
     --muted-foreground: #71717a;
     --accent: #f4f4f5;
-    --accent-foreground: #18181b;
+    --accent-foreground: #111111;
     --destructive: #ef4444;
-    --destructive-foreground: #fafafa;
+    --destructive-foreground: #ffffff;
     --border: #e4e4e7;
     --input: #e4e4e7;
-    --ring: #18181b;
+    --ring: #111111;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --card: #09090b;
-    --card-foreground: #fafafa;
-    --popover: #09090b;
-    --popover-foreground: #fafafa;
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
-    --secondary: #27272a;
-    --secondary-foreground: #fafafa;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --accent: #27272a;
-    --accent-foreground: #fafafa;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #fafafa;
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #d4d4d8;
+    --background: #111111;
+    --foreground: #ffffff;
+    --card: #181818;
+    --card-foreground: #ffffff;
+    --popover: #181818;
+    --popover-foreground: #ffffff;
+    --primary: #ffffff;
+    --primary-foreground: #111111;
+    --secondary: #242424;
+    --secondary-foreground: #ffffff;
+    --muted: #242424;
+    --muted-foreground: #999999;
+    --accent: #242424;
+    --accent-foreground: #ffffff;
+    --destructive: #ff4444;
+    --destructive-foreground: #ffffff;
+    --border: #2a2a2a;
+    --input: #2a2a2a;
+    --ring: #ffffff;
   }
 }
 
@@ -165,7 +165,7 @@
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #2358A4 #f3f4f6;
+    scrollbar-color: #333333 #181818;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -174,17 +174,17 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f3f4f6;
+    background: #181818;
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #2358A4;
+    background: #333333;
     border-radius: 10px;
     transition: background 0.2s;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #194079;
+    background: #555555;
   }
 }

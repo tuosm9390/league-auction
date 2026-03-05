@@ -44,7 +44,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#FDE047", // 미니언즈 노란색
+  themeColor: "#09090b", // Zinc background color
 };
 
 export default async function RootLayout({
@@ -59,7 +59,7 @@ export default async function RootLayout({
   const nonce = headersList.get("x-nonce") || undefined;
 
   return (
-    <html lang="ko">
+    <html lang="ko" className="dark">
       <head>
         <meta
           name="google-site-verification"
