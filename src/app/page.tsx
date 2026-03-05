@@ -44,13 +44,13 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col items-center px-4 py-16 gap-16">
         {/* Hero Card */}
-        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 relative">
+        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 border-secondary max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 relative">
           {/* Theme Toggle Button */}
           <div className="absolute top-4 right-4">
             <ThemeToggle />
           </div>
 
-          <h1 className="text-5xl font-black text-minion-blue drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
+          <h1 className="text-5xl font-black text-foreground drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
             <Image
               src="/favicon.png"
               alt="Minions Icon"
@@ -58,7 +58,7 @@ export default function Home() {
               height={48}
             />
             <div className="w-[350px]">
-              <span className="text-minion-yellow block drop-shadow-sm">
+              <span className="text-primary block drop-shadow-sm">
                 M I N I O N S
               </span>
               <span className="text-foreground block drop-shadow-sm">
@@ -94,7 +94,7 @@ export default function Home() {
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{item.icon}</span>
-                  <span className="text-xs font-black text-foreground bg-minion-yellow/30 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-black text-foreground bg-primary/30 px-2 py-0.5 rounded-full">
                     STEP {item.step}
                   </span>
                 </div>
@@ -109,7 +109,7 @@ export default function Home() {
           </div>
 
           {/* Tips */}
-          <div className="mt-8 bg-minion-blue/5 border border-minion-blue/20 rounded-2xl p-6 max-w-3xl mx-auto shadow-sm">
+          <div className="mt-8 bg-secondary/5 border border-secondary/20 rounded-2xl p-6 max-w-3xl mx-auto shadow-sm">
             <p className="text-sm font-black text-foreground mb-2">
               💡 알아두면 좋은 점
             </p>

@@ -47,7 +47,7 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
   }, [createdAt]);
   return (
     <div className="text-[10px] font-mono font-semibold text-primary-foreground/80 bg-primary/20 px-3 py-1 rounded-md border border-primary-foreground/20 tracking-widest">
-      경과 시간 <b className="text-minion-yellow/70 text-xs">{elapsed}</b>
+      경과 시간 <b className="text-primary/70 text-xs">{elapsed}</b>
     </div>
   );
 }

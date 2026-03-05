@@ -136,25 +136,25 @@
   }
 
   .minions {
-    --background: #FAFAFA;
-    --foreground: #111827;
-    --card: #FFFFFF;
-    --card-foreground: #111827;
-    --popover: #FFFFFF;
-    --popover-foreground: #111827;
-    --primary: #FBE042;
-    --primary-foreground: #111827;
-    --secondary: #2358A4;
-    --secondary-foreground: #FAFAFA;
-    --muted: #F3F4F6;
-    --muted-foreground: #6B7280;
-    --accent: #FFC09A;
-    --accent-foreground: #111827;
-    --destructive: #EF4444;
-    --destructive-foreground: #FAFAFA;
-    --border: #E5E7EB;
-    --input: #E5E7EB;
-    --ring: #FBE042;
+    --background: #eff6ff;
+    --foreground: #1e3a8a;
+    --card: #ffffff;
+    --card-foreground: #1e3a8a;
+    --popover: #ffffff;
+    --popover-foreground: #1e3a8a;
+    --primary: #fbe042;
+    --primary-foreground: #1e3a8a;
+    --secondary: #2358a4;
+    --secondary-foreground: #ffffff;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #fcd34d;
+    --accent-foreground: #1e3a8a;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #dbeafe;
+    --input: #dbeafe;
+    --ring: #2358a4;
   }
 }
 

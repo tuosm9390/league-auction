@@ -55,7 +55,7 @@ const getPositionImage = (pos: string) => {
     normalized.includes("sup")
   )
     return "/main_position_sup.svg";
-  return "/main_position_top.svg"; // 예비용
+  return "/main_position_fill.png"; // 예비용
 };
 
 export function LotteryAnimation({

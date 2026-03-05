@@ -115,13 +115,15 @@ function ArchiveDetailModal({
                           className="hover:bg-secondary/30 transition-colors"
                         >
                           <td
-                            className={`w-2/3 text-center py-2.5 px-4 font-semibold text-foreground ${idx !== team.players.length - 1 ? "border-b border-border/50" : ""}`}
+                            className={`w-2/3 text-center py-2.5 px-4 relative ${idx !== team.players.length - 1 ? "border-b border-border/50" : ""}`}
                           >
-                            <span>{p.name}</span>
+                            <span className="font-semibold text-foreground">
+                              {p.name}
+                            </span>
                             {p.sold_price != null && (
-                              <span className="ml-2 text-xs text-muted-foreground">
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-secondary-foreground bg-secondary px-1.5 py-0.5 rounded border border-border">
                                 {p.sold_price === 0
-                                  ? "(유찰)"
+                                  ? "0P"
                                   : `${p.sold_price.toLocaleString()}P`}
                               </span>
                             )}
