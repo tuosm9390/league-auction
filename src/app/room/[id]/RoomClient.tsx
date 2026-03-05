@@ -425,7 +425,7 @@ export function RoomClient({
                 <button
                   onClick={handleNotice}
                   disabled={!noticeText.trim() || isSendingNotice}
-                  className="bg-secondary text-secondary-foreground border border-border hover:bg-secondary/80 px-5 py-2.5 rounded-md text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                  className="bg-minion-yellow/60 text-secondary-foreground border border-border hover:bg-minion-yellow/80 px-5 py-2.5 rounded-md text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
                 >
                   선포
                 </button>

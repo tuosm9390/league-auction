@@ -186,14 +186,14 @@ export function AuctionBoard({
       {latestNotice && <NoticeBanner msg={latestNotice} />}
       {!allConnected && isAuctionStarted && !isAuctionComplete && (
         <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
-          <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-red-500 flex flex-col items-center gap-4 max-w-sm text-center">
-            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-red-100 rounded-full flex items-center justify-center text-2xl lg:text-3xl animate-pulse">
+          <div className="bg-card p-6 rounded-xl shadow-lg border-2 border-destructive flex flex-col items-center gap-4 max-w-sm text-center">
+            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-destructive/20 rounded-full flex items-center justify-center text-2xl lg:text-3xl animate-pulse">
               ⚠️
             </div>
-            <h2 className="text-xl font-bold text-red-600 tracking-tight">
+            <h2 className="text-xl font-bold text-destructive tracking-tight">
               팀장 접속 이탈
             </h2>
-            <p className="text-sm text-gray-500 font-medium leading-tight">
+            <p className="text-sm text-muted-foreground font-medium leading-tight">
               경매가 일시정지되었습니다.
               <br />
               모든 팀장이 재입장하면 재개됩니다.
