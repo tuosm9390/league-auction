@@ -1,15 +1,12 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 
 export type Role = 'ORGANIZER' | 'LEADER' | 'VIEWER' | null
-  theme: Theme
 export type PlayerStatus = 'WAITING' | 'IN_AUCTION' | 'SOLD' | 'UNSOLD'
-export type MessageRole = 'ORGANIZER' | 'LEADER' | 'VIEWER' | 'SYSTEM' | 'NOTICE'
-export type Theme = 'light' | 'dark' | 'monotone-light' | 'monotone-dark'
+export type MessageRole = 'ORGANIZER' | 'LEADER' | 'VIEWER' | 'SYSTEM' | 'NOTICE'
 
 export interface PresenceUser {
   role: Role
   teamId: string | null
-  theme: Theme
 }
 
 export interface Team {
@@ -33,9 +30,7 @@ export interface Player {
   sub_position: string
   status: PlayerStatus
   team_id: string | null
-  theme: Theme
   sold_price: number | null
-  theme: Theme
   description: string
 }
 
@@ -59,27 +54,20 @@ export interface Message {
 
 interface AuctionState {
   roomId: string | null
-  theme: Theme
   roomName: string | null
-  theme: Theme
   role: Role
   teamId: string | null
-  theme: Theme
 
   // Room tokens (for link regeneration)
   organizerToken: string | null
-  theme: Theme
   viewerToken: string | null
-  theme: Theme
 
   // Realtime Data sync
   basePoint: number
   totalTeams: number
   membersPerTeam: number
   timerEndsAt: string | null
-  theme: Theme
   createdAt: string | null
-  theme: Theme
   roomExists: boolean
   isRoomLoaded: boolean
   isReAuctionRound: boolean
@@ -88,45 +76,34 @@ interface AuctionState {
   players: Player[]
   messages: Message[]
 
-  // Presence (?�시�??�속 ?�황)
+  // Presence (?ㅼ떆媛??묒냽 ?꾪솴)
   presences: PresenceUser[]
 
-  // 추첨 모달 ?�태 (Broadcast CLOSE_LOTTERY�??�기??
-  lotteryPlayer: Player 
-  theme: Theme| null
-  theme: Theme
+  // 異붿꺼 紐⑤떖 ?곹깭 (Broadcast CLOSE_LOTTERY濡??숆린??
+  lotteryPlayer: Player | null
 
   // Actions
   setRoomContext: (roomId: string, role: Role, teamId?: string) => void
   setRealtimeData: (data: Partial<AuctionState>) => void
   setRoomNotFound: () => void
   setReAuctionRound: (isRe: boolean) => void
-  setLotteryPlayer: (player: Player | null
-  theme: Theme) => void
+  setLotteryPlayer: (player: Player | null) => void
 }
 
 export const useAuctionStore = create<AuctionState>((set) => ({
-  roomId: null
-  theme: Theme,
-  roomName: null
-  theme: Theme,
-  role: null
-  theme: Theme,
-  teamId: null
-  theme: Theme,
+  roomId: null,
+  roomName: null,
+  role: null,
+  teamId: null,
 
-  organizerToken: null
-  theme: Theme,
-  viewerToken: null
-  theme: Theme,
+  organizerToken: null,
+  viewerToken: null,
 
   basePoint: 1000,
   totalTeams: 5,
   membersPerTeam: 5,
-  timerEndsAt: null
-  theme: Theme,
-  createdAt: null
-  theme: Theme,
+  timerEndsAt: null,
+  createdAt: null,
   roomExists: true,
   isRoomLoaded: false,
   isReAuctionRound: false,
@@ -135,19 +112,15 @@ export const useAuctionStore = create<AuctionState>((set) => ({
   players: [],
   messages: [],
   presences: [],
-  lotteryPlayer: null
-  theme: Theme,
+  lotteryPlayer: null,
 
   setRoomContext: (roomId, role, teamId) => set({
-    roomId, role, teamId: teamId || null
-  theme: Theme, roomExists: true, isReAuctionRound: false
+    roomId, role, teamId: teamId || null, roomExists: true, isReAuctionRound: false
   }),
   setRealtimeData: (data) => set((state) => ({
     ...state, ...data, isRoomLoaded: true
   })),
   setRoomNotFound: () => set({ roomExists: false, isRoomLoaded: true }),
   setReAuctionRound: (isRe) => set({ isReAuctionRound: isRe }),
-  setLotteryPlayer: (player) => set({ lotteryPlayer: player 
-  theme: Theme}),
+  setLotteryPlayer: (player) => set({ lotteryPlayer: player }),
 }))
-
