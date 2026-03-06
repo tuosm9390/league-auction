@@ -1,96 +1,96 @@
-"use client";
+\"use client\";
 
-import Image from "next/image";
-import { useState, useEffect, useRef, memo } from "react";
+import Image from \"next/image\";
+import { useState, useEffect, useRef, memo } from \"react\";
 import {
   type Message,
   type Player,
   type Role,
-} from "@/features/auction/store/useAuctionStore";
-import { useAuctionBoard } from "@/features/auction/hooks/useAuctionBoard";
-import { AuctionResultModal } from "./AuctionResultModal";
-import { LotteryAnimation } from "./LotteryAnimation";
+} from \"@/features/auction/store/useAuctionStore\";
+import { useAuctionBoard } from \"@/features/auction/hooks/useAuctionBoard\";
+import { AuctionResultModal } from \"./AuctionResultModal\";
+import { LotteryAnimation } from \"./LotteryAnimation\";
 
 const TIER_COLOR: Record<string, string> = {
-  ì±Œë¦°ì €: "text-cyan-500",
-  ê·¸ëœë“œë§ˆìŠ¤í„°: "text-red-500",
-  ë§ˆìŠ¤í„°: "text-purple-500",
-  ë‹¤ì´ì•„: "text-blue-400",
-  ì—ë©”ë„ë“œ: "text-emerald-500",
-  í”Œë˜í‹°ë„˜: "text-teal-400",
-  ê³¨ë“œ: "text-yellow-500",
-  ì‹¤ë²„: "text-gray-400",
-  ë¸Œë¡ ì¦ˆ: "text-amber-700",
-  ì•„ì´ì–¸: "text-gray-500",
-  ì–¸ë­: "text-black",
-  Challenger: "text-cyan-500",
-  Grandmaster: "text-red-500",
-  Master: "text-purple-500",
-  Diamond: "text-blue-400",
-  Emerald: "text-emerald-500",
-  Platinum: "text-teal-400",
-  Gold: "text-yellow-500",
-  Silver: "text-gray-400",
-  Bronze: "text-amber-700",
-  Iron: "text-gray-500",
-  Unranked: "text-black",
+  Ã§¸°Àú: \"text-cyan-500\",
+  ±×·£µå¸¶½ºÅÍ: \"text-red-500\",
+  ¸¶½ºÅÍ: \"text-purple-500\",
+  ´ÙÀÌ¾Æ: \"text-blue-400\",
+  ¿¡¸Ş¶öµå: \"text-emerald-500\",
+  ÇÃ·¡Æ¼³Ñ: \"text-teal-400\",
+  °ñµå: \"text-yellow-500\",
+  ½Ç¹ö: \"text-gray-400\",
+  ºê·ĞÁî: \"text-amber-700\",
+  ¾ÆÀÌ¾ğ: \"text-gray-500\",
+  ¾ğ·©: \"text-black\",
+  Challenger: \"text-cyan-500\",
+  Grandmaster: \"text-red-500\",
+  Master: \"text-purple-500\",
+  Diamond: \"text-blue-400\",
+  Emerald: \"text-emerald-500\",
+  Platinum: \"text-teal-400\",
+  Gold: \"text-yellow-500\",
+  Silver: \"text-gray-400\",
+  Bronze: \"text-amber-700\",
+  Iron: \"text-gray-500\",
+  Unranked: \"text-black\",
 };
 
-/** í•œê¸€ í‹°ì–´ëª…ì„ ì˜ë¬¸ íŒŒì¼ëª…ìœ¼ë¡œ ë§¤í•‘ */
+/** ÇÑ±Û Æ¼¾î¸íÀ» ¿µ¹® ÆÄÀÏ¸íÀ¸·Î ¸ÅÇÎ */
 export const getTierImage = (tier: string) => {
   const map: Record<string, string> = {
-    ì±Œë¦°ì €: "Challenger",
-    ê·¸ëœë“œë§ˆìŠ¤í„°: "Grandmaster",
-    ë§ˆìŠ¤í„°: "Master",
-    ë‹¤ì´ì•„: "Diamond",
-    ì—ë©”ë„ë“œ: "Emerald",
-    í”Œë˜í‹°ë„˜: "Platinum",
-    ê³¨ë“œ: "Gold",
-    ì‹¤ë²„: "Silver",
-    ë¸Œë¡ ì¦ˆ: "Bronze",
-    ì•„ì´ì–¸: "Iron",
-    ì–¸ë­: "Iron",
+    Ã§¸°Àú: \"Challenger\",
+    ±×·£µå¸¶½ºÅÍ: \"Grandmaster\",
+    ¸¶½ºÅÍ: \"Master\",
+    ´ÙÀÌ¾Æ: \"Diamond\",
+    ¿¡¸Ş¶öµå: \"Emerald\",
+    ÇÃ·¡Æ¼³Ñ: \"Platinum\",
+    °ñµå: \"Gold\",
+    ½Ç¹ö: \"Silver\",
+    ºê·ĞÁî: \"Bronze\",
+    ¾ÆÀÌ¾ğ: \"Iron\",
+    ¾ğ·©: \"Iron\",
   };
   const englishTier = map[tier] || tier;
-  return `/Rank=${englishTier}.png`;
+  return \`/Rank=\${englishTier}.png\`;
 };
 
-/** í•œê¸€/ì˜ë¬¸ í¬ì§€ì…˜ì„ ì˜ë¬¸ íŒŒì¼ëª…ìœ¼ë¡œ ë§¤í•‘ */
+/** ÇÑ±Û/¿µ¹® Æ÷Áö¼ÇÀ» ¿µ¹® ÆÄÀÏ¸íÀ¸·Î ¸ÅÇÎ */
 export const getPositionImage = (pos: string) => {
   const normalized = pos.trim().toLowerCase();
-  if (normalized.includes("íƒ‘") || normalized.includes("top"))
-    return "/main_position_top.svg";
+  if (normalized.includes(\"Å¾\") || normalized.includes(\"top\"))
+    return \"/main_position_top.svg\";
   if (
-    normalized.includes("ì •ê¸€") ||
-    normalized.includes("jg") ||
-    normalized.includes("jungle")
+    normalized.includes(\"Á¤±Û\") ||
+    normalized.includes(\"jg\") ||
+    normalized.includes(\"jungle\")
   )
-    return "/main_position_jg.svg";
-  if (normalized.includes("ë¯¸ë“œ") || normalized.includes("mid"))
-    return "/main_position_mid.svg";
+    return \"/main_position_jg.svg\";
+  if (normalized.includes(\"¹Ìµå\") || normalized.includes(\"mid\"))
+    return \"/main_position_mid.svg\";
   if (
-    normalized.includes("ì›ë”œ") ||
-    normalized.includes("bot") ||
-    normalized.includes("ad") ||
-    normalized.includes("adc")
+    normalized.includes(\"¿øµô\") ||
+    normalized.includes(\"bot\") ||
+    normalized.includes(\"ad\") ||
+    normalized.includes(\"adc\")
   )
-    return "/main_position_bot.svg";
+    return \"/main_position_bot.svg\";
   if (
-    normalized.includes("ì„œí¿") ||
-    normalized.includes("ì„œí¬í„°") ||
-    normalized.includes("sup")
+    normalized.includes(\"¼­Æı\") ||
+    normalized.includes(\"¼­Æ÷ÅÍ\") ||
+    normalized.includes(\"sup\")
   )
-    return "/main_position_sup.svg";
-  return "/main_position_top.svg"; // ì˜ˆë¹„ìš©
+    return \"/main_position_sup.svg\";
+  return \"/main_position_top.svg\"; // ¿¹ºñ¿ë
 };
 
 const NoticeBanner = memo(function NoticeBanner({ msg }: { msg: Message }) {
   return (
-    <div className="bg-minion-yellow border-b border-amber-400 px-4 py-2 flex items-center gap-2 shrink-0">
-      <span className="text-xl shrink-0">ğŸ“¢</span>
-      <p className="text-[11px] font-bold text-amber-950 truncate">
-        <span className="text-xl opacity-50 mr-1.5">ê³µì§€:</span>
-        <span className="text-xl">{msg.content}</span>
+    <div className=\"bg-minion-yellow border-b border-amber-400 px-4 py-2 flex items-center gap-2 shrink-0\">
+      <span className=\"text-xl shrink-0\">??</span>
+      <p className=\"text-[11px] font-bold text-amber-950 truncate\">
+        <span className=\"text-xl opacity-50 mr-1.5\">°øÁö:</span>
+        <span className=\"text-xl\">{msg.content}</span>
       </p>
     </div>
   );
@@ -105,7 +105,7 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
   }, []);
   const target = new Date(timerEndsAt).getTime();
   useEffect(() => {
-    // timerEndsAt ë³€ê²½(ë˜ëŠ” ìµœì´ˆ ë§ˆìš´íŠ¸) ì‹œ í•­ìƒ initialDuration ì„¤ì •
+    // timerEndsAt º¯°æ(¶Ç´Â ÃÖÃÊ ¸¶¿îÆ®) ½Ã Ç×»ó initialDuration ¼³Á¤
     setInitialDuration(target - Date.now());
   }, [target]);
   const timeLeftMs = Math.max(0, target - now);
@@ -114,23 +114,23 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
   const progress = initialDuration
     ? (timeLeftMs / initialDuration) * 100
     : 0;
-  const pad = (n: number) => String(n).padStart(2, "0");
+  const pad = (n: number) => String(n).padStart(2, \"0\");
   const isUrgent = displayTime > 0 && displayTime <= 5;
   return (
-    <div className="flex flex-col items-center">
+    <div className=\"flex flex-col items-center\">
       <div
-        className={`relative flex items-center justify-center gap-1.5 lg:gap-2 rounded-lg px-3 py-1.5 sm:px-4 lg:px-6 lg:py-2.5 font-mono font-bold text-2xl sm:text-3xl lg:text-4xl transition-all duration-300 overflow-hidden ${isUrgent ? "bg-red-500 text-white animate-shake shadow-md" : displayTime === 0 ? "bg-gray-100 text-gray-400" : "bg-minion-blue text-white shadow-sm"}`}
+        className={\`relative flex items-center justify-center gap-1.5 lg:gap-2 rounded-lg px-3 py-1.5 sm:px-4 lg:px-6 lg:py-2.5 font-mono font-bold text-2xl sm:text-3xl lg:text-4xl transition-all duration-300 overflow-hidden \${isUrgent ? \"bg-red-500 text-white animate-shake shadow-md\" : displayTime === 0 ? \"bg-muted text-muted-foreground\" : \"bg-minion-blue text-white shadow-sm\"}\`}
       >
-        <span className="text-lg sm:text-xl lg:text-2xl">â±</span>
-        <span className="z-10 tracking-tighter">
+        <span className=\"text-lg sm:text-xl lg:text-2xl\">?</span>
+        <span className=\"z-10 tracking-tighter\">
           {isUrgent
             ? timeLeftSec.toFixed(1)
-            : `${pad(Math.floor(displayTime / 60))}:${pad(displayTime % 60)}`}
+            : \`\${pad(Math.floor(displayTime / 60))}:\${pad(displayTime % 60)}\`}
         </span>
         {displayTime > 0 && (
           <div
-            className={`absolute bottom-0 left-0 h-1.5 transition-all duration-100 ${isUrgent ? "bg-white/40" : "bg-minion-yellow/40"}`}
-            style={{ width: `${progress}%` }}
+            className={\`absolute bottom-0 left-0 h-1.5 transition-all duration-100 \${isUrgent ? \"bg-white/40\" : \"bg-minion-yellow/40\"}\`}
+            style={{ width: \`\${progress}%\` }}
           />
         )}
       </div>
@@ -182,234 +182,234 @@ export function AuctionBoard({
   } = useAuctionBoard({ isLotteryActive, lotteryPlayer, role, allConnected });
 
   return (
-    <div className="bg-white rounded-xl shadow-md border-2 border-minion-blue flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
+    <div className=\"bg-card rounded-xl shadow-md border-2 border-minion-blue flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]\">
       {latestNotice && <NoticeBanner msg={latestNotice} />}
       {!allConnected && isAuctionStarted && !isAuctionComplete && (
-        <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
-          <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-red-500 flex flex-col items-center gap-4 max-w-sm text-center">
-            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-red-100 rounded-full flex items-center justify-center text-2xl lg:text-3xl animate-pulse">
-              âš ï¸
+        <div className=\"absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md\">
+          <div className=\"bg-card p-6 rounded-xl shadow-lg border-2 border-red-500 flex flex-col items-center gap-4 max-w-sm text-center\">
+            <div className=\"w-12 h-12 lg:w-14 lg:h-14 bg-red-100 rounded-full flex items-center justify-center text-2xl lg:text-3xl animate-pulse\">
+              ??
             </div>
-            <h2 className="text-xl font-bold text-red-600 tracking-tight">
-              íŒ€ì¥ ì ‘ì† ì´íƒˆ
+            <h2 className=\"text-xl font-bold text-red-600 tracking-tight\">
+              ÆÀÀå Á¢¼Ó ÀÌÅ»
             </h2>
-            <p className="text-sm text-gray-500 font-medium leading-tight">
-              ê²½ë§¤ê°€ ì¼ì‹œì •ì§€ë˜ì—ˆìŠµë‹ˆë‹¤.
+            <p className=\"text-sm text-muted-foreground font-medium leading-tight\">
+              °æ¸Å°¡ ÀÏ½ÃÁ¤ÁöµÇ¾ú½À´Ï´Ù.
               <br />
-              ëª¨ë“  íŒ€ì¥ì´ ì¬ì…ì¥í•˜ë©´ ì¬ê°œë©ë‹ˆë‹¤.
+              ¸ğµç ÆÀÀåÀÌ ÀçÀÔÀåÇÏ¸é Àç°³µË´Ï´Ù.
             </p>
           </div>
         </div>
       )}
-      <div className="absolute top-0 right-0 w-60 h-60 bg-minion-yellow/10 rounded-full blur-[80px] pointer-events-none" />
-      <div className="z-10 flex flex-col flex-1 p-3 lg:p-4 gap-2 lg:gap-3 min-h-0">
-        <div className="flex justify-center min-h-[32px]">
+      <div className=\"absolute top-0 right-0 w-60 h-60 bg-minion-yellow/10 rounded-full blur-[80px] pointer-events-none\" />
+      <div className=\"z-10 flex flex-col flex-1 p-3 lg:p-4 gap-2 lg:gap-3 min-h-0\">
+        <div className=\"flex justify-center min-h-[32px]\">
           {currentPlayer ? (
             timerEndsAt ? (
-              <span className="bg-red-500 text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-red-600 animate-bounce">
-                ğŸ”¥ ê²½ë§¤ ì§„í–‰ ì¤‘ ğŸ”¥
+              <span className=\"bg-red-500 text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-red-600 animate-bounce\">
+                ?? °æ¸Å ÁøÇà Áß ??
               </span>
             ) : (
-              <span className="bg-gray-200 text-gray-500 font-bold px-4 py-1.5 rounded-md text-xs border border-gray-300 animate-pulse uppercase tracking-wider">
-                ê²½ë§¤ ì¤€ë¹„ì¤‘...
+              <span className=\"bg-muted text-muted-foreground font-bold px-4 py-1.5 rounded-md text-xs border border-border animate-pulse uppercase tracking-wider\">
+                °æ¸Å ÁØºñÁß...
               </span>
             )
           ) : isLotteryActive ? (
-            <span className="bg-minion-blue text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-blue-600 animate-pulse">
-              ğŸ² ì¶”ì²¨ ì§„í–‰ ì¤‘
+            <span className=\"bg-minion-blue text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-blue-600 animate-pulse\">
+              ?? ÃßÃ· ÁøÇà Áß
             </span>
           ) : isAuctionFinished ? (
-            <span className="bg-green-500 text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-green-600">
-              âœ… ê²½ë§¤ ì¢…ë£Œ
+            <span className=\"bg-green-500 text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-green-600\">
+              ? °æ¸Å Á¾·á
             </span>
           ) : (
-            <span className="bg-minion-yellow text-minion-blue font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-amber-400">
-              â±ï¸ ì¶”ì²¨ ëŒ€ê¸°
+            <span className=\"bg-minion-yellow text-minion-blue font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-amber-400\">
+              ?? ÃßÃ· ´ë±â
             </span>
           )}
         </div>
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className=\"flex-1 flex flex-col min-h-0\">
           {isLotteryActive && lotteryPlayer ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
+            <div className=\"flex-1 flex flex-col items-center justify-center gap-6\">
               <LotteryAnimation
                 candidates={waitingPlayers}
                 targetPlayer={lotteryPlayer}
                 onFinished={() => setLotteryDone(true)}
               />
-              <div className="min-h-[70px] flex items-center justify-center">
-                {role === "ORGANIZER" && lotteryDone && (
-                  <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className=\"min-h-[70px] flex items-center justify-center\">
+                {role === \"ORGANIZER\" && lotteryDone && (
+                  <div className=\"flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500\">
                     <button
                       onClick={onCloseLottery}
-                      className="w-[180px] bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-bold text-base shadow-sm active:translate-y-0.5 transition-all"
+                      className=\"w-[180px] bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-bold text-base shadow-sm active:translate-y-0.5 transition-all\"
                     >
-                      ê²½ë§¤ ì¤€ë¹„
+                      °æ¸Å ÁØºñ
                     </button>
                   </div>
                 )}
               </div>
             </div>
           ) : currentPlayer ? (
-            <div className="flex-1 flex flex-col gap-3 min-h-0">
-              <div className="flex justify-center min-h-[48px]">
+            <div className=\"flex-1 flex flex-col gap-3 min-h-0\">
+              <div className=\"flex justify-center min-h-[48px]\">
                 {timerEndsAt && <CenterTimer timerEndsAt={timerEndsAt} />}
               </div>
-              <div className="flex-1 flex flex-col items-center justify-center text-center gap-1.5 lg:gap-2">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight drop-shadow-sm leading-none">
+              <div className=\"flex-1 flex flex-col items-center justify-center text-center gap-1.5 lg:gap-2\">
+                <h2 className=\"text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight drop-shadow-sm leading-none\">
                   {currentPlayer.name}
                 </h2>
-                <div className="flex gap-4 lg:gap-6 items-center justify-center my-2">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center">
+                <div className=\"flex gap-4 lg:gap-6 items-center justify-center my-2\">
+                  <div className=\"flex flex-col items-center gap-1\">
+                    <div className=\"w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center\">
                       <Image
                         src={getTierImage(currentPlayer.tier)}
                         alt={currentPlayer.tier}
                         width={64}
                         height={64}
-                        className="object-contain drop-shadow-md"
+                        className=\"object-contain drop-shadow-md\"
                       />
                     </div>
                     <div
-                      className={`text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
+                      className={\`text-sm lg:text-lg font-bold bg-muted px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-border \${TIER_COLOR[currentPlayer.tier] || \"text-muted-foreground\"}\`}
                     >
                       {currentPlayer.tier}
                     </div>
                   </div>
 
-                  <div className="text-gray-300 mx-2 text-2xl font-light border border-gray-200 h-20" />
+                  <div className=\"text-gray-300 mx-2 text-2xl font-light border border-border h-20\" />
 
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center">
+                  <div className=\"flex flex-col items-center gap-1\">
+                    <div className=\"w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center\">
                       <Image
                         src={getPositionImage(currentPlayer.main_position)}
                         alt={currentPlayer.main_position}
                         width={50}
                         height={50}
-                        className="object-contain drop-shadow-md opacity-90"
+                        className=\"object-contain drop-shadow-md opacity-90\"
                       />
                     </div>
-                    <div className="text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 text-gray-700">
+                    <div className=\"text-sm lg:text-lg font-bold bg-muted px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-border text-foreground\">
                       {currentPlayer.main_position}
                     </div>
                   </div>
                 </div>
                 {currentPlayer.description && (
-                  <p className="text-sm text-gray-400 max-w-md font-bold italic">
+                  <p className=\"text-sm text-muted-foreground max-w-md font-bold italic\">
                     &quot;{currentPlayer.description}&quot;
                   </p>
                 )}
               </div>
               <div
-                className={`rounded-lg lg:rounded-xl p-2.5 sm:p-3 lg:p-4 border transition-all ${highestBid > 0 ? "bg-minion-yellow/5 border-minion-yellow shadow-sm" : "bg-gray-50 border-gray-200"}`}
+                className={\`rounded-lg lg:rounded-xl p-2.5 sm:p-3 lg:p-4 border transition-all \${highestBid > 0 ? \"bg-minion-yellow/5 border-minion-yellow shadow-sm\" : \"bg-muted border-border\"}\`}
               >
                 {highestBid > 0 ? (
-                  <div className="flex items-center justify-between px-1.5 lg:px-3">
+                  <div className=\"flex items-center justify-between px-1.5 lg:px-3\">
                     <div>
-                      <p className="text-[8px] sm:text-[9px] lg:text-[10px] text-gray-400 font-bold mb-0.5 uppercase tracking-wider">
-                        ìµœê³  ì…ì°°ê°€
+                      <p className=\"text-[8px] sm:text-[9px] lg:text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider\">
+                        ÃÖ°í ÀÔÂû°¡
                       </p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-minion-blue tabular-nums">
+                      <p className=\"text-xl sm:text-2xl lg:text-3xl font-bold text-minion-blue tabular-nums\">
                         {highestBid.toLocaleString()}
-                        <span className="text-sm sm:text-base lg:text-lg ml-0.5">
+                        <span className=\"text-sm sm:text-base lg:text-lg ml-0.5\">
                           P
                         </span>
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[8px] sm:text-[9px] lg:text-[10px] text-gray-400 font-bold mb-0.5 uppercase tracking-wider">
-                        ìµœê³  ì…ì°°íŒ€
+                    <div className=\"text-right\">
+                      <p className=\"text-[8px] sm:text-[9px] lg:text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider\">
+                        ÃÖ°í ÀÔÂûÆÀ
                       </p>
-                      <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-800">
-                        {leadingTeam?.name || "?"}
+                      <p className=\"text-sm sm:text-base lg:text-lg font-bold text-foreground\">
+                        {leadingTeam?.name || \"?\"}
                       </p>
                       {leadingTeam?.id === teamId && (
-                        <p className="text-xs font-black text-green-600 animate-pulse mt-1">
-                          í˜„ì¬ ìµœê³  ì…ì°° ì¤‘ì…ë‹ˆë‹¤! ğŸ‘‘
+                        <p className=\"text-xs font-black text-green-600 animate-pulse mt-1\">
+                          ÇöÀç ÃÖ°í ÀÔÂû ÁßÀÔ´Ï´Ù! ??
                         </p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-base text-center text-gray-400 py-1.5 font-bold italic tracking-tight">
-                    ì…ì°°ì„ ê¸°ë‹¤ë¦¬ê³  ìˆìŠµë‹ˆë‹¤...
+                  <p className=\"text-base text-center text-muted-foreground py-1.5 font-bold italic tracking-tight\">
+                    ÀÔÂûÀ» ±â´Ù¸®°í ÀÖ½À´Ï´Ù...
                   </p>
                 )}
               </div>
             </div>
           ) : (isAuctionFinished || isAutoDraftMode) && !isRoomComplete ? (
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className=\"flex-1 flex flex-col min-h-0\">
               {(() => {
-                const effectivePhase = isAutoDraftMode ? "DRAFT" : phase;
+                const effectivePhase = isAutoDraftMode ? \"DRAFT\" : phase;
                 const draftablePlayers = isAutoDraftMode
                   ? waitingPlayersList
                   : unsoldPlayers;
                 return (
                   <>
-                    <div className="text-center mb-4">
+                    <div className=\"text-center mb-4\">
                       <span
-                        className={`text-white font-bold px-6 py-2 rounded-lg text-sm border shadow-sm ${effectivePhase === "DRAFT" ? "bg-purple-500 border-purple-600" : "bg-orange-500 border-orange-600"}`}
+                        className={\`text-white font-bold px-6 py-2 rounded-lg text-sm border shadow-sm \${effectivePhase === \"DRAFT\" ? \"bg-purple-500 border-purple-600\" : \"bg-orange-500 border-orange-600\"}\`}
                       >
-                        {effectivePhase === "DRAFT"
-                          ? "ğŸ¤ ìœ ì°° ì„ ìˆ˜ ë°°ì • ì§„í–‰ ì¤‘"
-                          : "ğŸ”„ ìœ ì°° ì„ ìˆ˜ ì¬ê²½ë§¤ ì§„í–‰ ì¤‘"}
+                        {effectivePhase === \"DRAFT\"
+                          ? \"?? À¯Âû ¼±¼ö ¹èÁ¤ ÁøÇà Áß\"
+                          : \"?? À¯Âû ¼±¼ö Àç°æ¸Å ÁøÇà Áß\"}
                       </span>
-                      {effectivePhase === "DRAFT" && currentTurnTeam && (
-                        <div className="mt-4 flex flex-col items-center">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-                            ë°°ì • ìˆœì„œ
+                      {effectivePhase === \"DRAFT\" && currentTurnTeam && (
+                        <div className=\"mt-4 flex flex-col items-center\">
+                          <span className=\"text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5\">
+                            ¹èÁ¤ ¼ø¼­
                           </span>
-                          <span className="text-xl lg:text-2xl font-bold text-purple-700 bg-purple-50 px-4 py-1.5 lg:px-6 lg:py-1.5 rounded-lg border border-purple-200 shadow-sm">
-                            {currentTurnTeam.name}{" "}
-                            <span className="text-base lg:text-lg text-purple-400 ml-1.5">
+                          <span className=\"text-xl lg:text-2xl font-bold text-purple-700 bg-purple-50 px-4 py-1.5 lg:px-6 lg:py-1.5 rounded-lg border border-purple-200 shadow-sm\">
+                            {currentTurnTeam.name}{\" \"}
+                            <span className=\"text-base lg:text-lg text-purple-400 ml-1.5\">
                               ({currentTurnTeam.point_balance}P)
                             </span>
                           </span>
                         </div>
                       )}
-                      {effectivePhase !== "DRAFT" && role === "ORGANIZER" && (
-                        <div className="mt-6">
+                      {effectivePhase !== \"DRAFT\" && role === \"ORGANIZER\" && (
+                        <div className=\"mt-6\">
                           <button
                             onClick={handleRestartAuction}
                             disabled={isRestarting || !allConnected}
-                            className="bg-orange-500 text-white font-bold px-8 py-3 rounded-lg text-base shadow-sm active:translate-y-0.5 transition-all"
+                            className=\"bg-orange-50 text-white font-bold px-8 py-3 rounded-lg text-base shadow-sm active:translate-y-0.5 transition-all\"
                           >
-                            â–¶ ì¬ê²½ë§¤ ì‹œì‘í•˜ê¸°
+                            ¢º Àç°æ¸Å ½ÃÀÛÇÏ±â
                           </button>
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar px-1.5 mt-1.5">
-                      <div className="grid grid-cols-2 gap-2 p-0.5">
+                    <div className=\"flex-1 overflow-y-auto custom-scrollbar px-1.5 mt-1.5\">
+                      <div className=\"grid grid-cols-2 gap-2 p-0.5\">
                         {draftablePlayers.map((p) => (
                           <div
                             key={p.id}
-                            className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between hover:border-minion-blue transition-colors shadow-sm"
+                            className=\"bg-muted border border-border rounded-lg p-3 flex items-center justify-between hover:border-minion-blue transition-colors shadow-sm\"
                           >
-                            <div className="min-w-0">
-                              <p className="font-black text-base text-gray-800 truncate">
+                            <div className=\"min-w-0\">
+                              <p className=\"font-black text-base text-foreground truncate\">
                                 {p.name}
                               </p>
                               <p
-                                className={`text-xs font-black ${TIER_COLOR[p.tier] || "text-gray-500"}`}
+                                className={\`text-xs font-black \${TIER_COLOR[p.tier] || \"text-muted-foreground\"}\`}
                               >
-                                {p.tier}{" "}
-                                <span className="text-gray-300 ml-1">|</span>{" "}
-                                <span className="text-gray-500 ml-1">
+                                {p.tier}{\" \"}
+                                <span className=\"text-gray-300 ml-1\">|</span>{\" \"}
+                                <span className=\"text-muted-foreground ml-1\">
                                   {p.main_position}
                                 </span>
                               </p>
                             </div>
-                            {effectivePhase === "DRAFT" &&
-                              role === "ORGANIZER" && (
+                            {effectivePhase === \"DRAFT\" &&
+                              role === \"ORGANIZER\" && (
                                 <button
                                   onClick={() => handleDraft(p.id)}
                                   disabled={
                                     isProcessingAction !== null ||
                                     !currentTurnTeam
                                   }
-                                  className="bg-purple-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm active:translate-y-0.5"
+                                  className=\"bg-purple-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm active:translate-y-0.5\"
                                 >
-                                  ë°°ì •
+                                  ¹èÁ¤
                                 </button>
                               )}
                           </div>
@@ -421,18 +421,18 @@ export function AuctionBoard({
               })()}
             </div>
           ) : isAuctionFinished ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-green-50 rounded-full flex items-center justify-center mb-4 border-2 border-green-200">
-                <span className="text-3xl lg:text-4xl animate-bounce">ğŸ‰</span>
+            <div className=\"flex-1 flex flex-col items-center justify-center text-center p-6\">
+              <div className=\"w-16 h-16 lg:w-20 lg:h-20 bg-green-50 rounded-full flex items-center justify-center mb-4 border-2 border-green-200\">
+                <span className=\"text-3xl lg:text-4xl animate-bounce\">??</span>
               </div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-green-600 mb-3 drop-shadow-sm">
-                ëª¨ë“  ê²½ë§¤ ì¢…ë£Œ!
+              <h1 className=\"text-2xl lg:text-3xl font-bold text-green-600 mb-3 drop-shadow-sm\">
+                ¸ğµç °æ¸Å Á¾·á!
               </h1>
               <button
                 onClick={() => setShowResultModal(true)}
-                className="bg-minion-blue text-white font-bold px-6 py-3 lg:px-8 lg:py-3.5 rounded-xl text-base lg:text-lg shadow-sm active:translate-y-0.5 transition-all animate-pulse"
+                className=\"bg-minion-blue text-white font-bold px-6 py-3 lg:px-8 lg:py-3.5 rounded-xl text-base lg:text-lg shadow-sm active:translate-y-0.5 transition-all animate-pulse\"
               >
-                ğŸ“‹ ê²°ê³¼ ìµœì¢… í™•ì¸
+                ?? °á°ú ÃÖÁ¾ È®ÀÎ
               </button>
               <AuctionResultModal
                 isOpen={showResultModal}
@@ -440,39 +440,39 @@ export function AuctionBoard({
               />
             </div>
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className=\"flex-1 flex flex-col min-h-0\">
               {!allConnected ? (
                 <>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h2 className="text-xl font-bold text-minion-blue flex items-center gap-2">
-                      <span className="w-2 h-7 bg-minion-yellow rounded-full shadow-sm"></span>
-                      íŒ€ì¥ ì ‘ì† í˜„í™©
+                  <div className=\"flex items-center justify-between mb-4 px-1\">
+                    <h2 className=\"text-xl font-bold text-minion-blue flex items-center gap-2\">
+                      <span className=\"w-2 h-7 bg-minion-yellow rounded-full shadow-sm\"></span>
+                      ÆÀÀå Á¢¼Ó ÇöÈ²
                     </h2>
-                    <span className="text-xs font-bold px-3 py-1.5 rounded-md border bg-orange-50 text-orange-600 border-orange-200 shadow-sm animate-pulse">
-                      â³ ì ‘ì† ëŒ€ê¸° ì¤‘ ({connectedLeaderIds.size}/{teams.length})
+                    <span className=\"text-xs font-bold px-3 py-1.5 rounded-md border bg-orange-50 text-orange-600 border-orange-200 shadow-sm animate-pulse\">
+                      ? Á¢¼Ó ´ë±â Áß ({connectedLeaderIds.size}/{teams.length})
                     </span>
                   </div>
-                  <div className="flex flex-row overflow-x-auto custom-scrollbar gap-3 p-1.5 min-h-0 w-full">
+                  <div className=\"flex flex-row overflow-x-auto custom-scrollbar gap-3 p-1.5 min-h-0 w-full\">
                     {teams.map((team) => {
                       const connected = connectedLeaderIds.has(team.id);
                       return (
                         <div
                           key={team.id}
-                          className={`flex-1 min-w-[110px] rounded-xl border-2 p-3 lg:p-4 flex flex-col items-center justify-center text-center gap-2 transition-all duration-500 ${connected ? "border-green-300 bg-green-50/50 shadow-sm scale-[1.01]" : "border-gray-100 bg-gray-50/50 grayscale opacity-60"}`}
+                          className={\`flex-1 min-w-[110px] rounded-xl border-2 p-3 lg:p-4 flex flex-col items-center justify-center text-center gap-2 transition-all duration-500 \${connected ? \"border-green-300 bg-green-50/50 shadow-sm scale-[1.01]\" : \"border-border bg-muted/50 grayscale opacity-60\"}\`}
                         >
                           <div
-                            className={`w-12 h-12 rounded-full flex shrink-0 items-center justify-center text-2xl mb-1 ${connected ? "bg-green-100" : "bg-gray-200"}`}
+                            className={\`w-12 h-12 rounded-full flex shrink-0 items-center justify-center text-2xl mb-1 \${connected ? \"bg-green-100\" : \"bg-muted\"}\`}
                           >
-                            {connected ? "âœ…" : "â³"}
+                            {connected ? \"?\" : \"?\"}
                           </div>
-                          <div className="w-full min-w-0 flex flex-col items-center">
-                            <p className="font-bold text-gray-800 text-sm w-full truncate mb-0.5">
+                          <div className=\"w-full min-w-0 flex flex-col items-center\">
+                            <p className=\"font-bold text-foreground text-sm w-full truncate mb-0.5\">
                               {team.name}
                             </p>
                             <p
-                              className={`font-black text-[10px] sm:text-[11px] uppercase tracking-widest ${connected ? "text-green-600" : "text-gray-400"}`}
+                              className={\`font-black text-[10px] sm:text-[11px] uppercase tracking-widest \${connected ? \"text-green-600\" : \"text-muted-foreground\"}\`}
                             >
-                              {connected ? "Online" : "Offline"}
+                              {connected ? \"Online\" : \"Offline\"}
                             </p>
                           </div>
                         </div>
@@ -481,30 +481,30 @@ export function AuctionBoard({
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-700">
-                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-minion-yellow/10 rounded-full flex items-center justify-center mb-3 lg:mb-4 border-2 border-dashed border-minion-yellow animate-[spin_15s_linear_infinite]">
-                    <span className="text-3xl lg:text-4xl animate-bounce">
-                      ğŸ°
+                <div className=\"flex-1 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-700\">
+                  <div className=\"w-16 h-16 lg:w-20 lg:h-20 bg-minion-yellow/10 rounded-full flex items-center justify-center mb-3 lg:mb-4 border-2 border-dashed border-minion-yellow animate-[spin_15s_linear_infinite]\">
+                    <span className=\"text-3xl lg:text-4xl animate-bounce\">
+                      ??
                     </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-minion-blue mb-2 tracking-tight">
-                    ëª¨ë“  ì¤€ë¹„ê°€ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤!
+                  <h3 className=\"text-2xl font-bold text-minion-blue mb-2 tracking-tight\">
+                    ¸ğµç ÁØºñ°¡ ¿Ï·áµÇ¾ú½À´Ï´Ù!
                   </h3>
-                  <p className="text-sm text-gray-500 font-medium max-w-md leading-relaxed">
-                    í˜„ì¬{" "}
-                    <span className="text-minion-blue bg-minion-yellow px-2 py-0.5 rounded-md shadow-sm">
-                      ì¶”ì²¨ ëŒ€ê¸° ì¤‘
+                  <p className=\"text-sm text-muted-foreground font-medium max-w-md leading-relaxed\">
+                    ÇöÀç{\" \"}
+                    <span className=\"text-minion-blue bg-minion-yellow px-2 py-0.5 rounded-md shadow-sm\">
+                      ÃßÃ· ´ë±â Áß
                     </span>
-                    ì…ë‹ˆë‹¤.
+                    ÀÔ´Ï´Ù.
                     <br />
-                    ì£¼ìµœìê°€ ì„ ìˆ˜ë¥¼ ì¶”ì²¨í•˜ë©´ ê²½ë§¤ê°€ ì‹œì‘ë©ë‹ˆë‹¤.
+                    ÁÖÃÖÀÚ°¡ ¼±¼ö¸¦ ÃßÃ·ÇÏ¸é °æ¸Å°¡ ½ÃÀÛµË´Ï´Ù.
                   </p>
-                  <div className="mt-5 flex gap-2">
+                  <div className=\"mt-5 flex gap-2\">
                     {[0, 0.2, 0.4].map((d) => (
                       <div
                         key={d}
-                        className="w-2 h-2 bg-minion-yellow rounded-full animate-bounce"
-                        style={{ animationDelay: `${d}s` }}
+                        className=\"w-2 h-2 bg-minion-yellow rounded-full animate-bounce\"
+                        style={{ animationDelay: \`\${d}s\` }}
                       />
                     ))}
                   </div>
@@ -517,3 +517,4 @@ export function AuctionBoard({
     </div>
   );
 }
+

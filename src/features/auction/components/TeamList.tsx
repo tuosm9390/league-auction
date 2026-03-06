@@ -7,15 +7,15 @@ import {
 } from "@/features/auction/store/useAuctionStore";
 
 const TIER_COLOR: Record<string, string> = {
-  챌린저: "text-cyan-600",
-  그랜드마스터: "text-red-600",
-  마스터: "text-purple-600",
-  다이아: "text-blue-500",
-  에메랄드: "text-emerald-600",
-  플래티넘: "text-teal-600",
+  챌린?�: "text-cyan-600",
+  그랜?�마?�터: "text-red-600",
+  마스?? "text-purple-600",
+  ?�이?? "text-blue-500",
+  ?�메?�드: "text-emerald-600",
+  ?�래?�넘: "text-teal-600",
   골드: "text-yellow-600",
-  실버: "text-gray-500",
-  브론즈: "text-amber-800",
+  ?�버: "text-gray-500",
+  브론�? "text-amber-800",
 };
 
 export function UnsoldPanel() {
@@ -25,7 +25,7 @@ export function UnsoldPanel() {
   if (unsoldPlayers.length === 0)
     return (
       <div className="flex-1 flex justify-center items-center py-6 text-sm text-muted-foreground font-bold italic">
-        유찰 선수가 없습니다.
+        ?�찰 ?�수가 ?�습?�다.
       </div>
     );
 
@@ -69,7 +69,7 @@ export function TeamList() {
   if (teams.length === 0)
     return (
       <div className="text-muted-foreground text-sm text-center py-10 font-bold">
-        팀 정보가 없습니다.
+        ?� ?�보가 ?�습?�다.
       </div>
     );
 
@@ -89,7 +89,7 @@ export function TeamList() {
         return (
           <div
             key={team.id}
-            className={`p-2.5 rounded-lg border transition-all duration-300 relative overflow-hidden ${isTeamComplete ? "border-green-400 bg-green-50/50 shadow-sm" : isMyTeam ? "border-minion-blue bg-blue-50/50 shadow-sm ring-1 ring-minion-blue/10" : "border-border bg-muted/30"}`}
+            className={`p-2.5 rounded-lg border transition-all duration-300 relative overflow-hidden ${isTeamComplete ? "border-green-400 bg-green-500/10 shadow-sm" : isMyTeam ? "border-minion-blue bg-secondary/10 shadow-sm ring-1 ring-minion-blue/10" : "border-border bg-muted/30"}`}
           >
             {isTeamComplete && (
               <div className="absolute top-0 right-0 w-12 h-12 pointer-events-none">
@@ -100,17 +100,17 @@ export function TeamList() {
             )}
             <div className="flex justify-between items-start mb-2">
               <h3
-                className={`font-bold text-sm flex items-center gap-1 ${isTeamComplete ? "text-green-700" : isMyTeam ? "text-primary" : "text-foreground"}`}
+                className={`font-bold text-sm flex items-center gap-1 ${isTeamComplete ? "text-green-600" : isMyTeam ? "text-primary" : "text-foreground"}`}
               >
                 {isMyTeam && (
                   <span className="text-minion-yellow text-base drop-shadow-sm">
-                    ★
+                    ??
                   </span>
                 )}
                 {team.name}
               </h3>
               <div
-                className={`font-mono font-bold px-1.5 py-0.5 rounded-md text-xs shadow-sm border ${isTeamComplete ? "bg-green-100 text-green-700 border-green-200" : "bg-card text-primary border-border"}`}
+                className={`font-mono font-bold px-1.5 py-0.5 rounded-md text-xs shadow-sm border ${isTeamComplete ? "bg-green-500/20 text-green-600 border-green-200" : "bg-card text-primary border-border"}`}
               >
                 {team.point_balance.toLocaleString()}P
               </div>
@@ -128,20 +128,20 @@ export function TeamList() {
                 </span>
               </p>
               {teamPlayers.length === 0 ? (
-                <div className="text-[11px] text-gray-300 font-bold italic py-1 px-1">
-                  낙찰 받은 선수가 없습니다.
+                <div className="text-[11px] text-muted-foreground font-bold italic py-1 px-1">
+                  ?�찰 받�? ?�수가 ?�습?�다.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-1">
                   {teamPlayers.map((p: Player) => (
                     <div
                       key={p.id}
-                      className="flex justify-between items-center text-[12px] bg-card/80 p-1.5 rounded-md border border-gray-100/50 shadow-sm group hover:border-minion-blue/30 transition-colors"
+                      className="flex justify-between items-center text-[12px] bg-card/80 p-1.5 rounded-md border border-border/50 shadow-sm group hover:border-minion-blue/30 transition-colors"
                     >
-                      <span className="font-medium text-gray-700 truncate">
+                      <span className="font-medium text-foreground truncate">
                         {p.name}
                       </span>
-                      <span className="font-bold text-primary bg-blue-50 px-1 py-0.5 rounded text-[9px]">
+                      <span className="font-bold text-primary bg-secondary/20 px-1 py-0.5 rounded text-[9px]">
                         {p.sold_price || 0}P
                       </span>
                     </div>

@@ -8,99 +8,99 @@ import { Copy, X, Check, ExternalLink, ArrowRight, Upload } from "lucide-react";
 import Image from "next/image";
 
 const TIERS = [
-  "챌린저",
-  "그랜드마스터",
-  "마스터",
-  "다이아",
-  "에메랄드",
-  "플래티넘",
+  "챌린?�",
+  "그랜?�마?�터",
+  "마스??,
+  "?�이??,
+  "?�메?�드",
+  "?�래?�넘",
   "골드",
-  "실버",
-  "브론즈",
-  "언랭",
+  "?�버",
+  "브론�?,
+  "?�랭",
 ];
-const POSITIONS = ["탑", "정글", "미드", "원딜", "서포터", "무관"];
+const POSITIONS = ["??, "?��?", "미드", "?�딜", "?�포??, "무�?"];
 const LS_KEY = "league_auction_rooms";
 
 const LAST_NAMES = [
   "김",
-  "이",
-  "박",
-  "최",
-  "정",
-  "강",
-  "조",
-  "윤",
-  "장",
-  "임",
-  "한",
-  "오",
-  "서",
-  "신",
-  "권",
-  "황",
-  "안",
-  "송",
-  "홍",
-  "고",
+  "??,
+  "�?,
+  "�?,
+  "??,
+  "�?,
+  "�?,
+  "??,
+  "??,
+  "??,
+  "??,
+  "??,
+  "??,
+  "??,
+  "�?,
+  "??,
+  "??,
+  "??,
+  "??,
+  "�?,
 ];
 const FIRST_NAMES_LIST = [
-  "민준",
-  "서준",
-  "도윤",
-  "예준",
-  "시우",
+  "민�?",
+  "?��?",
+  "?�윤",
+  "?��?",
+  "?�우",
   "주원",
-  "하준",
-  "지호",
-  "준서",
-  "준혁",
-  "도현",
-  "지훈",
+  "?��?",
+  "지??,
+  "준??,
+  "준??,
+  "?�현",
+  "지??,
   "건우",
-  "우진",
-  "현우",
+  "?�진",
+  "?�우",
   "민재",
-  "준우",
+  "준??,
   "민호",
-  "준영",
+  "준??,
   "민규",
-  "지민",
-  "서연",
-  "서윤",
-  "지윤",
-  "수아",
-  "하윤",
-  "소윤",
-  "예린",
-  "지아",
+  "지�?,
+  "?�연",
+  "?�윤",
+  "지??,
+  "?�아",
+  "?�윤",
+  "?�윤",
+  "?�린",
+  "지??,
   "채원",
-  "수빈",
-  "다은",
-  "지은",
-  "예원",
-  "나은",
-  "수현",
-  "지현",
-  "유진",
-  "다연",
-  "아린",
+  "?�빈",
+  "?��?",
+  "지?�",
+  "?�원",
+  "?��?",
+  "?�현",
+  "지??,
+  "?�진",
+  "?�연",
+  "?�린",
 ];
 const CAPTAIN_INTROS = [
-  "팀원들을 이끌어 우승을 가져가겠습니다!",
-  "최선을 다해 팀을 운영하겠습니다.",
-  "좋은 팀 만들어서 꼭 우승하겠습니다!",
-  "팀원을 잘 챙기는 리더가 되겠습니다.",
-  "전략적으로 팀을 이끌겠습니다!",
+  "?�?�들???�끌???�승??가?��?겠습?�다!",
+  "최선???�해 ?�???�영?�겠?�니??",
+  "좋�? ?� 만들?�서 �??�승?�겠?�니??",
+  "?�?�을 ??챙기??리더가 ?�겠?�니??",
+  "?�략?�으�??�???�끌겠습?�다!",
 ];
 const PLAYER_INTROS = [
-  "열심히 하겠습니다!",
-  "최선을 다하겠습니다.",
-  "잘 부탁드립니다!",
-  "팀에 기여하는 선수가 되겠습니다.",
-  "승리를 위해 최선을 다하겠습니다!",
-  "믿고 맡겨주세요!",
-  "좋은 팀원 만나서 우승하고 싶습니다.",
+  "?�심???�겠?�니??",
+  "최선???�하겠습?�다.",
+  "??부?�드립니??",
+  "?�??기여?�는 ?�수가 ?�겠?�니??",
+  "?�리�??�해 최선???�하겠습?�다!",
+  "믿고 맡겨주세??",
+  "좋�? ?�??만나???�승?�고 ?�습?�다.",
 ];
 
 interface BasicInfo {
@@ -141,7 +141,7 @@ interface StoredRoom {
   createdAt: string;
 }
 
-const STEPS = ["기본 정보", "팀장 등록", "선수 등록", "링크 발급"];
+const STEPS = ["기본 ?�보", "?�???�록", "?�수 ?�록", "링크 발급"];
 
 function generateKoreanName(usedNames: Set<string>): string {
   for (let i = 0; i < 100; i++) {
@@ -154,7 +154,7 @@ function generateKoreanName(usedNames: Set<string>): string {
       return name;
     }
   }
-  const fallback = `선수${usedNames.size + 1}`;
+  const fallback = `?�수${usedNames.size + 1}`;
   usedNames.add(fallback);
   return fallback;
 }
@@ -168,7 +168,7 @@ function buildTemplateData(
   const captains: CaptainInfo[] = Array.from({ length: teamCount }, (_, i) => {
     const name = generateKoreanName(usedNames);
     return {
-      teamName: `${name}팀`,
+      teamName: `${name}?�`,
       name,
       position: POSITIONS[Math.floor(Math.random() * POSITIONS.length)],
       description: CAPTAIN_INTROS[i % CAPTAIN_INTROS.length],
@@ -210,23 +210,23 @@ function removeRoomFromStorage(id: string) {
 }
 
 const TIER_MAP: Record<string, string> = {
-  C: "챌린저",
-  GM: "그랜드마스터",
-  M: "마스터",
-  D: "다이아",
-  E: "에메랄드",
-  P: "플래티넘",
+  C: "챌린?�",
+  GM: "그랜?�마?�터",
+  M: "마스??,
+  D: "?�이??,
+  E: "?�메?�드",
+  P: "?�래?�넘",
   G: "골드",
-  S: "실버",
-  B: "브론즈",
+  S: "?�버",
+  B: "브론�?,
 };
 
 const POSITION_HEADER_KEYWORDS: { keywords: string[]; position: string }[] = [
-  { keywords: ["T", "탑"], position: "탑" },
-  { keywords: ["J", "정글"], position: "정글" },
+  { keywords: ["T", "??], position: "?? },
+  { keywords: ["J", "?��?"], position: "?��?" },
   { keywords: ["M", "미드"], position: "미드" },
-  { keywords: ["A", "원딜"], position: "원딜" },
-  { keywords: ["S", "서포터"], position: "서포터" },
+  { keywords: ["A", "?�딜"], position: "?�딜" },
+  { keywords: ["S", "?�포??], position: "?�포?? },
 ];
 
 export function CreateRoomModal() {
@@ -238,7 +238,7 @@ export function CreateRoomModal() {
   const [copied, setCopied] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 미완료 방 알림
+  // 미완�?�??�림
   const [activeRooms, setActiveRooms] = useState<StoredRoom[]>([]);
   const [isCheckingRooms, setIsCheckingRooms] = useState(false);
 
@@ -257,7 +257,7 @@ export function CreateRoomModal() {
     players: PlayerInfo[];
   } | null>(null);
 
-  // 모달 열릴 때 미완료 방 확인
+  // 모달 ?�릴 ??미완�?�??�인
   useEffect(() => {
     if (!isOpen) return;
     checkActiveRooms();
@@ -273,7 +273,7 @@ export function CreateRoomModal() {
 
       const active: StoredRoom[] = [];
       for (const room of stored) {
-        // 플레이어 상태 조회 — SOLD가 아닌 선수가 있거나, 플레이어가 없는 방(세팅 직후)은 미완료로 간주
+        // ?�레?�어 ?�태 조회 ??SOLD가 ?�닌 ?�수가 ?�거?? ?�레?�어가 ?�는 �??�팅 직후)?� 미완료로 간주
         const { data: roomCheck } = await supabase
           .from("rooms")
           .select("id")
@@ -307,9 +307,9 @@ export function CreateRoomModal() {
       for (let i = 0; i < count; i++) {
         result.push(
           prev[i] ?? {
-            teamName: `팀 ${i + 1}`,
+            teamName: `?� ${i + 1}`,
             name: "",
-            position: "탑",
+            position: "??,
             description: "",
             captainPoints: 0,
           },
@@ -326,8 +326,8 @@ export function CreateRoomModal() {
       const extra = Array.from({ length: count - prev.length }, () => ({
         name: "",
         tier: "골드",
-        mainPosition: "탑",
-        subPosition: "무관",
+        mainPosition: "??,
+        subPosition: "무�?",
         description: "",
       }));
       return [...prev, ...extra];
@@ -337,19 +337,19 @@ export function CreateRoomModal() {
   const handleNext = async () => {
     if (step === 0) {
       if (!basic.title.trim()) {
-        alert("경매 제목을 입력해주세요.");
+        alert("경매 ?�목???�력?�주?�요.");
         return;
       }
       if (!basic.teamCount || basic.teamCount < 2) {
-        alert("팀은 최소 2개 이상이어야 합니다.");
+        alert("?�?� 최소 2�??�상?�어???�니??");
         return;
       }
       if (!basic.membersPerTeam || basic.membersPerTeam < 2) {
-        alert("팀당 인원은 최소 2명 이상이어야 합니다.");
+        alert("?�???�원?� 최소 2�??�상?�어???�니??");
         return;
       }
       if (!basic.totalPoints || basic.totalPoints < 100) {
-        alert("총 포인트는 최소 100 이상이어야 합니다.");
+        alert("�??�인?�는 최소 100 ?�상?�어???�니??");
         return;
       }
       syncCaptains(basic.teamCount);
@@ -359,14 +359,14 @@ export function CreateRoomModal() {
         (c) => !c.name.trim() || !c.teamName.trim(),
       );
       if (invalid) {
-        alert("모든 팀장의 팀 이름과 이름을 입력해주세요.");
+        alert("모든 ?�?�의 ?� ?�름�??�름???�력?�주?�요.");
         return;
       }
       const overPoint = captains.some(
         (c) => c.captainPoints < 0 || c.captainPoints >= basic.totalPoints,
       );
       if (overPoint) {
-        alert("팀장 포인트는 0 이상, 총 포인트 미만이어야 합니다.");
+        alert("?�???�인?�는 0 ?�상, �??�인??미만?�어???�니??");
         return;
       }
       syncPlayers(basic.teamCount * (basic.membersPerTeam - 1));
@@ -374,7 +374,7 @@ export function CreateRoomModal() {
     } else if (step === 2) {
       const invalidName = players.find((p) => !p.name.trim());
       if (invalidName) {
-        alert("모든 선수의 이름을 입력해주세요.");
+        alert("모든 ?�수???�름???�력?�주?�요.");
         return;
       }
       setIsLoading(true);
@@ -383,7 +383,7 @@ export function CreateRoomModal() {
         setStep(3);
       } catch (err) {
         console.error(err);
-        alert("방 생성에 실패했습니다. 콘솔을 확인해주세요.");
+        alert("�??�성???�패?�습?�다. 콘솔???�인?�주?�요.");
       } finally {
         setIsLoading(false);
       }
@@ -403,13 +403,13 @@ export function CreateRoomModal() {
 
     const { roomId, organizerToken, viewerToken, teams: teamsResult } = result;
     if (!roomId || !organizerToken || !viewerToken || !teamsResult) {
-      throw new Error("방 생성 결과가 올바르지 않습니다.");
+      throw new Error("�??�성 결과가 ?�바르�? ?�습?�다.");
     }
 
     const baseUrl = window.location.origin;
     const organizerPath = `/api/room-auth?roomId=${roomId}&role=ORGANIZER&token=${organizerToken}`;
 
-    // localStorage에 저장
+    // localStorage???�??
     saveRoomToStorage({
       id: roomId,
       name: basic.title,
@@ -450,7 +450,7 @@ export function CreateRoomModal() {
     e.target.value = "";
     setIsUploading(true);
     try {
-      // xlsx 라이브러리를 동적으로 로드 (초기 번들 사이즈 최적화)
+      // xlsx ?�이브러리�? ?�적?�로 로드 (초기 번들 ?�이�?최적??
       const XLSX = await import("xlsx");
 
       const reader = new FileReader();
@@ -485,9 +485,9 @@ export function CreateRoomModal() {
             commentCol = 6;
           for (let ci = 0; ci < headerRow.length; ci++) {
             const h = headerRow[ci];
-            if (h.includes("닉네임")) nameCol = ci;
-            else if (h.includes("티어")) tierCol = ci;
-            else if (h.includes("코멘트") || h.includes("설명"))
+            if (h.includes("?�네??)) nameCol = ci;
+            else if (h.includes("?�어")) tierCol = ci;
+            else if (h.includes("코멘??) || h.includes("?�명"))
               commentCol = ci;
           }
 
@@ -505,11 +505,11 @@ export function CreateRoomModal() {
           if (positionColMap.size < 5) {
             positionColMap.clear();
             [
-              ["탑", 9],
-              ["정글", 10],
+              ["??, 9],
+              ["?��?", 10],
               ["미드", 11],
-              ["원딜", 12],
-              ["서포터", 13],
+              ["?�딜", 12],
+              ["?�포??, 13],
             ].forEach(([pos, idx]) =>
               positionColMap.set(idx as number, pos as string),
             );
@@ -522,28 +522,28 @@ export function CreateRoomModal() {
             if (!name) continue;
 
             const tierRaw = String(row[tierCol] ?? "").trim();
-            const tier = TIER_MAP[tierRaw] ?? "언랭";
+            const tier = TIER_MAP[tierRaw] ?? "?�랭";
             const description = String(row[commentCol] ?? "").trim();
 
             let mainPosition = "",
               subPosition = "";
             positionColMap.forEach((posName, colIdx) => {
               const val = String(row[colIdx] ?? "").trim();
-              if (val === "●" && !mainPosition) mainPosition = posName;
-              else if (val === "○" && !subPosition) subPosition = posName;
+              if (val === "?? && !mainPosition) mainPosition = posName;
+              else if (val === "?? && !subPosition) subPosition = posName;
             });
 
             parsed.push({
               name,
               tier,
-              mainPosition: mainPosition || "무관",
-              subPosition: subPosition || "무관",
+              mainPosition: mainPosition || "무�?",
+              subPosition: subPosition || "무�?",
               description,
             });
           }
 
           if (parsed.length === 0) {
-            alert("파싱된 선수가 없습니다. 파일 형식을 확인해주세요.");
+            alert("?�싱???�수가 ?�습?�다. ?�일 ?�식???�인?�주?�요.");
             return;
           }
           const fixed = basic.teamCount * (basic.membersPerTeam - 1);
@@ -555,31 +555,31 @@ export function CreateRoomModal() {
                   ...Array.from({ length: fixed - trimmed.length }, () => ({
                     name: "",
                     tier: "골드",
-                    mainPosition: "탑",
-                    subPosition: "무관",
+                    mainPosition: "??,
+                    subPosition: "무�?",
                     description: "",
                   })),
                 ]
               : trimmed;
           setPlayers(padded);
           alert(
-            `${trimmed.length}명의 선수 정보로 목록을 덮어썼습니다.${parsed.length > fixed ? `\n(엑셀의 ${parsed.length}명 중 ${fixed}명만 적용)` : ""}`,
+            `${trimmed.length}명의 ?�수 ?�보�?목록????��?�습?�다.${parsed.length > fixed ? `\n(?��???${parsed.length}�?�?${fixed}명만 ?�용)` : ""}`,
           );
         } catch (err) {
           console.error("Excel parse error:", err);
-          alert("엑셀 파일 파싱에 실패했습니다.");
+          alert("?��? ?�일 ?�싱???�패?�습?�다.");
         } finally {
           setIsUploading(false);
         }
       };
       reader.onerror = () => {
-        alert("파일을 읽는 중 오류가 발생했습니다.");
+        alert("?�일???�는 �??�류가 발생?�습?�다.");
         setIsUploading(false);
       };
       reader.readAsArrayBuffer(file);
     } catch (err) {
       console.error("xlsx load error:", err);
-      alert("라이브러리 로드에 실패했습니다.");
+      alert("?�이브러�?로드???�패?�습?�다.");
       setIsUploading(false);
     }
   };
@@ -600,14 +600,14 @@ export function CreateRoomModal() {
         if (idx !== i) return c;
         const updated = { ...c, [field]: value };
         if (field === "name" && typeof value === "string") {
-          const defaultName = `팀 ${i + 1}`;
-          const prevAutoName = `${c.name}팀`;
+          const defaultName = `?� ${i + 1}`;
+          const prevAutoName = `${c.name}?�`;
           if (
             !c.name ||
             c.teamName === defaultName ||
             c.teamName === prevAutoName
           ) {
-            updated.teamName = value ? `${value}팀` : defaultName;
+            updated.teamName = value ? `${value}?�` : defaultName;
           }
         }
         return updated;
@@ -660,7 +660,7 @@ export function CreateRoomModal() {
         onClick={() => setIsOpen(true)}
         className="bg-minion-yellow hover:bg-minion-yellow-hover text-minion-blue font-bold py-4 px-10 rounded-2xl text-2xl transition-all shadow-[0_6px_0_#D9B310] hover:shadow-[0_4px_0_#D9B310] hover:translate-y-1 active:shadow-none hover:scale-105 active:scale-95"
       >
-        새로운 경매방 만들기
+        ?�로??경매�?만들�?
       </button>
 
       {isOpen && (
@@ -671,11 +671,11 @@ export function CreateRoomModal() {
           }}
         >
           <div
-            className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 cursor-default"
+            className="bg-card rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Image
                   src="/favicon.png"
@@ -685,16 +685,16 @@ export function CreateRoomModal() {
                   className="drop-shadow-sm"
                 />
                 <h2 className="text-xl font-black text-minion-blue">
-                  경매방 만들기
+                  경매�?만들�?
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {STEPS[step]} ({step + 1}/{STEPS.length})
                 </p>
               </div>
               {step < 3 && (
                 <button
                   onClick={close}
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="text-muted-foreground hover:text-muted-foreground p-2 rounded-xl hover:bg-muted transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -715,19 +715,19 @@ export function CreateRoomModal() {
                         ? "bg-green-500 text-white"
                         : i === step
                           ? "bg-minion-blue text-white"
-                          : "bg-gray-100 text-gray-400"
+                          : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {i < step ? <Check size={13} /> : i + 1}
                   </div>
                   <span
-                    className={`ml-1.5 text-xs font-medium whitespace-nowrap ${i === step ? "text-minion-blue" : "text-gray-400"}`}
+                    className={`ml-1.5 text-xs font-medium whitespace-nowrap ${i === step ? "text-minion-blue" : "text-muted-foreground"}`}
                   >
                     {label}
                   </span>
                   {i < STEPS.length - 1 && (
                     <div
-                      className={`flex-1 h-0.5 mx-2 rounded-full ${i < step ? "bg-green-400" : "bg-gray-100"}`}
+                      className={`flex-1 h-0.5 mx-2 rounded-full ${i < step ? "bg-green-400" : "bg-muted"}`}
                     />
                   )}
                 </div>
@@ -736,31 +736,31 @@ export function CreateRoomModal() {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
-              {/* Step 0: 기본 정보 */}
+              {/* Step 0: 기본 ?�보 */}
               {step === 0 && (
                 <div className="space-y-5">
-                  {/* 미완료 방 알림 배너 */}
+                  {/* 미완�?�??�림 배너 */}
                   {isCheckingRooms && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-xs text-gray-400 text-center">
-                      이전 경매방 확인 중...
+                    <div className="bg-muted border border-border rounded-2xl p-3 text-xs text-muted-foreground text-center">
+                      ?�전 경매�??�인 �?..
                     </div>
                   )}
                   {!isCheckingRooms && activeRooms.length > 0 && (
                     <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
                       <p className="text-sm font-black text-orange-700 mb-3">
-                        ⚠️ 진행 중인 경매방이 있습니다
+                        ?�️ 진행 중인 경매방이 ?�습?�다
                       </p>
                       <div className="space-y-2">
                         {activeRooms.map((room) => (
                           <div
                             key={room.id}
-                            className="bg-white border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-3"
+                            className="bg-card border border-orange-200 rounded-xl p-3 flex items-center justify-between gap-3"
                           >
                             <div className="min-w-0">
-                              <p className="font-bold text-gray-800 text-sm truncate">
+                              <p className="font-bold text-foreground text-sm truncate">
                                 {room.name}
                               </p>
-                              <p className="text-xs text-gray-400 mt-0.5">
+                              <p className="text-xs text-muted-foreground mt-0.5">
                                 {new Date(room.createdAt).toLocaleDateString(
                                   "ko-KR",
                                   {
@@ -770,27 +770,27 @@ export function CreateRoomModal() {
                                     minute: "2-digit",
                                   },
                                 )}{" "}
-                                생성
+                                ?�성
                               </p>
                             </div>
                             <button
                               onClick={() => goToRoom(room.organizerPath)}
                               className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0"
                             >
-                              이 방으로 이동 <ArrowRight size={12} />
+                              ??방으�??�동 <ArrowRight size={12} />
                             </button>
                           </div>
                         ))}
                       </div>
                       <p className="text-xs text-orange-500 mt-2">
-                        아래 양식을 작성하면 새 경매방을 만들 수 있습니다.
+                        ?�래 ?�식???�성?�면 ??경매방을 만들 ???�습?�다.
                       </p>
                     </div>
                   )}
 
                   <div>
-                    <label className="text-sm font-bold text-gray-700 block mb-1.5">
-                      경매 제목 *
+                    <label className="text-sm font-bold text-foreground block mb-1.5">
+                      경매 ?�목 *
                     </label>
                     <input
                       type="text"
@@ -799,15 +799,15 @@ export function CreateRoomModal() {
                       onChange={(e) =>
                         setBasic((p) => ({ ...p, title: e.target.value }))
                       }
-                      placeholder="예시) 제 14회 미니언즈 정규 리그전"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
+                      placeholder="?�시) ??14??미니?�즈 ?�규 리그??
+                      className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                     />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="text-sm font-bold text-gray-700 block mb-1.5">
-                        팀 수
+                      <label className="text-sm font-bold text-foreground block mb-1.5">
+                        ?� ??
                       </label>
                       <input
                         type="number"
@@ -823,12 +823,12 @@ export function CreateRoomModal() {
                                 : parseInt(e.target.value),
                           }))
                         }
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
+                        className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-bold text-gray-700 block mb-1.5">
-                        팀당 인원 수
+                      <label className="text-sm font-bold text-foreground block mb-1.5">
+                        ?�???�원 ??
                       </label>
                       <input
                         type="number"
@@ -844,13 +844,13 @@ export function CreateRoomModal() {
                                 : parseInt(e.target.value),
                           }))
                         }
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
+                        className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                       />
-                      <p className="text-xs text-gray-400 mt-1">팀장 포함</p>
+                      <p className="text-xs text-muted-foreground mt-1">?�???�함</p>
                     </div>
                     <div>
-                      <label className="text-sm font-bold text-gray-700 block mb-1.5">
-                        팀당 총 포인트
+                      <label className="text-sm font-bold text-foreground block mb-1.5">
+                        ?�??�??�인??
                       </label>
                       <input
                         type="number"
@@ -866,64 +866,64 @@ export function CreateRoomModal() {
                                 : parseInt(e.target.value),
                           }))
                         }
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
+                        className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-bold text-gray-700 block mb-1.5">
+                    <label className="text-sm font-bold text-foreground block mb-1.5">
                       경매 진행 방식
                     </label>
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
-                      경매는 주최자가 무작위로 선수를 추첨하여 시작됩니다.
-                      팀장들은 한정된 포인트를 사용하여 입찰하며, 가장 높은
-                      금액을 부른 팀장이 선수를 영입합니다. 모든 팀이 인원을
-                      모두 채울 때까지 경매가 진행됩니다.
+                    <div className="bg-muted border border-border rounded-2xl p-4 text-xs text-muted-foreground leading-relaxed">
+                      경매??주최?��? 무작?�로 ?�수�?추첨?�여 ?�작?�니??
+                      ?�?�들?� ?�정???�인?��? ?�용?�여 ?�찰?�며, 가???��?
+                      금액??부�??�?�이 ?�수�??�입?�니?? 모든 ?�???�원??
+                      모두 채울 ?�까지 경매가 진행?�니??
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 rounded-2xl p-4 text-sm text-gray-600 space-y-1">
-                    <p className="font-bold text-minion-blue mb-1">요약</p>
+                  <div className="bg-blue-50 rounded-2xl p-4 text-sm text-muted-foreground space-y-1">
+                    <p className="font-bold text-minion-blue mb-1">?�약</p>
                     <p>
-                      · 총 {basic.teamCount}팀, 팀당 {basic.membersPerTeam}명
-                      (팀장 포함)
+                      · �?{basic.teamCount}?�, ?�??{basic.membersPerTeam}�?
+                      (?�???�함)
                     </p>
                     <p>
-                      · 경매 선수{" "}
+                      · 경매 ?�수{" "}
                       <span className="font-bold text-minion-blue">
-                        {minPlayers}명
+                        {minPlayers}�?
                       </span>{" "}
-                      고정 등록
+                      고정 ?�록
                     </p>
                     <p>
-                      · 각 팀 시작 포인트: {basic.totalPoints}P (팀장 포인트
-                      차감 전)
+                      · �??� ?�작 ?�인?? {basic.totalPoints}P (?�???�인??
+                      차감 ??
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Step 1: 팀장 등록 */}
+              {/* Step 1: ?�???�록 */}
               {step === 1 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-3 gap-3">
-                    <p className="text-xs text-gray-500">
-                      팀장 이름을 입력하면 팀명이 자동으로 생성됩니다. 팀장
-                      포인트는 시작 포인트에서 차감됩니다.
+                    <p className="text-xs text-muted-foreground">
+                      ?�???�름???�력?�면 ?�명이 ?�동?�로 ?�성?�니?? ?�??
+                      ?�인?�는 ?�작 ?�인?�에??차감?�니??
                     </p>
                     <button
                       type="button"
                       onClick={openTemplateModal}
                       className="flex items-center gap-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap shrink-0"
                     >
-                      🎲 테스트 데이터 생성
+                      ?�� ?�스???�이???�성
                     </button>
                   </div>
                   {captains.map((captain, i) => (
                     <div
                       key={i}
-                      className="border border-gray-100 rounded-2xl p-4 bg-gray-50"
+                      className="border border-border rounded-2xl p-4 bg-muted"
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-7 h-7 bg-minion-blue rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
@@ -935,11 +935,11 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updateCaptain(i, "teamName", e.target.value)
                           }
-                          placeholder="팀 이름"
-                          className="font-bold text-minion-blue bg-transparent border-b-2 border-gray-200 focus:border-minion-blue outline-none px-1 py-0.5 text-sm flex-1 min-w-0"
+                          placeholder="?� ?�름"
+                          className="font-bold text-minion-blue bg-transparent border-b-2 border-border focus:border-minion-blue outline-none px-1 py-0.5 text-sm flex-1 min-w-0"
                         />
-                        <span className="text-xs text-gray-500 whitespace-nowrap shrink-0">
-                          시작 포인트:{" "}
+                        <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                          ?�작 ?�인??{" "}
                           <span
                             className={`font-bold ${basic.totalPoints - captain.captainPoints > 0 ? "text-minion-blue" : "text-red-500"}`}
                           >
@@ -949,8 +949,8 @@ export function CreateRoomModal() {
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">
-                            팀장 이름 *
+                          <label className="text-xs text-muted-foreground block mb-1">
+                            ?�???�름 *
                           </label>
                           <input
                             type="text"
@@ -958,20 +958,20 @@ export function CreateRoomModal() {
                             onChange={(e) =>
                               updateCaptain(i, "name", e.target.value)
                             }
-                            placeholder="이름"
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            placeholder="?�름"
+                            className="w-full border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card"
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">
-                            포지션
+                          <label className="text-xs text-muted-foreground block mb-1">
+                            ?��???
                           </label>
                           <select
                             value={captain.position}
                             onChange={(e) =>
                               updateCaptain(i, "position", e.target.value)
                             }
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            className="w-full border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card"
                           >
                             {POSITIONS.map((p) => (
                               <option key={p} value={p}>
@@ -981,8 +981,8 @@ export function CreateRoomModal() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">
-                            팀장 포인트
+                          <label className="text-xs text-muted-foreground block mb-1">
+                            ?�???�인??
                           </label>
                           <input
                             type="number"
@@ -998,12 +998,12 @@ export function CreateRoomModal() {
                                   : parseInt(e.target.value),
                               )
                             }
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            className="w-full border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card"
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500 block mb-1">
-                            소개
+                          <label className="text-xs text-muted-foreground block mb-1">
+                            ?�개
                           </label>
                           <input
                             type="text"
@@ -1011,27 +1011,27 @@ export function CreateRoomModal() {
                             onChange={(e) =>
                               updateCaptain(i, "description", e.target.value)
                             }
-                            placeholder="간단 소개"
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            placeholder="간단 ?�개"
+                            className="w-full border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card"
                           />
                         </div>
                       </div>
                     </div>
                   ))}
-                  <p className="text-xs text-gray-400 text-center pt-1">
-                    팀 시작 포인트 = 총 포인트({basic.totalPoints}) - 팀장
-                    포인트
+                  <p className="text-xs text-muted-foreground text-center pt-1">
+                    ?� ?�작 ?�인??= �??�인??{basic.totalPoints}) - ?�??
+                    ?�인??
                   </p>
                 </div>
               )}
 
-              {/* Step 2: 선수 등록 */}
+              {/* Step 2: ?�수 ?�록 */}
               {step === 2 && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-700">
-                        경매 선수 목록
+                      <span className="text-sm font-bold text-foreground">
+                        경매 ?�수 목록
                       </span>
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -1042,7 +1042,7 @@ export function CreateRoomModal() {
                         }`}
                       >
                         {players.filter((p) => p.name.trim()).length} /{" "}
-                        {minPlayers}명
+                        {minPlayers}�?
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1051,7 +1051,7 @@ export function CreateRoomModal() {
                         onClick={openTemplateModal}
                         className="flex items-center gap-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap"
                       >
-                        🎲 테스트 데이터 생성
+                        ?�� ?�스???�이???�성
                       </button>
                       <input
                         ref={fileInputRef}
@@ -1067,34 +1067,34 @@ export function CreateRoomModal() {
                         className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Upload size={14} />{" "}
-                        {isUploading ? "처리 중..." : "엑셀 업로드"}
+                        {isUploading ? "처리 �?.." : "?��? ?�로??}
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <div
-                      className="grid gap-2 text-xs font-bold text-gray-400 px-2 pb-1"
+                      className="grid gap-2 text-xs font-bold text-muted-foreground px-2 pb-1"
                       style={{
                         gridTemplateColumns: "1.5rem 1fr 5rem 5rem 5rem 1fr",
                       }}
                     >
                       <span className="text-center">#</span>
-                      <span>이름 *</span>
-                      <span>티어</span>
-                      <span>주 포지션</span>
-                      <span>부 포지션</span>
-                      <span>소개</span>
+                      <span>?�름 *</span>
+                      <span>?�어</span>
+                      <span>�??��???/span>
+                      <span>부 ?��???/span>
+                      <span>?�개</span>
                     </div>
                     {players.map((player, i) => (
                       <div
                         key={i}
-                        className="grid gap-2 items-center bg-gray-50 rounded-xl px-2 py-1.5"
+                        className="grid gap-2 items-center bg-muted rounded-xl px-2 py-1.5"
                         style={{
                           gridTemplateColumns: "1.5rem 1fr 5rem 5rem 5rem 1fr",
                         }}
                       >
-                        <span className="text-xs text-gray-400 text-center">
+                        <span className="text-xs text-muted-foreground text-center">
                           {i + 1}
                         </span>
                         <input
@@ -1103,15 +1103,15 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updatePlayer(i, "name", e.target.value)
                           }
-                          placeholder="선수 이름"
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          placeholder="?�수 ?�름"
+                          className="border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card w-full"
                         />
                         <select
                           value={player.tier}
                           onChange={(e) =>
                             updatePlayer(i, "tier", e.target.value)
                           }
-                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border border-border rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card w-full"
                         >
                           {TIERS.map((t) => (
                             <option key={t} value={t}>
@@ -1124,7 +1124,7 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updatePlayer(i, "mainPosition", e.target.value)
                           }
-                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border border-border rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card w-full"
                         >
                           {POSITIONS.map((p) => (
                             <option key={p} value={p}>
@@ -1137,7 +1137,7 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updatePlayer(i, "subPosition", e.target.value)
                           }
-                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border border-border rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card w-full"
                         >
                           {POSITIONS.map((p) => (
                             <option key={p} value={p}>
@@ -1151,8 +1151,8 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updatePlayer(i, "description", e.target.value)
                           }
-                          placeholder="소개 (선택)"
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          placeholder="?�개 (?�택)"
+                          className="border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-card w-full"
                         />
                       </div>
                     ))}
@@ -1164,18 +1164,18 @@ export function CreateRoomModal() {
               {step === 3 && links && (
                 <div className="space-y-4">
                   <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
-                    <div className="text-3xl mb-1">🎉</div>
+                    <div className="text-3xl mb-1">?��</div>
                     <p className="font-black text-green-700 text-lg">
-                      경매방이 생성되었습니다!
+                      경매방이 ?�성?�었?�니??
                     </p>
                     <p className="text-sm text-green-600 mt-1">
-                      아래 링크를 각 참가자에게 공유하세요.
+                      ?�래 링크�?�?참�??�에�?공유?�세??
                     </p>
                   </div>
 
                   <LinkCard
-                    label="👑 주최자 링크"
-                    desc="경매 진행 및 관리 전용"
+                    label="?�� 주최??링크"
+                    desc="경매 진행 �?관�??�용"
                     link={links.organizerLink}
                     linkKey="organizer"
                     copied={copied}
@@ -1183,15 +1183,15 @@ export function CreateRoomModal() {
                   />
 
                   <div>
-                    <p className="text-sm font-bold text-gray-700 mb-2">
-                      🛡️ 팀장 링크 (팀별 개별 공유)
+                    <p className="text-sm font-bold text-foreground mb-2">
+                      ?���??�??링크 (?��?개별 공유)
                     </p>
                     <div className="space-y-2">
                       {links.captainLinks.map((cl, i) => (
                         <LinkCard
                           key={i}
                           label={cl.teamName}
-                          desc="팀장 전용 — 입찰 가능"
+                          desc="?�???�용 ???�찰 가??
                           link={cl.link}
                           linkKey={`captain-${i}`}
                           copied={copied}
@@ -1202,8 +1202,8 @@ export function CreateRoomModal() {
                   </div>
 
                   <LinkCard
-                    label="👀 관전자 링크"
-                    desc="관전 전용 — 입찰 불가, 자유롭게 공유 가능"
+                    label="?? 관?�자 링크"
+                    desc="관???�용 ???�찰 불�?, ?�유�?�� 공유 가??
                     link={links.viewerLink}
                     linkKey="viewer"
                     copied={copied}
@@ -1214,14 +1214,14 @@ export function CreateRoomModal() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center shrink-0">
               {step < 3 ? (
                 <>
                   <button
                     onClick={step === 0 ? close : () => setStep((s) => s - 1)}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-colors"
                   >
-                    {step === 0 ? "취소" : "← 이전"}
+                    {step === 0 ? "취소" : "???�전"}
                   </button>
                   <button
                     onClick={handleNext}
@@ -1230,19 +1230,19 @@ export function CreateRoomModal() {
                     className="bg-minion-blue hover:bg-minion-blue-hover text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading
-                      ? "생성 중..."
+                      ? "?�성 �?.."
                       : step === 2
-                        ? "방 만들기 🎉"
-                        : "다음 →"}
+                        ? "�?만들�??��"
+                        : "?�음 ??}
                   </button>
                 </>
               ) : (
                 <>
                   <button
                     onClick={close}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-colors"
                   >
-                    닫기
+                    ?�기
                   </button>
                   {links && (
                     <button
@@ -1252,7 +1252,7 @@ export function CreateRoomModal() {
                       }}
                       className="bg-minion-yellow hover:bg-minion-yellow-hover text-minion-blue px-6 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2 shadow-[0_4px_0_#D9B310] hover:shadow-[0_2px_0_#D9B310] hover:translate-y-0.5 active:shadow-none active:translate-y-1"
                     >
-                      경매 시작하기 <ExternalLink size={14} />
+                      경매 ?�작?�기 <ExternalLink size={14} />
                     </button>
                   )}
                 </>
@@ -1262,66 +1262,66 @@ export function CreateRoomModal() {
         </div>
       )}
 
-      {/* 템플릿 미리보기 모달 */}
+      {/* ?�플�?미리보기 모달 */}
       {isTemplateModalOpen && templateData && (
         <div
           className="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4"
           onClick={() => setIsTemplateModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
+            className="bg-card rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 헤더 */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+            {/* ?�더 */}
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
               <div>
                 <h3 className="text-lg font-black text-minion-blue">
-                  🎲 테스트 데이터 미리보기
+                  ?�� ?�스???�이??미리보기
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {basic.teamCount}팀 · 팀장 {basic.teamCount}명 · 선수{" "}
-                  {basic.teamCount * (basic.membersPerTeam - 1)}명
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {basic.teamCount}?� · ?�??{basic.teamCount}�?· ?�수{" "}
+                  {basic.teamCount * (basic.membersPerTeam - 1)}�?
                 </p>
               </div>
               <button
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                className="text-muted-foreground hover:text-muted-foreground p-2 rounded-xl hover:bg-muted transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* 콘텐츠 */}
+            {/* 콘텐�?*/}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-              {/* 팀장 섹션 */}
+              {/* ?�???�션 */}
               <div>
-                <p className="text-sm font-black text-gray-700 mb-2">
-                  🛡️ 팀장 ({templateData.captains.length}명)
+                <p className="text-sm font-black text-foreground mb-2">
+                  ?���??�??({templateData.captains.length}�?
                 </p>
-                <div className="rounded-xl overflow-hidden border border-gray-100">
+                <div className="rounded-xl overflow-hidden border border-border">
                   <div
-                    className="grid text-xs font-bold text-gray-400 bg-gray-50 px-3 py-2"
+                    className="grid text-xs font-bold text-muted-foreground bg-muted px-3 py-2"
                     style={{ gridTemplateColumns: "2rem 1fr 1fr 4rem 1fr" }}
                   >
                     <span>#</span>
-                    <span>팀 이름</span>
-                    <span>팀장 이름</span>
-                    <span>포지션</span>
-                    <span>소개</span>
+                    <span>?� ?�름</span>
+                    <span>?�???�름</span>
+                    <span>?��???/span>
+                    <span>?�개</span>
                   </div>
                   {templateData.captains.map((c, i) => (
                     <div
                       key={i}
-                      className="grid text-xs text-gray-700 px-3 py-2 border-t border-gray-50 hover:bg-gray-50"
+                      className="grid text-xs text-foreground px-3 py-2 border-t border-gray-50 hover:bg-muted"
                       style={{ gridTemplateColumns: "2rem 1fr 1fr 4rem 1fr" }}
                     >
-                      <span className="text-gray-400">{i + 1}</span>
+                      <span className="text-muted-foreground">{i + 1}</span>
                       <span className="font-bold text-minion-blue truncate pr-2">
                         {c.teamName}
                       </span>
                       <span className="truncate pr-2">{c.name}</span>
-                      <span className="text-gray-500">{c.position}</span>
-                      <span className="text-gray-500 truncate">
+                      <span className="text-muted-foreground">{c.position}</span>
+                      <span className="text-muted-foreground truncate">
                         {c.description}
                       </span>
                     </div>
@@ -1329,39 +1329,39 @@ export function CreateRoomModal() {
                 </div>
               </div>
 
-              {/* 선수 섹션 */}
+              {/* ?�수 ?�션 */}
               <div>
-                <p className="text-sm font-black text-gray-700 mb-2">
-                  ⚔️ 경매 선수 ({templateData.players.length}명)
+                <p className="text-sm font-black text-foreground mb-2">
+                  ?�️ 경매 ?�수 ({templateData.players.length}�?
                 </p>
-                <div className="rounded-xl overflow-hidden border border-gray-100">
+                <div className="rounded-xl overflow-hidden border border-border">
                   <div
-                    className="grid text-xs font-bold text-gray-400 bg-gray-50 px-3 py-2"
+                    className="grid text-xs font-bold text-muted-foreground bg-muted px-3 py-2"
                     style={{
                       gridTemplateColumns: "2rem 1fr 4rem 4rem 4rem 1fr",
                     }}
                   >
                     <span>#</span>
-                    <span>이름</span>
-                    <span>티어</span>
-                    <span>주 포지션</span>
-                    <span>부 포지션</span>
-                    <span>소개</span>
+                    <span>?�름</span>
+                    <span>?�어</span>
+                    <span>�??��???/span>
+                    <span>부 ?��???/span>
+                    <span>?�개</span>
                   </div>
                   {templateData.players.map((p, i) => (
                     <div
                       key={i}
-                      className="grid text-xs text-gray-700 px-3 py-2 border-t border-gray-50 hover:bg-gray-50"
+                      className="grid text-xs text-foreground px-3 py-2 border-t border-gray-50 hover:bg-muted"
                       style={{
                         gridTemplateColumns: "2rem 1fr 4rem 4rem 4rem 1fr",
                       }}
                     >
-                      <span className="text-gray-400">{i + 1}</span>
+                      <span className="text-muted-foreground">{i + 1}</span>
                       <span className="font-bold truncate pr-2">{p.name}</span>
-                      <span className="text-gray-500">{p.tier}</span>
-                      <span className="text-gray-500">{p.mainPosition}</span>
-                      <span className="text-gray-500">{p.subPosition}</span>
-                      <span className="text-gray-500 truncate">
+                      <span className="text-muted-foreground">{p.tier}</span>
+                      <span className="text-muted-foreground">{p.mainPosition}</span>
+                      <span className="text-muted-foreground">{p.subPosition}</span>
+                      <span className="text-muted-foreground truncate">
                         {p.description}
                       </span>
                     </div>
@@ -1370,11 +1370,11 @@ export function CreateRoomModal() {
               </div>
             </div>
 
-            {/* 푸터 */}
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+            {/* ?�터 */}
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center shrink-0">
               <button
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-colors"
               >
                 취소
               </button>
@@ -1387,13 +1387,13 @@ export function CreateRoomModal() {
                   }}
                   className="px-4 py-2.5 rounded-xl text-sm font-bold text-purple-600 hover:bg-purple-50 transition-colors border border-purple-200"
                 >
-                  🔄 다시 생성
+                  ?�� ?�시 ?�성
                 </button>
                 <button
                   onClick={applyTemplate}
                   className="bg-minion-blue hover:bg-minion-blue-hover text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors"
                 >
-                  템플릿 적용 ✓
+                  ?�플�??�용 ??
                 </button>
               </div>
             </div>
@@ -1420,10 +1420,10 @@ function LinkCard({
   onCopy: (text: string, key: string) => void;
 }) {
   return (
-    <div className="border border-gray-200 rounded-xl p-3 flex items-center gap-3 bg-gray-50">
+    <div className="border border-border rounded-xl p-3 flex items-center gap-3 bg-muted">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-gray-800">{label}</p>
-        <p className="text-xs text-gray-500">{desc}</p>
+        <p className="text-sm font-bold text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{desc}</p>
         <p className="text-xs text-blue-500 truncate mt-0.5 font-mono">
           {link}
         </p>
@@ -1433,12 +1433,12 @@ function LinkCard({
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${
           copied === linkKey
             ? "bg-green-100 text-green-700"
-            : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"
+            : "bg-card hover:bg-muted text-muted-foreground border border-border"
         }`}
       >
         {copied === linkKey ? (
           <>
-            <Check size={12} /> 복사됨
+            <Check size={12} /> 복사??
           </>
         ) : (
           <>

@@ -12,23 +12,23 @@ const MAX_MESSAGE_LENGTH = 200;
 function MessageItem({ msg }: { msg: Message }) {
   const role = msg.sender_role;
 
-  // ── 시스템 메시지 ──
+  // ?�?� ?�스??메시지 ?�?�
   if (role === "SYSTEM") {
     return (
       <div className="flex justify-center my-1">
-        <span className="text-[12px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full font-medium italic">
+        <span className="text-[12px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-medium italic">
           {msg.content}
         </span>
       </div>
     );
   }
 
-  // ── 공지 메시지 ──
+  // ?�?� 공�? 메시지 ?�?�
   if (role === "NOTICE") {
     return (
       <div className="bg-minion-yellow/20 border border-minion-yellow rounded-lg px-2 py-1.5 my-0.5">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-sm font-black text-amber-700">📢 공지</span>
+          <span className="text-sm font-black text-amber-700">?�� 공�?</span>
           <span className="text-[9px] text-muted-foreground ml-auto font-mono">
             {new Date(msg.created_at).toLocaleTimeString([], {
               hour: "2-digit",
@@ -43,32 +43,32 @@ function MessageItem({ msg }: { msg: Message }) {
     );
   }
 
-  // ── 일반 채팅 ──
+  // ?�?� ?�반 채팅 ?�?�
   const BADGE: Record<string, React.ReactElement> = {
     ORGANIZER: (
-      <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded border border-red-200">
+      <span className="text-[9px] bg-destructive/10 text-destructive px-1 py-0.5 rounded border border-destructive/20">
         주최
       </span>
     ),
     LEADER: (
-      <span className="text-[9px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded border border-blue-200">
-        팀장
+      <span className="text-[9px] bg-secondary/10 text-secondary px-1 py-0.5 rounded border border-secondary/20">
+        ?�??
       </span>
     ),
     VIEWER: (
-      <span className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">
-        관전
+      <span className="text-[9px] bg-muted text-muted-foreground px-1 py-0.5 rounded">
+        관??
       </span>
     ),
   };
   const badge = BADGE[role] ?? (
-    <span className="text-[9px] bg-gray-100 text-muted-foreground px-1 py-0.5 rounded">
+    <span className="text-[9px] bg-muted text-muted-foreground px-1 py-0.5 rounded">
       {role}
     </span>
   );
 
   return (
-    <div className="text-sm bg-muted hover:bg-gray-100/70 p-1.5 rounded-lg transition-colors leading-normal">
+    <div className="text-sm bg-muted hover:bg-muted/70 p-1.5 rounded-lg transition-colors leading-normal">
       <div className="flex items-center gap-1 mb-0.5">
         {badge}
         <span className="font-bold text-foreground text-[11px]">
@@ -81,7 +81,7 @@ function MessageItem({ msg }: { msg: Message }) {
           })}
         </span>
       </div>
-      <p className="text-gray-700 pl-0.5 break-words">{msg.content}</p>
+      <p className="text-foreground pl-0.5 break-words">{msg.content}</p>
     </div>
   );
 }
@@ -119,11 +119,11 @@ export function ChatPanel() {
 
     setIsSending(true);
     try {
-      let senderName = "관전자";
-      if (role === "ORGANIZER") senderName = "주최자";
+      let senderName = "관?�자";
+      if (role === "ORGANIZER") senderName = "주최??;
       else if (role === "LEADER") {
         const myTeam = teams.find((t) => t.id === teamId);
-        senderName = myTeam?.leader_name || myTeam?.name || "팀장";
+        senderName = myTeam?.leader_name || myTeam?.name || "?�??;
       }
 
       const { error } = await sendChatMessage(
@@ -148,7 +148,7 @@ export function ChatPanel() {
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
       <div className="p-2 border-b border-border bg-card shrink-0">
         <h2 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-tighter">
-          <span className="text-xl">💬</span> 실시간 채팅
+          <span className="text-xl">?��</span> ?�시�?채팅
         </h2>
       </div>
 
@@ -158,7 +158,7 @@ export function ChatPanel() {
       >
         {messages.length === 0 ? (
           <div className="text-muted-foreground text-[11px] text-center py-6 my-auto">
-            대화를 시작하세요.
+            ?�?��? ?�작?�세??
           </div>
         ) : (
           messages.map((msg) => <MessageItem key={msg.id} msg={msg} />)
@@ -183,7 +183,7 @@ export function ChatPanel() {
           disabled={isSending || !input.trim()}
           className="bg-minion-blue text-white px-3 py-1.5 rounded-md font-bold text-xs hover:bg-minion-blue-hover transition-colors disabled:opacity-50"
         >
-          전송
+          ?�송
         </button>
       </form>
     </div>
