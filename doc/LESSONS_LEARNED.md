@@ -57,3 +57,11 @@ export async function startAuction(...): Promise<{ error?: string }> {
 > **Zustand store에서 상태를 제거할 때는, 반드시 먼저 `grep -r "상태명" src/`로 모든 소비 위치를 파악하고, 각 소비자를 로컬 상태나 props로 전환한 뒤에 store에서 제거해야 한다. 제거와 소비자 전환을 동시에 하지 않으면 TypeScript 빌드 에러가 발생한다.**
 
 **배경**: `isReAuctionRound`가 여러 곳에서 `setReAuctionRound(true)`로 쓰였지만, `RoomClient.tsx`는 동명의 로컬 변수(`unsoldPlayers.length > 0 && waitingPlayers.length === 0`)를 사용했다. 재경매 전환 직후 로컬값이 `false`가 되어 타이머 duration이 5초 → 10초로 잘못 계산됐다.
+
+Date: 2026-03-06 15:52:00
+Author: Sage
+
+### [Lesson 2] 테마 설정 저장 시 로컬 스토리지 데이터 살균(Sanitization)의 중요성
+- **문제**: 로컬 스토리지에 저장된 테마 값을 검증 없이 DOM 클래스나 스타일로 직접 주입할 경우 XSS 공격의 통로가 될 수 있음.
+- **해결**: 테마 스토어(Zustand 등)에서 값을 읽어올 때 반드시 사전에 정의된 허용 값(White-list) 여부를 확인하고 살균 처리하는 로직을 필수적으로 포함해야 함.
+- **AI 행동 지침**: 클라이언트 사이드 영속성 데이터를 사용할 때는 항상 데이터 오염(Data Poisoning) 가능성을 염두에 두고 입력값 검증 로직을 우선 설계해야 함.
