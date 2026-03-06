@@ -1,16 +1,16 @@
-ï»¿"use client";
+\"use client\";
 
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Image from \"next/image\";
+import { useEffect, useRef, useState } from \"react\";
+import { useRouter } from \"next/navigation\";
 import {
   useAuctionStore,
   Role,
   PresenceUser,
-} from "@/features/auction/store/useAuctionStore";
-import { useAuctionRealtime } from "@/features/auction/hooks/useAuctionRealtime";
-import { useRoomAuth } from "@/features/auction/hooks/useRoomAuth";
-import { useAuctionControl } from "@/features/auction/hooks/useAuctionControl";
+} from \"@/features/auction/store/useAuctionStore\";
+import { useAuctionRealtime } from \"@/features/auction/hooks/useAuctionRealtime\";
+import { useRoomAuth } from \"@/features/auction/hooks/useRoomAuth\";
+import { useAuctionControl } from \"@/features/auction/hooks/useAuctionControl\";
 import {
   startAuction,
   deleteRoom,
@@ -18,19 +18,19 @@ import {
   saveAuctionArchive,
   pauseAuction,
   sendNotice,
-} from "@/features/auction/api/auctionActions";
-import { AuctionBoard } from "@/features/auction/components/AuctionBoard";
-import { TeamList, UnsoldPanel } from "@/features/auction/components/TeamList";
-import { ChatPanel } from "@/features/auction/components/ChatPanel";
-import { BiddingControl } from "@/features/auction/components/BiddingControl";
-import { LinksModal } from "@/features/auction/components/LinksModal";
-import { HowToUseModal } from "@/features/auction/components/HowToUseModal";
-import { EndRoomModal } from "@/features/auction/components/EndRoomModal";
-import { AuctionResultModal } from "@/features/auction/components/AuctionResultModal";
-import { LeaveRoomModal } from "@/features/auction/components/LeaveRoomModal";
+} from \"@/features/auction/api/auctionActions\";
+import { AuctionBoard } from \"@/features/auction/components/AuctionBoard\";
+import { TeamList, UnsoldPanel } from \"@/features/auction/components/TeamList\";
+import { ChatPanel } from \"@/features/auction/components/ChatPanel\";
+import { BiddingControl } from \"@/features/auction/components/BiddingControl\";
+import { LinksModal } from \"@/features/auction/components/LinksModal\";
+import { HowToUseModal } from \"@/features/auction/components/HowToUseModal\";
+import { EndRoomModal } from \"@/features/auction/components/EndRoomModal\";
+import { AuctionResultModal } from \"@/features/auction/components/AuctionResultModal\";
+import { LeaveRoomModal } from \"@/features/auction/components/LeaveRoomModal\";
 
 function ElapsedTimer({ createdAt }: { createdAt: string }) {
-  const [elapsed, setElapsed] = useState("");
+  const [elapsed, setElapsed] = useState(\"\");
   useEffect(() => {
     const start = new Date(createdAt).getTime();
     const iv = setInterval(() => {
@@ -39,14 +39,14 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
       const m = Math.floor((sec % 3600) / 60);
       const s = sec % 60;
       setElapsed(
-        `${h > 0 ? `${h}:` : ""}${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
+        \`\${h > 0 ? \`\${h}:\` : \"\"}\${String(m).padStart(2, \"0\")}:\${String(s).padStart(2, \"0\")}\`,
       );
     }, 1000);
     return () => clearInterval(iv);
   }, [createdAt]);
   return (
-    <div className="text-[10px] font-mono font-semibold text-blue-200 bg-blue-900/30 px-3 py-1 rounded-md border border-blue-700/40 tracking-widest">
-      ê²½ê³¼ ì‹œê°„ <b className="text-minion-yellow text-xs">{elapsed}</b>
+    <div className=\"text-[10px] font-mono font-semibold text-blue-200 bg-blue-900/30 px-3 py-1 rounded-md border border-blue-700/40 tracking-widest\">
+      °æ°ú ½Ã°£ <b className=\"text-minion-yellow text-xs\">\${elapsed}</b>
     </div>
   );
 }
@@ -85,18 +85,18 @@ export function RoomClient({
   });
   const connectedLeaderIds = new Set(
     presences
-      .filter((p: PresenceUser) => p.role === "LEADER")
+      .filter((p: PresenceUser) => p.role === \"LEADER\")
       .map((p: PresenceUser) => p.teamId),
   );
   const allConnected =
     teams.length > 0 && connectedLeaderIds.size >= teams.length;
-  const currentPlayer = players.find((p) => p.status === "IN_AUCTION");
-  const waitingPlayers = players.filter((p) => p.status === "WAITING");
-  const soldPlayers = players.filter((p) => p.status === "SOLD");
-  const unsoldPlayers = players.filter((p) => p.status === "UNSOLD");
+  const currentPlayer = players.find((p) => p.status === \"IN_AUCTION\");
+  const waitingPlayers = players.filter((p) => p.status === \"WAITING\");
+  const soldPlayers = players.filter((p) => p.status === \"SOLD\");
+  const unsoldPlayers = players.filter((p) => p.status === \"UNSOLD\");
   const biddableTeams = teams.filter(
     (t) =>
-      players.filter((p) => p.team_id === t.id && p.status === "SOLD").length <
+      players.filter((p) => p.team_id === t.id && p.status === \"SOLD\").length <
         membersPerTeam - 1 && t.point_balance >= 10,
   );
   const isAutoDraftMode =
@@ -125,24 +125,22 @@ export function RoomClient({
     return () => clearTimeout(t);
   }, [timerEndsAt]);
   const isAuctionActive = !!timerEndsAt && !isExpired;
-  // storeTeamId: useRoomAuthë¥¼ í†µí•´ ì¿ í‚¤ì—ì„œ ê²€ì¦ëœ teamId (route.ts í† í° ê²€ì¦ ì™„ë£Œ)
   const myTeam = teams.find((t) => t.id === storeTeamId);
   let isTeamFull = false;
   if (myTeam)
     isTeamFull =
-      players.filter((p) => p.team_id === myTeam.id && p.status === "SOLD")
+      players.filter((p) => p.team_id === myTeam.id && p.status === \"SOLD\")
         .length >=
       membersPerTeam - 1;
   const lotteryPlayer = useAuctionStore((s) => s.lotteryPlayer);
   const { handleCloseLottery } = useAuctionControl({
     roomId,
-    effectiveRole: effectiveRole ?? "VIEWER",
+    effectiveRole: effectiveRole ?? \"VIEWER\",
     players,
     timerEndsAt,
     fetchAll,
   });
 
-  // Pause/resume auction on team leader disconnect/reconnect (ORGANIZER only)
   const prevAllConnectedRef = useRef<boolean | null>(null);
   const wasPausedByDisconnectRef = useRef(false);
   const timerEndsAtRef = useRef(timerEndsAt);
@@ -150,7 +148,7 @@ export function RoomClient({
   timerEndsAtRef.current = timerEndsAt;
   currentPlayerRef.current = currentPlayer;
   useEffect(() => {
-    if (!roomId || effectiveRole !== "ORGANIZER") return;
+    if (!roomId || effectiveRole !== \"ORGANIZER\") return;
     const prev = prevAllConnectedRef.current;
     prevAllConnectedRef.current = allConnected;
     if (prev === null) return;
@@ -160,7 +158,6 @@ export function RoomClient({
         pauseAuction(roomId);
       }
     }
-    // allConnected ë³µê·€ ì‹œ ìë™ ì¬ê°œí•˜ì§€ ì•ŠìŒ â€” ë°©ì¥ì´ ìˆ˜ë™ìœ¼ë¡œ "â–¶ ê²½ë§¤ ì‹œì‘" ë²„íŠ¼ì„ ëˆŒëŸ¬ì•¼ ì¬ê°œ
   }, [allConnected, roomId, effectiveRole]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -168,14 +165,14 @@ export function RoomClient({
   const [isEndRoomOpen, setIsEndRoomOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [noticeText, setNoticeText] = useState("");
+  const [noticeText, setNoticeText] = useState(\"\");
   const [isSendingNotice, setIsSendingNotice] = useState(false);
   const handleNotice = async () => {
     if (!noticeText.trim() || !roomId || isSendingNotice) return;
     setIsSendingNotice(true);
     try {
       const res = await sendNotice(roomId, noticeText.trim());
-      if (!res.error) setNoticeText("");
+      if (!res.error) setNoticeText(\"\");
     } finally {
       setIsSendingNotice(false);
     }
@@ -199,7 +196,6 @@ export function RoomClient({
       if (res.error) {
         alert(res.error);
       } else if (res.timerEndsAt) {
-        // ì‹¤ì‹œê°„ ì´ë²¤íŠ¸ ëŒ€ê¸° ì—†ì´ ì¦‰ì‹œ íƒ€ì´ë¨¸ ë°˜ì˜ (Optimistic Update)
         setRealtimeData({ timerEndsAt: res.timerEndsAt });
       }
     } finally {
@@ -210,7 +206,7 @@ export function RoomClient({
     teams.length > 0 &&
     teams.every(
       (t) =>
-        players.filter((p) => p.team_id === t.id && p.status === "SOLD")
+        players.filter((p) => p.team_id === t.id && p.status === \"SOLD\")
           .length ===
         membersPerTeam - 1,
     );
@@ -226,7 +222,7 @@ export function RoomClient({
       if (saveResult && allDone) {
         await saveAuctionArchive({
           roomId,
-          roomName: roomName ?? "ê²½ë§¤ë°©",
+          roomName: roomName ?? \"°æ¸Å¹æ\",
           roomCreatedAt: createdAt ?? new Date().toISOString(),
           teams: teams.map((t) => ({
             id: t.id,
@@ -240,7 +236,7 @@ export function RoomClient({
         });
       }
       const result = await deleteRoom(roomId);
-      if (!result.error) router.push("/");
+      if (!result.error) router.push(\"/\");
     } finally {
       setIsDeleting(false);
     }
@@ -248,146 +244,145 @@ export function RoomClient({
 
   if (!isRoomLoaded)
     return (
-      <div className="h-screen bg-blue-50 flex items-center justify-center font-bold text-minion-blue text-lg animate-pulse tracking-tighter uppercase">
-        ë°ì´í„° ë¡œë”© ì¤‘...
+      <div className=\"h-screen bg-background flex items-center justify-center font-bold text-foreground text-lg animate-pulse tracking-tighter uppercase\">
+        µ¥ÀÌÅÍ ·Îµù Áß...
       </div>
     );
   if (!roomExists)
     return (
-      <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-200">
-          <span className="text-3xl">ğŸš«</span>
+      <div className=\"h-screen bg-background flex flex-col items-center justify-center p-6 text-center\">
+        <div className=\"w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4 border border-destructive/20\">
+          <span className=\"text-3xl\">??</span>
         </div>
-        <h2 className="text-xl font-bold text-minion-blue mb-4">
-          ê²½ë§¤ê°€ ì¢…ë£Œëœ ë°©ì´ê±°ë‚˜, ìœ íš¨í•˜ì§€ ì•Šì€ ì ‘ê·¼ì…ë‹ˆë‹¤.
+        <h2 className=\"text-xl font-bold text-foreground mb-4\">
+          °æ¸Å°¡ Á¾·áµÈ ¹æÀÌ°Å³ª, À¯È¿ÇÏÁö ¾ÊÀº Á¢±ÙÀÔ´Ï´Ù.
         </h2>
         <button
-          onClick={() => router.push("/")}
-          className="bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase"
+          onClick={() => router.push(\"/\")}
+          className=\"bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase\"
         >
-          í™ˆìœ¼ë¡œ ëŒì•„ê°€ê¸°
+          È¨À¸·Î µ¹¾Æ°¡±â
         </button>
       </div>
     );
 
   if (effectiveRole === null)
     return (
-      <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-200">
-          <span className="text-3xl">ğŸš«</span>
+      <div className=\"h-screen bg-background flex flex-col items-center justify-center p-6 text-center\">
+        <div className=\"w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4 border border-destructive/20\">
+          <span className=\"text-3xl\">??</span>
         </div>
-        <h2 className="text-xl font-bold text-red-500 mb-2">
-          ìœ íš¨í•˜ì§€ ì•Šì€ ì ‘ê·¼
+        <h2 className=\"text-xl font-bold text-destructive mb-2\">
+          À¯È¿ÇÏÁö ¾ÊÀº Á¢±Ù
         </h2>
-        <p className="text-sm text-gray-500 font-medium mb-6 max-w-sm leading-relaxed">
-          ìœ íš¨í•œ ì¸ì¦ ì •ë³´ê°€ ì—†ìŠµë‹ˆë‹¤.
+        <p className=\"text-sm text-muted-foreground mb-6 max-w-sm leading-relaxed\">
+          À¯È¿ÇÑ ÀÎÁõ Á¤º¸°¡ ¾ø½À´Ï´Ù.
           <br />
-          ì´ˆëŒ€ ë§í¬ë¥¼ í†µí•´ ë‹¤ì‹œ ì ‘ì†í•´ ì£¼ì„¸ìš”.
+          ÃÊ´ë ¸µÅ©¸¦ ÅëÇØ ´Ù½Ã Á¢¼ÓÇØ ÁÖ¼¼¿ä.
         </p>
         <button
-          onClick={() => router.push("/")}
-          className="bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase"
+          onClick={() => router.push(\"/\")}
+          className=\"bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase\"
         >
-          í™ˆìœ¼ë¡œ ëŒì•„ê°€ê¸°
+          È¨À¸·Î µ¹¾Æ°¡±â
         </button>
       </div>
     );
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50/50 font-pretendard">
-      <header className="h-16 shrink-0 bg-minion-blue text-white shadow-sm relative z-[110]">
-        <div className="max-w-7xl mx-auto px-6 w-full h-full flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base md:text-xl font-bold text-minion-yellow tracking-tight drop-shadow-sm">
+    <div className=\"flex flex-col h-screen overflow-hidden bg-background font-pretendard\">
+      <header className=\"h-16 shrink-0 bg-minion-blue text-white shadow-sm relative z-[110]\">
+        <div className=\"max-w-7xl mx-auto px-6 w-full h-full flex justify-between items-center\">
+          <div className=\"flex items-center gap-6\">
+            <div className=\"flex items-center gap-2\">
+              <h1 className=\"text-base md:text-xl font-bold text-minion-yellow tracking-tight drop-shadow-sm\">
                 MINIONS
               </h1>
               <Image
-                src="/favicon.png"
-                alt="Minions Icon"
+                src=\"/favicon.png\"
+                alt=\"Minions Icon\"
                 width={28}
                 height={28}
-                className="drop-shadow-sm"
+                className=\"drop-shadow-sm\"
               />
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-white/10 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 shadow-inner">
-                {effectiveRole === "ORGANIZER" ? (
+            <div className=\"flex items-center gap-3\">
+              <div className=\"flex items-center gap-1.5 bg-muted/10 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-muted/20 shadow-inner\">
+                {effectiveRole === \"ORGANIZER\" ? (
                   <>
-                    <span className="text-sm">ğŸ‘‘</span> ì£¼ìµœì
+                    <span className=\"text-sm\">??</span> ÁÖÃÖÀÚ
                   </>
-                ) : effectiveRole === "LEADER" ? (
+                ) : effectiveRole === \"LEADER\" ? (
                   <>
-                    <span className="text-sm">ğŸ›¡ï¸</span> íŒ€ì¥
+                    <span className=\"text-sm\">???</span> ÆÀÀå
                   </>
                 ) : (
                   <>
-                    <span className="text-sm">ğŸ‘€</span> ê´€ì „ì
+                    <span className=\"text-sm\">??</span> °üÀüÀÚ
                   </>
                 )}
               </div>
-              <div className="h-5 w-px bg-white/20 mx-1.5" />
-              <div className="flex gap-2">
-                {effectiveRole === "ORGANIZER" && <LinksModal />}
-                <HowToUseModal variant="header" />
+              <div className=\"h-5 w-px bg-muted/20 mx-1.5\" />
+              <div className=\"flex gap-2\">
+                {effectiveRole === \"ORGANIZER\" && <LinksModal />}
+                <HowToUseModal variant=\"header\" />
                 {soldPlayers.length > 0 && (
                   <button
                     onClick={() => setShowResultModal(true)}
-                    className="bg-minion-yellow hover:bg-yellow-400 text-minion-blue px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+                    className=\"bg-minion-yellow hover:bg-yellow-400 text-minion-blue px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5\"
                   >
-                    <span className="text-sm">ğŸ“‹</span> ê²°ê³¼
+                    <span className=\"text-sm\">??</span> °á°ú
                   </button>
                 )}
-                {effectiveRole === "ORGANIZER" && (
+                {effectiveRole === \"ORGANIZER\" && (
                   <button
                     onClick={() => setIsEndRoomOpen(true)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"
+                    className=\"bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5\"
                   >
-                    <span className="text-sm">ğŸšª</span> ì¢…ë£Œ
+                    <span className=\"text-sm\">??</span> Á¾·á
                   </button>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className=\"flex items-center gap-3\">
             {createdAt && <ElapsedTimer createdAt={createdAt} />}
             <button
               onClick={() => setIsLeaveRoomOpen(true)}
-              className="bg-white/10 hover:bg-white/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 transition-colors shadow-inner flex items-center gap-1.5"
-              title="ë©”ì¸ í™ˆìœ¼ë¡œ ì´ë™"
+              className=\"bg-muted/10 hover:bg-muted/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold border border-muted/20 transition-colors shadow-inner flex items-center gap-1.5\"
+              title=\"¸ŞÀÎ È¨À¸·Î ÀÌµ¿\"
             >
-              <span className="text-sm">ğŸ </span> ë‚˜ê°€ê¸°
+              <span className=\"text-sm\">??</span> ³ª°¡±â
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 p-2 sm:p-3 lg:px-6 overflow-y-auto lg:overflow-hidden min-h-0 max-h-[950px] w-full max-w-7xl mx-auto py-3">
-        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] sm:h-[400px] lg:h-auto lg:self-stretch shrink-0">
-          <div className="bg-card rounded-xl shadow-sm border border-border flex-1 flex flex-col overflow-hidden min-h-0">
-            <div className="px-3 py-2.5 border-b border-border bg-card shrink-0">
-              <h2 className="text-sm font-semibold text-minion-blue flex items-center gap-1.5 uppercase tracking-tight">
-                ğŸ‘¥ íŒ€ í˜„í™©
+      <main className=\"flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 p-2 sm:p-3 lg:px-6 overflow-y-auto lg:overflow-hidden min-h-0 max-h-[950px] w-full max-w-7xl mx-auto py-3\">
+        <aside className=\"lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] sm:h-[400px] lg:h-auto lg:self-stretch shrink-0\">
+          <div className=\"bg-card rounded-xl shadow-sm border border-border flex-1 flex flex-col overflow-hidden min-h-0\">
+            <div className=\"px-3 py-2.5 border-b border-border bg-card shrink-0\">
+              <h2 className=\"text-sm font-semibold text-minion-blue flex items-center gap-1.5 uppercase tracking-tight\">
+                ?? ÆÀ ÇöÈ²
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pr-2 mr-0.5 min-h-0">
+            <div className=\"flex-1 overflow-y-auto custom-scrollbar p-3 pr-2 mr-0.5 min-h-0\">
               <TeamList />
             </div>
           </div>
         </aside>
 
-        <section className="lg:col-span-6 flex flex-col gap-2 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
+        <section className=\"lg:col-span-6 flex flex-col gap-2 min-h-0 order-1 lg:order-2 lg:h-full shrink-0\">
           {roomName && (
-            <div className="shrink-0 bg-[#0f1f3d] rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 border border-[#2a3f6f] relative overflow-hidden">
-              {/* ì€ì€í•œ ê´‘íƒ ì˜¤ë²„ë ˆì´ */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 pointer-events-none" />
-              <span className="text-3xl shrink-0 drop-shadow">ğŸ†</span>
+            <div className=\"shrink-0 bg-[#0f1f3d] rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 border border-[#2a3f6f] relative overflow-hidden\">
+              <div className=\"absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 pointer-events-none\" />
+              <span className=\"text-3xl shrink-0 drop-shadow\">??</span>
               <h2
-                className="text-2xl font-bold truncate tracking-[0.15em] uppercase relative"
+                className=\"text-2xl font-bold truncate tracking-[0.15em] uppercase relative\"
                 style={{
-                  fontFamily: "var(--font-cinzel, 'Georgia', serif)",
-                  color: "#FBE042",
-                  textShadow: "0 0 20px rgba(251,224,66,0.35)",
+                  fontFamily: \"var(--font-cinzel, \"Georgia\", serif)\",
+                  color: \"#FBE042\",
+                  textShadow: \"0 0 20px rgba(251,224,66,0.35)\",
                 }}
               >
                 {roomName}
@@ -402,47 +397,47 @@ export function RoomClient({
             allConnected={allConnected}
             onCloseLottery={handleCloseLottery}
           />
-          {effectiveRole === "ORGANIZER" && (
-            <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-5 shrink-0">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="text-xs font-semibold text-minion-blue uppercase tracking-wider flex items-center gap-2">
-                  ğŸ›ï¸ ì£¼ìµœì ì»¨íŠ¸ë¡¤ ë°•ìŠ¤
+          {effectiveRole === \"ORGANIZER\" && (
+            <div className=\"bg-card rounded-xl shadow-md border border-border p-3 lg:p-5 shrink-0\">
+              <div className=\"flex items-center justify-between mb-3 px-1\">
+                <h3 className=\"text-xs font-semibold text-minion-blue uppercase tracking-wider flex items-center gap-2\">
+                  ??? ÁÖÃÖÀÚ ÄÁÆ®·Ñ ¹Ú½º
                 </h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-md border border-gray-100">
-                    ëŒ€ê¸°ì: {waitingPlayers.length}ëª… / ë‚™ì°°ì:{" "}
-                    {soldPlayers.length}ëª…
+                <div className=\"flex items-center gap-3\">
+                  <span className=\"text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-md border border-border\">
+                    ´ë±âÀÚ: {waitingPlayers.length}¸í / ³«ÂûÀÚ:{\" \"}
+                    {soldPlayers.length}¸í
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2 mb-3 pb-3 border-b border-gray-100">
+              <div className=\"flex gap-2 mb-3 pb-3 border-b border-border\">
                 <input
-                  type="text"
+                  type=\"text\"
                   value={noticeText}
                   onChange={(e) => setNoticeText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleNotice()}
-                  placeholder="ê³µì§€ ë‚´ìš© ì…ë ¥..."
-                  className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-minion-blue focus:ring-1 focus:ring-minion-blue/20"
+                  onKeyDown={(e) => e.key === \"Enter\" && handleNotice()}
+                  placeholder=\"°øÁö ³»¿ë ÀÔ·Â...\"
+                  className=\"flex-1 border border-border bg-muted rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-minion-blue focus:ring-1 focus:ring-minion-blue/20\"
                   disabled={isSendingNotice}
                 />
                 <button
                   onClick={handleNotice}
                   disabled={!noticeText.trim() || isSendingNotice}
-                  className="bg-minion-yellow text-minion-blue px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm"
+                  className=\"bg-minion-yellow text-minion-blue px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm\"
                 >
-                  ì„ í¬
+                  ¼±Æ÷
                 </button>
               </div>
               {allDone ? (
-                <div className="text-center py-4 bg-green-50 rounded-lg border border-green-200">
-                  <p className="font-bold text-green-600 text-lg tracking-tight">
-                    ğŸ† ê²½ë§¤ ì™„ë£Œ!
+                <div className=\"text-center py-4 bg-green-500/10 rounded-lg border border-green-500/20\">
+                  <p className=\"font-bold text-green-600 text-lg tracking-tight\">
+                    ?? °æ¸Å ¿Ï·á!
                   </p>
                 </div>
               ) : !currentPlayer ? (
                 isAutoDraftMode ? (
-                  <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 py-4 rounded-lg font-bold text-center text-base animate-pulse">
-                    âš¡ ìë™ ë“œë˜í”„íŠ¸ ì§„í–‰ ì¤‘
+                  <div className=\"bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 py-4 rounded-lg font-bold text-center text-base animate-pulse\">
+                    ? ÀÚµ¿ µå·¡ÇÁÆ® ÁøÇà Áß
                   </div>
                 ) : (
                   <button
@@ -450,31 +445,31 @@ export function RoomClient({
                     disabled={
                       isDrawing || waitingPlayers.length === 0 || !allConnected
                     }
-                    className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-12 lg:h-14 rounded-lg font-bold text-sm md:text-base lg:text-lg shadow-sm"
+                    className=\"w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-12 lg:h-14 rounded-lg font-bold text-sm md:text-base lg:text-lg shadow-sm\"
                   >
-                    ğŸ² ë‹¤ìŒ ì„ ìˆ˜ ì¶”ì²¨ (ë‚¨ì€ ì¸ì› : {waitingPlayers.length}ëª…)
+                    ?? ´ÙÀ½ ¼±¼ö ÃßÃ· (³²Àº ÀÎ¿ø : {waitingPlayers.length}¸í)
                   </button>
                 )
               ) : !timerEndsAt && !lotteryPlayer ? (
                 <button
                   onClick={handleStart}
                   disabled={isStarting || !allConnected}
-                  className="w-full bg-lime-500 hover:bg-lime-600 text-white h-12 lg:h-14 rounded-lg font-bold text-lg lg:text-xl shadow-sm"
+                  className=\"w-full bg-lime-500 hover:bg-lime-600 text-white h-12 lg:h-14 rounded-lg font-bold text-lg lg:text-xl shadow-sm\"
                 >
-                  â–¶ ê²½ë§¤ ì‹œì‘
+                  ¢º °æ¸Å ½ÃÀÛ
                 </button>
               ) : !timerEndsAt ? (
-                <div className="bg-minion-blue/10 border-2 border-minion-blue/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider">
-                  ğŸ° ì¶”ì²¨ ì§„í–‰ ì¤‘
+                <div className=\"bg-minion-blue/10 border-2 border-minion-blue/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider\">
+                  ?? ÃßÃ· ÁøÇà Áß
                 </div>
               ) : (
-                <div className="bg-minion-yellow/10 border-2 border-minion-yellow/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider">
-                  ğŸ”¥ ê²½ë§¤ ì§„í–‰ ì¤‘ ğŸ”¥
+                <div className=\"bg-minion-yellow/10 border-2 border-minion-yellow/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider\">
+                  ?? °æ¸Å ÁøÇà Áß ??
                 </div>
               )}
             </div>
           )}
-          {effectiveRole === "LEADER" && roomId && storeTeamId && (
+          {effectiveRole === \"LEADER\" && roomId && storeTeamId && (
             <BiddingControl
               roomId={roomId}
               teamId={storeTeamId}
@@ -488,19 +483,19 @@ export function RoomClient({
           )}
         </section>
 
-        <aside className="lg:col-span-3 flex flex-col gap-2 lg:gap-3 min-h-0 order-2 lg:order-3 h-[400px] sm:h-[500px] lg:h-auto lg:self-stretch shrink-0">
-          <div className="bg-card rounded-xl shadow-sm border border-border flex-none max-h-[140px] flex flex-col overflow-hidden min-h-0 relative">
-            <div className="px-3 py-2 border-b border-border bg-card shrink-0">
-              <h2 className="text-xs font-semibold text-red-500 flex items-center gap-1.5 uppercase px-0.5">
-                ğŸ‘» ìœ ì°° ëŒ€ê¸°ì„
+        <aside className=\"lg:col-span-3 flex flex-col gap-2 lg:gap-3 min-h-0 order-2 lg:order-3 h-[400px] sm:h-[500px] lg:h-auto lg:self-stretch shrink-0\">
+          <div className=\"bg-card rounded-xl shadow-sm border border-border flex-none max-h-[140px] flex flex-col overflow-hidden min-h-0 relative\">
+            <div className=\"px-3 py-2 border-b border-border bg-card shrink-0\">
+              <h2 className=\"text-xs font-semibold text-red-500 flex items-center gap-1.5 uppercase px-0.5\">
+                ?? À¯Âû ´ë±â¼®
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 pr-2 mr-0.5 min-h-0">
+            <div className=\"flex-1 overflow-y-auto custom-scrollbar p-2 pr-2 mr-0.5 min-h-0\">
               <UnsoldPanel />
             </div>
           </div>
-          <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-card rounded-xl shadow-sm border border-border relative">
-            <div className="flex-1 flex flex-col min-h-0 mr-0.5 overflow-hidden">
+          <div className=\"flex-1 overflow-hidden flex flex-col min-h-0 bg-card rounded-xl shadow-sm border border-border relative\">
+            <div className=\"flex-1 flex-col min-h-0 mr-0.5 overflow-hidden\">
               <ChatPanel />
             </div>
           </div>
@@ -510,7 +505,7 @@ export function RoomClient({
       <LeaveRoomModal
         isOpen={isLeaveRoomOpen}
         onClose={() => setIsLeaveRoomOpen(false)}
-        onConfirm={() => router.push("/")}
+        onConfirm={() => router.push(\"/\")}
       />
       <EndRoomModal
         isOpen={isEndRoomOpen}
@@ -526,3 +521,4 @@ export function RoomClient({
     </div>
   );
 }
+

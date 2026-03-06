@@ -1,21 +1,20 @@
-﻿@import 'tailwindcss';
-@plugin 'tailwindcss-animate';
+@import \"tailwindcss\";
+@plugin \"tailwindcss-animate\";
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-minion-yellow: #FBE042;
-  --color-minion-yellow-hover: #F2D214;
-  --color-minion-blue: #2358A4;
-  --color-minion-blue-hover: #194079;
+  --color-minion-yellow: var(--minion-yellow);
+  --color-minion-yellow-hover: var(--minion-yellow-hover);
+  --color-minion-blue: var(--minion-blue);
+  --color-minion-blue-hover: var(--minion-blue-hover);
   --color-minion-grey: #808080;
   --color-minion-skin: #FFC09A;
 
-  --font-cinzel: var(--font-cinzel, 'Cinzel', serif);
+  --font-cinzel: var(--font-cinzel, \"Cinzel\", serif);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Define standard card, border colors */
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -77,6 +76,12 @@
     --input: #E5E7EB;
     --ring: #FBE042;
     --radius: 0.5rem;
+
+    /* Minion Specific Colors */
+    --minion-yellow: #FBE042;
+    --minion-yellow-hover: #F2D214;
+    --minion-blue: #2358A4;
+    --minion-blue-hover: #194079;
   }
 
   .dark {
@@ -99,6 +104,12 @@
     --border: #374151;
     --input: #374151;
     --ring: #FBE042;
+
+    /* Minion Specific Colors (Optimized for Dark) */
+    --minion-yellow: #FDE047;
+    --minion-yellow-hover: #FACC15;
+    --minion-blue: #3B82F6;
+    --minion-blue-hover: #2563EB;
   }
 
   .monotone-light {
@@ -121,6 +132,12 @@
     --border: #E2E8F0;
     --input: #E2E8F0;
     --ring: #0F172A;
+
+    /* Minion Specific Colors (Monotone override) */
+    --minion-yellow: #0F172A;
+    --minion-yellow-hover: #1E293B;
+    --minion-blue: #64748B;
+    --minion-blue-hover: #475569;
   }
 
   .monotone-dark {
@@ -143,6 +160,12 @@
     --border: #1E293B;
     --input: #1E293B;
     --ring: #F8FAFC;
+
+    /* Minion Specific Colors (Monotone override) */
+    --minion-yellow: #F8FAFC;
+    --minion-yellow-hover: #E2E8F0;
+    --minion-blue: #94A3B8;
+    --minion-blue-hover: #64748B;
   }
 
   * { @apply border-border; }
@@ -154,10 +177,11 @@
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #2358A4 #f3f4f6;
+    scrollbar-color: var(--minion-blue) var(--muted);
   }
   .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 10px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #2358A4; border-radius: 10px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #194079; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: var(--muted); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--minion-blue); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--minion-blue-hover); }
 }
+

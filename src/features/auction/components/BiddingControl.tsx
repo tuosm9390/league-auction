@@ -44,18 +44,18 @@ export function BiddingControl(props: BiddingControlProps) {
 
   return (
     <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-4 shrink-0">
-      <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-100">
+      <div className="flex items-start justify-between mb-3 pb-3 border-b border-border">
         <h3 className="text-xs lg:text-sm font-semibold text-minion-blue uppercase tracking-wider flex items-center gap-1.5 mt-1">
-          <span className="text-base lg:text-lg">🔨</span> 팀장 컨트롤 박스
+          <span className="text-base lg:text-lg">?��</span> ?�??컨트�?박스
         </h3>
         <div className="flex flex-col items-end gap-1.5">
-          <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-md border border-gray-100">
-            대기자: {waitingCount}명 / 낙찰자: {soldCount}명
+          <span className="text-xs font-semibold text-muted-foreground bg-muted px-3 py-1 rounded-md border border-border">
+            ?�기자: {waitingCount}�?/ ?�찰?? {soldCount}�?
           </span>
           <div className="flex items-center gap-3 lg:gap-4 mt-0.5">
             <div className="flex flex-col items-end">
-              <span className="text-[8px] lg:text-[9px] font-bold text-gray-400 uppercase tracking-tight">
-                남은 포인트
+              <span className="text-[8px] lg:text-[9px] font-bold text-muted-foreground uppercase tracking-tight">
+                ?��? ?�인??
               </span>
               <span className="text-base lg:text-lg font-bold text-minion-blue tabular-nums leading-none">
                 {myTeam?.point_balance?.toLocaleString() ?? 0}P
@@ -63,8 +63,8 @@ export function BiddingControl(props: BiddingControlProps) {
             </div>
             {currentPlayer && (
               <div className="flex flex-col items-end">
-                <span className="text-[9px] lg:text-[10px] font-black text-gray-400 uppercase tracking-tighter">
-                  최소 입찰가
+                <span className="text-[9px] lg:text-[10px] font-black text-muted-foreground uppercase tracking-tighter">
+                  최소 ?�찰가
                 </span>
                 <span className="text-base lg:text-lg font-bold text-red-500 tabular-nums leading-none">
                   {minBid.toLocaleString()}P
@@ -83,14 +83,14 @@ export function BiddingControl(props: BiddingControlProps) {
 
       <div className="flex gap-1.5 lg:gap-3 relative h-10 md:h-11 lg:h-12">
         {!isAuctionActive && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg border border-dashed border-gray-200">
-            <p className="text-xs lg:text-sm text-gray-500 font-medium flex items-center gap-1.5 lg:gap-2">
-              <span className="text-base lg:text-lg animate-bounce">⏱️</span>
+          <div className="absolute inset-0 bg-card/95 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg border border-dashed border-border">
+            <p className="text-xs lg:text-sm text-muted-foreground font-medium flex items-center gap-1.5 lg:gap-2">
+              <span className="text-base lg:text-lg animate-bounce">?�️</span>
               {!currentPlayer
-                ? "선수가 추첨되면 입찰 창이 활성화됩니다."
+                ? "?�수가 추첨?�면 ?�찰 창이 ?�성?�됩?�다."
                 : !timerEndsAt
-                  ? "주최자가 경매를 시작하면 입찰할 수 있습니다."
-                  : "경매 시간이 종료되었습니다."}
+                  ? "주최?��? 경매�??�작?�면 ?�찰?????�습?�다."
+                  : "경매 ?�간??종료?�었?�니??"}
             </p>
           </div>
         )}
@@ -98,9 +98,9 @@ export function BiddingControl(props: BiddingControlProps) {
         <button
           onClick={decrementBid}
           disabled={!canBid || numericBidAmount <= minBid}
-          className="bg-white hover:bg-gray-50 text-gray-700 w-10 lg:w-12 h-full rounded-lg font-bold text-xl lg:text-2xl border border-gray-200 transition-all active:scale-90 disabled:opacity-20 shadow-sm"
+          className="bg-card hover:bg-muted text-foreground w-10 lg:w-12 h-full rounded-lg font-bold text-xl lg:text-2xl border border-border transition-all active:scale-90 disabled:opacity-20 shadow-sm"
         >
-          －
+          �?
         </button>
 
         <div className="relative flex-1 group">
@@ -112,9 +112,9 @@ export function BiddingControl(props: BiddingControlProps) {
             onChange={(e) => setBidAmount(e.target.value)}
             onFocus={(e) => e.target.select()}
             disabled={!canBid}
-            className="w-full h-full bg-white border-2 lg:border-2 border-gray-200 focus:border-minion-blue rounded-lg px-2 sm:px-3 lg:px-4 text-lg sm:text-xl md:text-2xl lg:text-2xl font-bold text-center focus:outline-none focus:ring-1 focus:ring-minion-blue/20 transition-all disabled:opacity-50 tabular-nums"
+            className="w-full h-full bg-card border-2 lg:border-2 border-border focus:border-minion-blue rounded-lg px-2 sm:px-3 lg:px-4 text-lg sm:text-xl md:text-2xl lg:text-2xl font-bold text-center focus:outline-none focus:ring-1 focus:ring-minion-blue/20 transition-all disabled:opacity-50 tabular-nums"
           />
-          <div className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-gray-300 font-bold text-sm lg:text-base pointer-events-none group-focus-within:text-minion-blue transition-colors">
+          <div className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm lg:text-base pointer-events-none group-focus-within:text-minion-blue transition-colors">
             P
           </div>
         </div>
@@ -122,9 +122,9 @@ export function BiddingControl(props: BiddingControlProps) {
         <button
           onClick={incrementBid}
           disabled={!canBid}
-          className="bg-white hover:bg-gray-50 text-gray-700 w-10 lg:w-12 h-full rounded-lg font-bold text-xl lg:text-2xl border border-gray-200 transition-all active:scale-90 disabled:opacity-20 shadow-sm"
+          className="bg-card hover:bg-muted text-foreground w-10 lg:w-12 h-full rounded-lg font-bold text-xl lg:text-2xl border border-border transition-all active:scale-90 disabled:opacity-20 shadow-sm"
         >
-          ＋
+          �?
         </button>
 
         <button
@@ -137,18 +137,18 @@ export function BiddingControl(props: BiddingControlProps) {
           }`}
         >
           {isLeading
-            ? "낙찰 유력 후보! 👑"
+            ? "?�찰 ?�력 ?�보! ?��"
             : isBidding
-              ? "입찰 중..."
+              ? "?�찰 �?.."
               : isTeamFull
-                ? "🚫 정원 초과"
-                : "입찰 하기 🔥"}
+                ? "?�� ?�원 초과"
+                : "?�찰 ?�기 ?��"}
         </button>
       </div>
 
       {isTeamFull && (
         <p className="text-[10px] text-red-500 mt-3 text-center font-bold animate-pulse">
-          ※ 현재 팀의 모든 자리가 가득 찼습니다.
+          ???�재 ?�??모든 ?�리가 가??찼습?�다.
         </p>
       )}
     </div>
