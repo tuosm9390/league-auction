@@ -1,18 +1,19 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-minion-yellow: #FBE042;
-  --color-minion-yellow-hover: #F2D214;
-  --color-minion-blue: #2358A4;
-  --color-minion-blue-hover: #194079;
-  --color-minion-grey: #808080;
-  --color-minion-skin: #FFC09A;
+  /* Alias minion colors to theme variables for dynamic switching */
+  --color-minion-yellow: var(--primary);
+  --color-minion-yellow-hover: color-mix(in srgb, var(--primary), black 10%);
+  --color-minion-blue: var(--secondary);
+  --color-minion-blue-hover: color-mix(in srgb, var(--secondary), black 10%);
+  --color-minion-grey: var(--muted-foreground);
+  --color-minion-skin: var(--accent);
 
-  --font-cinzel: var(--font-cinzel, 'Cinzel', serif);
+  --font-cinzel: var(--font-cinzel, "Cinzel", serif);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -46,51 +47,22 @@
   --animate-shake: shake 0.4s cubic-bezier(.36, .07, .19, .97) infinite;
 
   @keyframes shake {
-
-    10%,
-    90% {
-      transform: translate3d(-1px, 0, 0);
-    }
-
-    20%,
-    80% {
-      transform: translate3d(2px, 0, 0);
-    }
-
-    30%,
-    50%,
-    70% {
-      transform: translate3d(-4px, 0, 0);
-    }
-
-    40%,
-    60% {
-      transform: translate3d(4px, 0, 0);
-    }
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
   }
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
-
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
 }
 
 @layer base {
-  :root {
+  /* Default: Minions Theme */
+  :root, [data-theme="minions"] {
     --background: #FAFAFA;
     --foreground: #111827;
     --card: #FFFFFF;
@@ -113,42 +85,82 @@
     --radius: 0.5rem;
   }
 
+  /* HIGH READABILITY: Ease Dark Theme */
+  [data-theme="dark"] {
+    --background: #0A0A0A; 
+    --foreground: #FFFFFF; /* Pure White for headers */
+    --card: #141414;
+    --card-foreground: #F5F5F5;
+    --popover: #1A1A1A;
+    --popover-foreground: #FFFFFF;
+    --primary: #FFFFFF; 
+    --primary-foreground: #000000;
+    --secondary: #E5E7EB; /* Light Grey for text visibility (mapped from minion-blue) */
+    --secondary-foreground: #000000;
+    --muted: #262626; 
+    --muted-foreground: #A1A1AA; /* Body grey */
+    --accent: #FFFFFF;
+    --accent-foreground: #000000;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: #262626;
+    --input: #1F1F1F;
+    --ring: #FFFFFF;
+  }
+
+  /* NEW: Elegant Rose Theme */
+  [data-theme="rose"] {
+    --background: #FFF1F2;
+    --foreground: #4C0519;
+    --card: #FFFFFF;
+    --card-foreground: #4C0519;
+    --popover: #FFFFFF;
+    --popover-foreground: #4C0519;
+    --primary: #E11D48;
+    --primary-foreground: #FFFFFF;
+    --secondary: #FB7185;
+    --secondary-foreground: #FFFFFF;
+    --muted: #FFE4E6;
+    --muted-foreground: #9F1239;
+    --accent: #FDA4AF;
+    --accent-foreground: #4C0519;
+    --destructive: #BE123C;
+    --destructive-foreground: #FFFFFF;
+    --border: #FECDD3;
+    --input: #FECDD3;
+    --ring: #E11D48;
+  }
+
   .dark {
-    --background: #111827;
-    --foreground: #F9FAFB;
-    --card: #1F2937;
-    --card-foreground: #F9FAFB;
-    --popover: #1F2937;
-    --popover-foreground: #F9FAFB;
-    --primary: #FBE042;
-    --primary-foreground: #111827;
-    --secondary: #2358A4;
-    --secondary-foreground: #FAFAFA;
-    --muted: #374151;
-    --muted-foreground: #9CA3AF;
-    --accent: #FFC09A;
-    --accent-foreground: #111827;
-    --destructive: #7F1D1D;
-    --destructive-foreground: #F9FAFB;
-    --border: #374151;
-    --input: #374151;
-    --ring: #FBE042;
+    --background: #0A0A0A;
+    --foreground: #FFFFFF;
+    --card: #141414;
+    --card-foreground: #F5F5F5;
+    --popover: #1A1A1A;
+    --popover-foreground: #FFFFFF;
+    --primary: #FFFFFF;
+    --primary-foreground: #000000;
+    --secondary: #E5E7EB;
+    --secondary-foreground: #000000;
+    --muted: #262626;
+    --muted-foreground: #A1A1AA;
+    --accent: #FFFFFF;
+    --accent-foreground: #000000;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --border: #262626;
+    --input: #1F1F1F;
+    --ring: #FFFFFF;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
+  * { @apply border-border; }
+  body { 
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
-
-  button {
-    cursor: pointer;
-  }
-
+  button { cursor: pointer; }
   button:disabled {
     cursor: not-allowed !important;
     pointer-events: none !important;
@@ -156,35 +168,20 @@
     box-shadow: none !important;
     transform: none !important;
   }
-
-  .cursor-pointer {
-    cursor: pointer;
-  }
+  .cursor-pointer { cursor: pointer; }
 }
 
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #2358A4 #f3f4f6;
+    scrollbar-color: var(--secondary) var(--muted);
   }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f3f4f6;
-    border-radius: 10px;
-  }
-
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: var(--muted); border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #2358A4;
+    background: var(--secondary);
     border-radius: 10px;
     transition: background 0.2s;
   }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #194079;
-  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--secondary), black 20%); }
 }
