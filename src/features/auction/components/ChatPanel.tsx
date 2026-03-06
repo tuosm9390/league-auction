@@ -16,7 +16,7 @@ function MessageItem({ msg }: { msg: Message }) {
   if (role === "SYSTEM") {
     return (
       <div className="flex justify-center my-1">
-        <span className="text-[12px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium italic">
+        <span className="text-[12px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full font-medium italic">
           {msg.content}
         </span>
       </div>
@@ -29,7 +29,7 @@ function MessageItem({ msg }: { msg: Message }) {
       <div className="bg-minion-yellow/20 border border-minion-yellow rounded-lg px-2 py-1.5 my-0.5">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm font-black text-amber-700">📢 공지</span>
-          <span className="text-[9px] text-gray-400 ml-auto font-mono">
+          <span className="text-[9px] text-muted-foreground ml-auto font-mono">
             {new Date(msg.created_at).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -62,19 +62,19 @@ function MessageItem({ msg }: { msg: Message }) {
     ),
   };
   const badge = BADGE[role] ?? (
-    <span className="text-[9px] bg-gray-100 text-gray-400 px-1 py-0.5 rounded">
+    <span className="text-[9px] bg-gray-100 text-muted-foreground px-1 py-0.5 rounded">
       {role}
     </span>
   );
 
   return (
-    <div className="text-sm bg-gray-50 hover:bg-gray-100/70 p-1.5 rounded-lg transition-colors leading-normal">
+    <div className="text-sm bg-muted hover:bg-gray-100/70 p-1.5 rounded-lg transition-colors leading-normal">
       <div className="flex items-center gap-1 mb-0.5">
         {badge}
-        <span className="font-bold text-gray-800 text-[11px]">
+        <span className="font-bold text-foreground text-[11px]">
           {msg.sender_name}
         </span>
-        <span className="text-[9px] text-gray-400 ml-auto font-mono">
+        <span className="text-[9px] text-muted-foreground ml-auto font-mono">
           {new Date(msg.created_at).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -147,7 +147,7 @@ export function ChatPanel() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
       <div className="p-2 border-b border-border bg-card shrink-0">
-        <h2 className="text-sm font-bold text-minion-blue flex items-center gap-2 uppercase tracking-tighter">
+        <h2 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-tighter">
           <span className="text-xl">💬</span> 실시간 채팅
         </h2>
       </div>
@@ -167,7 +167,7 @@ export function ChatPanel() {
 
       <form
         onSubmit={handleSend}
-        className="p-2 px-3 border-t bg-gray-50 flex gap-2"
+        className="p-2 px-3 border-t bg-muted flex gap-2"
       >
         <input
           type="text"
@@ -175,7 +175,7 @@ export function ChatPanel() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="메시지..."
           maxLength={MAX_MESSAGE_LENGTH}
-          className="flex-1 bg-white border border-gray-200 px-2.5 py-1.5 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-minion-yellow transition-shadow"
+          className="flex-1 bg-card border border-border px-2.5 py-1.5 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-minion-yellow transition-shadow"
           disabled={isSending}
         />
         <button
