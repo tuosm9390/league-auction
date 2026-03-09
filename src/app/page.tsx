@@ -37,21 +37,21 @@ const HOW_TO_USE = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-[#F5F5F7] relative overflow-hidden">
       {/* Decorative background */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-minion-yellow/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-minion-yellow/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col items-center px-4 py-16 gap-16">
         {/* Hero Card */}
-        <div className="bg-card p-12 rounded-3xl shadow-xl border-4 border-minion-blue max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-5xl font-black text-minion-blue drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
+        <div className="bg-white p-12 lg:p-16 rounded-[40px] shadow-2xl border border-gray-100 max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <h1 className="text-6xl font-black text-[#1D1D1F] drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
             <Image
               src="/favicon.png"
               alt="Minions Icon"
               width={48}
               height={48}
             />
-            <div className="w-[350px]">
+            <div className="w-[450px]">
               <span className="text-minion-yellow block drop-shadow-sm">
                 M I N I O N S
               </span>
@@ -82,7 +82,7 @@ export default function Home() {
             {HOW_TO_USE.map((item) => (
               <div
                 key={item.step}
-                className="bg-card rounded-2xl p-5 border-2 border-gray-100 hover:border-minion-yellow transition-colors shadow-sm"
+                className="bg-white rounded-3xl p-8 border border-gray-100 hover:shadow-xl transition-colors shadow-sm"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{item.icon}</span>
@@ -99,8 +99,8 @@ export default function Home() {
           </div>
 
           {/* Tips */}
-          <div className="mt-8 bg-minion-blue/5 border border-minion-blue/20 rounded-2xl p-6 max-w-3xl mx-auto shadow-sm">
-            <p className="text-sm font-black text-minion-blue mb-2">
+          <div className="mt-8 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm max-w-3xl mx-auto shadow-sm">
+            <p className="text-sm font-black text-[#1D1D1F] mb-4 font-bold text-lg">
               💡 알아두면 좋은 점
             </p>
             <ul className="text-sm text-gray-600 space-y-1.5 list-none">
@@ -128,7 +128,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative z-1 text-center py-8 text-sm text-gray-400 w-full mt-auto">
         <p>
-          Copyright © {new Date().getFullYear()} MINIONS(소모임). All rights
+          Copyright © {new Date().getFullYear()} MINIONS(?�모??. All rights
           reserved.
         </p>
       </footer>

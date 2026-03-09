@@ -26,7 +26,7 @@ function MessageItem({ msg }: { msg: Message }) {
   // ── 공지 메시지 ──
   if (role === "NOTICE") {
     return (
-      <div className="bg-minion-yellow/20 border border-minion-yellow rounded-lg px-2 py-1.5 my-0.5">
+      <div className="bg-amber-50/50 border border-amber-100 rounded-2xl px-4 py-3 my-1">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm font-black text-amber-700">📢 공지</span>
           <span className="text-[9px] text-gray-400 ml-auto font-mono">
@@ -68,10 +68,10 @@ function MessageItem({ msg }: { msg: Message }) {
   );
 
   return (
-    <div className="text-sm bg-gray-50 hover:bg-gray-100/70 p-1.5 rounded-lg transition-colors leading-normal">
+    <div className="text-sm p-2 rounded-xl hover:bg-gray-50/50 transition-all transition-colors leading-normal">
       <div className="flex items-center gap-1 mb-0.5">
         {badge}
-        <span className="font-bold text-gray-800 text-[11px]">
+        <span className="font-bold text-[#1D1D1F] text-\[12px\] font-bold">
           {msg.sender_name}
         </span>
         <span className="text-[9px] text-gray-400 ml-auto font-mono">
@@ -146,7 +146,7 @@ export function ChatPanel() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-      <div className="p-2 border-b border-border bg-card shrink-0">
+      <div className="p-4 border-b border-gray-100 bg-white shrink-0">
         <h2 className="text-sm font-bold text-minion-blue flex items-center gap-2 uppercase tracking-tighter">
           <span className="text-xl">💬</span> 실시간 채팅
         </h2>
@@ -167,7 +167,7 @@ export function ChatPanel() {
 
       <form
         onSubmit={handleSend}
-        className="p-2 px-3 border-t bg-gray-50 flex gap-2"
+        className="p-4 px-6 border-t border-gray-100 bg-white flex gap-3"
       >
         <input
           type="text"
@@ -181,7 +181,7 @@ export function ChatPanel() {
         <button
           type="submit"
           disabled={isSending || !input.trim()}
-          className="bg-minion-blue text-white px-3 py-1.5 rounded-md font-bold text-xs hover:bg-minion-blue-hover transition-colors disabled:opacity-50"
+          className="bg-[#0071E3] text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-[#0077ED] hover:bg-minion-blue-hover transition-colors disabled:opacity-50"
         >
           전송
         </button>

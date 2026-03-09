@@ -86,9 +86,9 @@ export const getPositionImage = (pos: string) => {
 
 const NoticeBanner = memo(function NoticeBanner({ msg }: { msg: Message }) {
   return (
-    <div className="bg-minion-yellow border-b border-amber-400 px-4 py-2 flex items-center gap-2 shrink-0">
+    <div className="bg-amber-50/50 border-b border-amber-100 px-5 py-3 flex items-center gap-2 shrink-0">
       <span className="text-xl shrink-0">📢</span>
-      <p className="text-[11px] font-bold text-amber-950 truncate">
+      <p className="text-[11px] font-bold text-amber-800 truncate">
         <span className="text-xl opacity-50 mr-1.5">공지:</span>
         <span className="text-xl">{msg.content}</span>
       </p>
@@ -119,7 +119,7 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className={`relative flex items-center justify-center gap-1.5 lg:gap-2 rounded-lg px-3 py-1.5 sm:px-4 lg:px-6 lg:py-2.5 font-mono font-bold text-2xl sm:text-3xl lg:text-4xl transition-all duration-300 overflow-hidden ${isUrgent ? "bg-red-500 text-white animate-shake shadow-md" : displayTime === 0 ? "bg-gray-100 text-gray-400" : "bg-minion-blue text-white shadow-sm"}`}
+        className={`relative flex items-center justify-center gap-1.5 lg:gap-2 rounded-lg px-3 py-1.5 sm:px-4 lg:px-6 lg:py-2.5 font-mono font-bold text-2xl sm:text-3xl lg:text-4xl transition-all duration-300 overflow-hidden ${isUrgent ? "bg-red-500 text-white animate-shake shadow-md" : displayTime === 0 ? "bg-gray-100 text-gray-400" : "bg-[#1D1D1F] text-[#4285F4] shadow-lg"}`}
       >
         <span className="text-lg sm:text-xl lg:text-2xl">⏱</span>
         <span className="z-10 tracking-tighter">
@@ -182,7 +182,7 @@ export function AuctionBoard({
   } = useAuctionBoard({ isLotteryActive, lotteryPlayer, role, allConnected });
 
   return (
-    <div className="bg-white rounded-xl shadow-md border-2 border-minion-blue flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
+    <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
       {latestNotice && <NoticeBanner msg={latestNotice} />}
       {!allConnected && isAuctionStarted && !isAuctionComplete && (
         <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
@@ -202,7 +202,7 @@ export function AuctionBoard({
         </div>
       )}
       <div className="absolute top-0 right-0 w-60 h-60 bg-minion-yellow/10 rounded-full blur-[80px] pointer-events-none" />
-      <div className="z-10 flex flex-col flex-1 p-3 lg:p-4 gap-2 lg:gap-3 min-h-0">
+      <div className="z-10 flex flex-col flex-1 p-6 lg:p-8 gap-4 lg:gap-6 min-h-0">
         <div className="flex justify-center min-h-[32px]">
           {currentPlayer ? (
             timerEndsAt ? (
@@ -270,7 +270,7 @@ export function AuctionBoard({
                       />
                     </div>
                     <div
-                      className={`text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
+                      className={`text-sm lg:text-lg font-bold bg-gray-50/80 px-4 py-2 rounded-2xl border border-gray-100 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
                     >
                       {currentPlayer.tier}
                     </div>
@@ -288,7 +288,7 @@ export function AuctionBoard({
                         className="object-contain drop-shadow-md opacity-90"
                       />
                     </div>
-                    <div className="text-sm lg:text-lg font-bold bg-gray-50 px-3 py-1 lg:px-4 lg:py-1.5 rounded-lg border border-gray-200 text-gray-700">
+                    <div className="text-sm lg:text-lg font-bold bg-gray-50/80 px-4 py-2 rounded-2xl border border-gray-100 text-gray-700">
                       {currentPlayer.main_position}
                     </div>
                   </div>

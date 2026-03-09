@@ -103,15 +103,15 @@ export function LotteryAnimation({
       <div
         className={`text-xl font-black tracking-widest transition-all duration-500 ${
           isSpinning
-            ? "text-minion-blue animate-pulse"
-            : "text-minion-blue scale-110"
+            ? "text-[#1D1D1F] animate-pulse"
+            : "text-[#1D1D1F] scale-110"
         }`}
       >
         {isSpinning ? "🎰 추첨 중..." : "🎉 추첨 완료!"}
       </div>
 
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-gray-50 border-4 border-minion-yellow shadow-inner relative mx-auto"
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-[#F5F5F7] border border-gray-200 shadow-xl relative mx-auto"
         style={{ height: `${ITEM_HEIGHT}px` }}
       >
         <div
@@ -134,8 +134,8 @@ export function LotteryAnimation({
               <span
                 className={`text-4xl font-black w-full text-center truncate transition-all duration-300 ${
                   !isSpinning && idx === 40
-                    ? "text-minion-blue scale-110"
-                    : "text-gray-400"
+                    ? "text-[#1D1D1F] scale-110"
+                    : "text-gray-300"
                 }`}
                 title={p.name}
               >
@@ -166,7 +166,7 @@ export function LotteryAnimation({
               <span
                 className={`text-xs font-bold transition-all duration-300 ${
                   !isSpinning && idx === 40
-                    ? "text-minion-blue/60 scale-110 mt-1"
+                    ? "text-[#1D1D1F]/60 scale-110 mt-1"
                     : "text-gray-300"
                 }`}
               >

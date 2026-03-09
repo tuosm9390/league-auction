@@ -91,10 +91,10 @@
 
 @layer base {
   :root {
-    --background: #FAFAFA;
-    --foreground: #111827;
+    --background: #F5F5F7;
+    --foreground: #1D1D1F;
     --card: #FFFFFF;
-    --card-foreground: #111827;
+    --card-foreground: #1D1D1F;
     --popover: #FFFFFF;
     --popover-foreground: #111827;
     --primary: #FBE042;
@@ -107,7 +107,7 @@
     --accent-foreground: #111827;
     --destructive: #EF4444;
     --destructive-foreground: #FAFAFA;
-    --border: #E5E7EB;
+    --border: #F2F2F7;
     --input: #E5E7EB;
     --ring: #FBE042;
     --radius: 0.5rem;

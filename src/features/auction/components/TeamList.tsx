@@ -89,7 +89,7 @@ export function TeamList() {
         return (
           <div
             key={team.id}
-            className={`p-2.5 rounded-lg border transition-all duration-300 relative overflow-hidden ${isTeamComplete ? "border-green-400 bg-green-50/50 shadow-sm" : isMyTeam ? "border-minion-blue bg-blue-50/50 shadow-sm ring-1 ring-minion-blue/10" : "border-gray-200 bg-gray-50/30"}`}
+            className={`p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${isTeamComplete ? "border-green-400 bg-green-50/50 shadow-sm" : isMyTeam ? "border-minion-blue bg-white shadow-xl ring-0" : "border-gray-100 bg-white/50"}`}
           >
             {isTeamComplete && (
               <div className="absolute top-0 right-0 w-12 h-12 pointer-events-none">
@@ -110,7 +110,7 @@ export function TeamList() {
                 {team.name}
               </h3>
               <div
-                className={`font-mono font-bold px-1.5 py-0.5 rounded-md text-xs shadow-sm border ${isTeamComplete ? "bg-green-100 text-green-700 border-green-200" : "bg-white text-minion-blue border-gray-200"}`}
+                className={`font-mono font-bold px-1.5 py-0.5 rounded-md text-xs shadow-sm border ${isTeamComplete ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-50 text-[#1D1D1F] border-gray-100"}`}
               >
                 {team.point_balance.toLocaleString()}P
               </div>
@@ -141,7 +141,7 @@ export function TeamList() {
                       <span className="font-medium text-gray-700 truncate">
                         {p.name}
                       </span>
-                      <span className="font-bold text-minion-blue bg-blue-50 px-1 py-0.5 rounded text-[9px]">
+                      <span className="font-bold text-minion-blue bg-blue-50/30 px-2 py-1 rounded-full text-\[10px\] font-bold">
                         {p.sold_price || 0}P
                       </span>
                     </div>
