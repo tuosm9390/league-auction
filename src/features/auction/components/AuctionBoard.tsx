@@ -182,7 +182,7 @@ export function AuctionBoard({
   } = useAuctionBoard({ isLotteryActive, lotteryPlayer, role, allConnected });
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
+    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
       {latestNotice && <NoticeBanner msg={latestNotice} />}
       {!allConnected && isAuctionStarted && !isAuctionComplete && (
         <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
@@ -423,7 +423,7 @@ export function AuctionBoard({
           ) : isAuctionFinished ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
               <div className="w-16 h-16 lg:w-20 lg:h-20 bg-green-50 rounded-full flex items-center justify-center mb-4 border-2 border-green-200">
-                <span className="text-3xl lg:text-4xl animate-bounce">🎉</span>
+                <span className="text-3xl lg:text-4xl animate-bounce">?��</span>
               </div>
               <h1 className="text-2xl lg:text-3xl font-bold text-green-600 mb-3 drop-shadow-sm">
                 모든 경매 종료!
@@ -484,20 +484,20 @@ export function AuctionBoard({
                 <div className="flex-1 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-700">
                   <div className="w-16 h-16 lg:w-20 lg:h-20 bg-minion-yellow/10 rounded-full flex items-center justify-center mb-3 lg:mb-4 border-2 border-dashed border-minion-yellow animate-[spin_15s_linear_infinite]">
                     <span className="text-3xl lg:text-4xl animate-bounce">
-                      🎰
+                      ?��
                     </span>
                   </div>
                   <h3 className="text-2xl font-bold text-minion-blue mb-2 tracking-tight">
-                    모든 준비가 완료되었습니다!
+                    모든 준비�? ?�료?�었?�니??
                   </h3>
                   <p className="text-sm text-gray-500 font-medium max-w-md leading-relaxed">
-                    현재{" "}
+                    ?�재{" "}
                     <span className="text-minion-blue bg-minion-yellow px-2 py-0.5 rounded-md shadow-sm">
-                      추첨 대기 중
+                      추첨 ?��?�?
                     </span>
-                    입니다.
+                    ?�니??
                     <br />
-                    주최자가 선수를 추첨하면 경매가 시작됩니다.
+                    주최?��? ?�수�?추첨?�면 경매가 ?�작?�니??
                   </p>
                   <div className="mt-5 flex gap-2">
                     {[0, 0.2, 0.4].map((d) => (

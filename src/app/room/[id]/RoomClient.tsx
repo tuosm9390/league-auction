@@ -376,7 +376,7 @@ export function RoomClient({
           </div>
         </aside>
 
-        <section className="lg:col-span-6 flex flex-col gap-2 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
+        <section className="lg:col-span-6 flex flex-col gap-3 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
           {roomName && (
             <div className="shrink-0 bg-[#0f1f3d] rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 border border-[#2a3f6f] relative overflow-hidden">
               {/* 은은한 광택 오버레이 */}
@@ -403,7 +403,7 @@ export function RoomClient({
             onCloseLottery={handleCloseLottery}
           />
           {effectiveRole === "ORGANIZER" && (
-            <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-5 shrink-0">
+            <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-5 shrink-0 relative z-20">
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="text-xs font-semibold text-minion-blue uppercase tracking-wider flex items-center gap-2">
                   🎛️ 주최자 컨트롤 박스

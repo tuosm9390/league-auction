@@ -43,7 +43,7 @@ export function BiddingControl(props: BiddingControlProps) {
   } = props;
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 lg:p-8 shrink-0">
+    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 lg:p-8 shrink-0">
       <div className="flex items-start justify-between mb-3 pb-3 border-0 pb-4">
         <h3 className="text-xs lg:text-sm font-semibold text-[#1D1D1F] tracking-tight font-bold flex items-center gap-1.5 mt-1">
           <span className="text-base lg:text-lg">🔨</span> 팀장 컨트롤 박스
@@ -85,7 +85,7 @@ export function BiddingControl(props: BiddingControlProps) {
         {!isAuctionActive && (
           <div className="absolute inset-0 bg-white/95 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg border border-dashed border-gray-200">
             <p className="text-xs lg:text-sm text-gray-500 font-medium flex items-center gap-1.5 lg:gap-2">
-              <span className="text-base lg:text-lg animate-bounce">⏱️</span>
+              <span className="text-base lg:text-lg animate-bounce">?�️</span>
               {!currentPlayer
                 ? "선수가 추첨되면 입찰 창이 활성화됩니다."
                 : !timerEndsAt
