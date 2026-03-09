@@ -81,3 +81,9 @@ export async function startAuction(...): Promise<{ error?: string }> {
 - 2026-03-09: 디자인 시스템의 일관성을 위해 신규 UI 작업 시 기존의 대표 컴포넌트 스타일을 벤치마킹한다.
 
 - 2026-03-09: 픽셀 테마에서는 스크롤바 등 브라우저 기본 UI도 각진 형태와 테두리를 갖추도록 커스텀 스타일을 적용한다.
+[2026-03-09] Next.js 동적 경로([id]) 파일을 수정할 때는 반드시 -LiteralPath를 사용하여 경로 오인식을 방지할 것.
+[2026-03-09] 새로운 도메인 페이지를 생성하거나 수정할 때는 항상 고유한 메타데이터가 필요한지 검토하고 generateMetadata 적용을 습관화할 것.
+작업 시간: 2026-03-09 22:23:35
+AI 행동 지침 (Lessons Learned & New Rules): 
+- JavaScript/TypeScript 코드를 PowerShell로 생성 시 반드시 단일 인용구 Here-string (@'...'@)을 사용하여 $ 문자 보간 에러를 방지할 것. 
+- 10KB 초과 컴포넌트는 기능적 최소 단위로 분할하여 단일 책임 원칙(SRP)을 준수할 것.

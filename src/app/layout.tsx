@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { VT323, Press_Start_2P, Pixelify_Sans } from "next/font/google";
 import "./globals.css";
@@ -24,13 +24,29 @@ const pixelifySans = Pixelify_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Minions Bid",
-  description: "미니언즈 테마의 리그오브레전드 5인1조 경매 내전 플랫폼",
-  keywords: ["리그오브레전드", "LoL", "경매", "내전", "미니언즈", "팀구성"],
+  metadataBase: new URL("https://minionsbid.vercel.app"),
+  title: {
+    default: "Minions Bid 🍌",
+    template: "%s | Minions Bid",
+  },
+  description:
+    "리그 오브 레전드 미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
+  keywords: [
+    "리그오브레전드",
+    "LoL",
+    "경매",
+    "내전",
+    "미니언즈",
+    "팀구성",
+    "드래프트",
+  ],
   authors: [{ name: "Antigravity" }],
+  verification: {
+    google: "MDjk5WdTY8Pl_7kx3O84WmAebWeKmh2-1BK39ZzeGWA",
+  },
   openGraph: {
     title: "Minions Bid 🍌",
-    description: "미니언즈 테마의 리그오브레전드 5인1조 경매 내전 플랫폼",
+    description: "미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
     url: "https://minionsbid.vercel.app",
     siteName: "Minions Bid",
     images: [
@@ -47,7 +63,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Minions Bid",
-    description: "미니언즈 테마의 리그오브레전드 5인1조 경매 내전 플랫폼",
+    description: "미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
     images: ["/thumbnail.png"],
   },
 };
@@ -71,9 +87,24 @@ export default async function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <meta
-          name="google-site-verification"
-          content="MDjk5WdTY8Pl_7kx3O84WmAebWeKmh2-1BK39ZzeGWA"
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "Minions Bid",
+              url: "https://minionsbid.vercel.app",
+              description:
+                "리그 오브 레전드 미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
+              applicationCategory: "GameApplication",
+              operatingSystem: "All",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+              },
+            }),
+          }}
         />
       </head>
       <body className={"antialiased min-h-screen"}>{children}</body>

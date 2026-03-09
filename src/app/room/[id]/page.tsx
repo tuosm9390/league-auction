@@ -1,9 +1,19 @@
+import { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { RoomClient } from './RoomClient'
 import { Role } from '@/features/auction/store/useAuctionStore'
 
 type Params = Promise<{ id: string }>
 type SearchParams = Promise<{ role?: string; teamId?: string }>
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const resolvedParams = await params;
+  return {
+    title: `경매방 입장 (ID: ${resolvedParams.id})`,
+    description: `미니언즈 경매 시스템 - 실시간 경매가 진행 중인 방(${resolvedParams.id})에 참여하세요.`,
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function RoomPage(props: {
   params: Params
@@ -24,7 +34,6 @@ export default async function RoomPage(props: {
   let teamId: string | null = null
 
   if (roleParam) {
-    // 역할+팀ID에 대응하는 쿠키 이름 결정
     const cookieSuffix =
       roleParam === 'LEADER' && teamIdParam
         ? `LEADER_${teamIdParam}`
