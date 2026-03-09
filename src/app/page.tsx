@@ -7,130 +7,132 @@ const HOW_TO_USE = [
     step: "01",
     icon: "🍌",
     title: "경매방 만들기",
-    desc: "팀 수, 인원, 포인트를 설정하고 팀장과 경매 선수를 등록해 방을 생성합니다.",
+    desc: "팀 수, 인원, 포인트를 설정하고 팀장과 선수를 등록하세요.",
   },
   {
     step: "02",
     icon: "🔗",
     title: "링크 공유",
-    desc: "생성된 팀장별 링크를 각 팀장에게 공유합니다. 관전자 링크도 자유롭게 배포할 수 있습니다.",
+    desc: "팀장 전용 링크를 복사하여 각 팀장에게 전달하세요.",
   },
   {
     step: "03",
     icon: "✅",
-    title: "팀장 접속 확인",
-    desc: "경매 화면에서 팀장들의 실시간 접속 여부를 확인합니다.",
+    title: "접속 확인",
+    desc: "팀장들이 입장하면 실시간으로 상태가 표시됩니다.",
   },
   {
     step: "04",
     icon: "🔥",
     title: "경매 시작",
-    desc: "주최자가 선수를 하나씩 경매에 올리면 각 팀장이 포인트로 입찰합니다.",
+    desc: "주최자가 뽑기를 돌려 선수를 올리고 경매를 진행합니다.",
   },
   {
     step: "05",
     icon: "🏆",
     title: "팀 확정",
-    desc: "모든 선수가 낙찰되면 최종 팀 구성과 사용 포인트가 확정됩니다.",
+    desc: "최종 팀 구성을 확인하고 내전을 준비하세요!",
   },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#F5F5F7] relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-minion-yellow/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 flex flex-col items-center px-4 py-16 gap-16">
-        {/* Hero Card */}
-        <div className="bg-white p-12 lg:p-16 rounded-[40px] shadow-2xl border border-gray-100 max-w-2xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-6xl font-black text-[#1D1D1F] drop-shadow-sm uppercase tracking-tight flex items-center justify-center gap-2">
-            <Image
-              src="/favicon.png"
-              alt="Minions Icon"
-              width={48}
-              height={48}
-            />
-            <div className="w-[450px]">
-              <span className="text-minion-yellow block drop-shadow-sm">
-                M I N I O N S
-              </span>
-              <span className="block drop-shadow-sm">auction</span>
+    <div className="min-h-screen relative crt-overlay">
+      <div className="relative z-10 flex flex-col items-center px-4 py-20 gap-20">
+        {/* Main Menu Box */}
+        <div className="bg-white p-10 lg:p-14 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-3xl w-full text-center space-y-10">
+          <div className="inline-block px-4 py-1 bg-black text-white text-sm font-bold tracking-widest uppercase mb-4">
+            Level 1: System Start
+          </div>
+          <h1 className="text-4xl lg:text-6xl font-heading flex flex-col items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/favicon.png"
+                alt="Icon"
+                width={48}
+                height={48}
+                className="pixelated"
+              />
+              <div className="w-[450px]">
+                <span className="text-minion-yellow block drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                  MINIONS
+                </span>
+                <span className="drop-shadow-[4px_4px_0px_rgba(251,224,66,1)]">
+                  AUCTION
+                </span>
+              </div>
+              <Image
+                src="/favicon.png"
+                alt="Icon"
+                width={48}
+                height={48}
+                className="pixelated"
+              />
             </div>
-            <Image
-              src="/favicon.png"
-              alt="Minions Icon"
-              width={48}
-              height={48}
-            />
           </h1>
-          <p className="text-xl text-muted-foreground font-medium break-keep">
-            미니언즈 공식 팀 드래프트 시스템 두둥!등장!
+          <p className="text-xl font-bold border-y-2 border-black py-4 border-dashed">
+            미니언즈 공식 팀 드래프트 시스템 v1.0
           </p>
-          <div className="pt-4 w-full flex flex-col items-center">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
             <CreateRoomModal />
             <ArchiveModalWrapper />
           </div>
         </div>
 
-        {/* How to use */}
-        <div className="max-w-7xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-          <h2 className="text-2xl font-black text-minion-blue text-center mb-8">
-            이용 방법
+        {/* Quest Section (How to use) */}
+        <div className="max-w-6xl w-full space-y-10">
+          <h2 className="text-3xl font-black text-center text-minion-blue uppercase tracking-tighter">
+            [ Main Quest: How to Play ]
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {HOW_TO_USE.map((item) => (
               <div
                 key={item.step}
-                className="bg-white rounded-3xl p-8 border border-gray-100 hover:shadow-xl transition-colors shadow-sm"
+                className="bg-white border-4 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{item.icon}</span>
-                  <span className="text-xs font-black text-minion-blue bg-minion-yellow/30 px-2 py-0.5 rounded-full">
-                    STEP {item.step}
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-3xl">{item.icon}</span>
+                  <span className="bg-minion-yellow border-2 border-black px-2 py-0.5 text-[10px] font-bold">
+                    STAGE {item.step}
                   </span>
                 </div>
-                <h3 className="font-black text-gray-800 mb-1">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <h3 className="text-lg font-black mb-2">{item.title}</h3>
+                <p className="text-xs text-gray-600 font-bold leading-relaxed">
                   {item.desc}
                 </p>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Tips */}
-          <div className="mt-8 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm max-w-3xl mx-auto shadow-sm">
-            <p className="text-sm font-black text-[#1D1D1F] mb-4 font-bold text-lg">
-              💡 알아두면 좋은 점
-            </p>
-            <ul className="text-sm text-gray-600 space-y-1.5 list-none">
-              <li>
-                · 팀장 링크와 주최자 링크는{" "}
-                <span className="font-bold">다른 주소</span>입니다. 링크를
-                혼동하지 않도록 주의해주세요.
-              </li>
-              <li>
-                · 팀장 포인트는 팀 시작 포인트에서 차감됩니다 (팀 예산 = 총
-                포인트 - 팀장 포인트).
-              </li>
-              <li>
-                · 링크는{" "}
-                <span className="font-bold">
-                  방 페이지 상단 &ldquo;링크 확인&rdquo; 버튼
-                </span>
-                으로 언제든지 다시 확인할 수 있습니다.
-              </li>
-            </ul>
-          </div>
+        {/* System Tips */}
+        <div className="max-w-3xl w-full bg-black text-white border-4 border-minion-yellow p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.2)]">
+          <h3 className="text-xl font-bold text-minion-yellow mb-4 flex items-center gap-2">
+            <span className="animate-pulse">●</span> 알아두면 좋은 팁
+          </h3>
+          <ul className="text-sm space-y-3 font-bold text-gray-300">
+            <li className="flex gap-2">
+              <span>-</span>{" "}
+              <span>팀장 링크와 주최자 링크는 별개의 고유 주소입니다.</span>
+            </li>
+            <li className="flex gap-2">
+              <span>-</span>{" "}
+              <span>
+                모든 입찰은 실시간으로 동기화되며 취소가 불가능합니다.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span>-</span>{" "}
+              <span>
+                방 페이지 상단의 [LINK] 버튼으로 언제든 주소를 재확인하세요.
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="relative z-1 text-center py-8 text-sm text-gray-400 w-full mt-auto">
-        <p>
-          Copyright © {new Date().getFullYear()} MINIONS(?�모??. All rights
-          reserved.
-        </p>
+      <footer className="py-10 text-center text-xs font-bold text-gray-500">
+        Copyright © {new Date().getFullYear()} MINIONS(소모임). All rights
       </footer>
     </div>
   );

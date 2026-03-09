@@ -12,76 +12,70 @@ const MAX_MESSAGE_LENGTH = 200;
 function MessageItem({ msg }: { msg: Message }) {
   const role = msg.sender_role;
 
-  // ── 시스템 메시지 ──
   if (role === "SYSTEM") {
     return (
-      <div className="flex justify-center my-1">
-        <span className="text-[12px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium italic">
+      <div className="flex items-center gap-2 my-1 px-2">
+        <span className="text-[10px] text-gray-400 font-bold tracking-tighter">
+          [SYSTEM]
+        </span>
+        <span className="text-[10px] text-gray-500 font-bold italic">
           {msg.content}
         </span>
       </div>
     );
   }
 
-  // ── 공지 메시지 ──
   if (role === "NOTICE") {
     return (
-      <div className="bg-amber-50/50 border border-amber-100 rounded-2xl px-4 py-3 my-1">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-sm font-black text-amber-700">📢 공지</span>
-          <span className="text-[9px] text-gray-400 ml-auto font-mono">
+      <div className="bg-yellow-50 border-4 border-black p-3 my-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="bg-black text-minion-yellow text-[8px] px-1.5 py-0.5 font-heading uppercase">
+            QUEST ALERT
+          </span>
+          <span className="text-[8px] text-gray-400 ml-auto font-mono">
             {new Date(msg.created_at).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}
           </span>
         </div>
-        <p className="text-md font-bold text-amber-900 break-words">
+        <p className="text-xs font-black text-black leading-tight">
           {msg.content}
         </p>
       </div>
     );
   }
 
-  // ── 일반 채팅 ──
-  const BADGE: Record<string, React.ReactElement> = {
-    ORGANIZER: (
-      <span className="text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded border border-red-200">
-        주최
-      </span>
-    ),
-    LEADER: (
-      <span className="text-[9px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded border border-blue-200">
-        팀장
-      </span>
-    ),
-    VIEWER: (
-      <span className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">
-        관전
-      </span>
-    ),
+  const BADGE: Record<string, string> = {
+    ORGANIZER: "bg-red-600 text-white",
+    LEADER: "bg-minion-blue text-white",
+    VIEWER: "bg-gray-200 text-gray-600",
   };
-  const badge = BADGE[role] ?? (
-    <span className="text-[9px] bg-gray-100 text-gray-400 px-1 py-0.5 rounded">
-      {role}
-    </span>
-  );
+  const label: Record<string, string> = {
+    ORGANIZER: "주최자",
+    LEADER: "팀장",
+    VIEWER: "관전자",
+  };
 
   return (
-    <div className="text-sm p-2 rounded-xl hover:bg-gray-50/50 transition-all transition-colors leading-normal">
-      <div className="flex items-center gap-1 mb-0.5">
-        {badge}
-        <span className="font-bold text-[#1D1D1F] text-\[12px\] font-bold">
-          {msg.sender_name}
+    <div className="text-[11px] p-2 hover:bg-gray-50 transition-colors border-b border-black/5">
+      <div className="flex items-center gap-2 mb-1">
+        <span
+          className={`text-[10px] font-heading px-1 py-0.5 border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${BADGE[role] || ""}`}
+        >
+          {label[role] || "NPC"}
         </span>
-        <span className="text-[9px] text-gray-400 ml-auto font-mono">
+        <span className="font-black text-black">{msg.sender_name}</span>
+        <span className="text-[8px] text-gray-600 ml-auto font-mono">
           {new Date(msg.created_at).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           })}
         </span>
       </div>
-      <p className="text-gray-700 pl-0.5 break-words">{msg.content}</p>
+      <p className="text-gray-700 font-bold leading-relaxed break-words pl-1 border-l-2 border-black/10">
+        {msg.content}
+      </p>
     </div>
   );
 }
@@ -96,7 +90,6 @@ export function ChatPanel() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const lastSentAtRef = useRef(0);
   const lastMsgIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -112,11 +105,6 @@ export function ChatPanel() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !roomId || isSending) return;
-    if (input.trim().length > MAX_MESSAGE_LENGTH) return;
-    const now = Date.now();
-    if (now - lastSentAtRef.current < 1000) return;
-    lastSentAtRef.current = now;
-
     setIsSending(true);
     try {
       let senderName = "관전자";
@@ -125,20 +113,8 @@ export function ChatPanel() {
         const myTeam = teams.find((t) => t.id === teamId);
         senderName = myTeam?.leader_name || myTeam?.name || "팀장";
       }
-
-      const { error } = await sendChatMessage(
-        roomId,
-        senderName,
-        role || "VIEWER",
-        input.trim(),
-      );
-      if (error) {
-        console.error("Failed to send message:", error);
-        return;
-      }
+      await sendChatMessage(roomId, senderName, role || "VIEWER", input.trim());
       setInput("");
-    } catch (err) {
-      console.error("Failed to send message:", err);
     } finally {
       setIsSending(false);
     }
@@ -146,19 +122,13 @@ export function ChatPanel() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-      <div className="p-4 border-b border-gray-100 bg-white shrink-0">
-        <h2 className="text-sm font-bold text-minion-blue flex items-center gap-2 uppercase tracking-tighter">
-          <span className="text-xl">💬</span> 실시간 채팅
-        </h2>
-      </div>
-
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-2 py-1.5 flex flex-col gap-1 custom-scrollbar min-h-0"
+        className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1 custom-scrollbar"
       >
         {messages.length === 0 ? (
-          <div className="text-muted-foreground text-[11px] text-center py-6 my-auto">
-            대화를 시작하세요.
+          <div className="text-gray-600 text-[10px] text-center py-10 my-auto font-black italic uppercase">
+            No logs recorded
           </div>
         ) : (
           messages.map((msg) => <MessageItem key={msg.id} msg={msg} />)
@@ -167,24 +137,34 @@ export function ChatPanel() {
 
       <form
         onSubmit={handleSend}
-        className="p-4 px-6 border-t border-gray-100 bg-white flex gap-3"
+        className="p-3 bg-gray-50 border-t-4 border-black flex flex-col gap-2"
       >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="메시지..."
-          maxLength={MAX_MESSAGE_LENGTH}
-          className="flex-1 bg-white border border-gray-200 px-2.5 py-1.5 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-minion-yellow transition-shadow"
-          disabled={isSending}
-        />
-        <button
-          type="submit"
-          disabled={isSending || !input.trim()}
-          className="bg-[#0071E3] text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-[#0077ED] hover:bg-minion-blue-hover transition-colors disabled:opacity-50"
-        >
-          전송
-        </button>
+        <div className="flex justify-between items-center px-1">
+          <span className="text-[8px] font-black text-gray-400 uppercase">
+            Message Input
+          </span>
+          <span className="text-[8px] font-black text-gray-400">
+            {input.length}/{MAX_MESSAGE_LENGTH}
+          </span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="입력하세요..."
+            maxLength={MAX_MESSAGE_LENGTH}
+            className="flex-1 bg-white border-4 border-black px-3 py-2 text-[10px] font-black focus:outline-none placeholder:text-gray-200"
+            disabled={isSending}
+          />
+          <button
+            type="submit"
+            disabled={isSending || !input.trim()}
+            className="pixel-button bg-black text-white px-4 text-[10px]"
+          >
+            전송
+          </button>
+        </div>
       </form>
     </div>
   );

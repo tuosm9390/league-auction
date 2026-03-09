@@ -1,24 +1,29 @@
-'use client'
+"use client";
 
-import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Trophy, X, RefreshCw } from 'lucide-react'
-import type { ArchiveTeam } from '@/features/auction/api/auctionActions'
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { Trophy, X, RefreshCw } from "lucide-react";
+import type { ArchiveTeam } from "@/features/auction/api/auctionActions";
 
 interface AuctionArchiveRow {
-  id: string
-  room_id: string
-  room_name: string
-  room_created_at: string
-  closed_at: string
-  result_snapshot: ArchiveTeam[]
+  id: string;
+  room_id: string;
+  room_name: string;
+  room_created_at: string;
+  closed_at: string;
+  result_snapshot: ArchiveTeam[];
 }
 
-// ── 상세 결과 모달 ──────────────────────────────────────────────────────────────
-function ArchiveDetailModal({ archive, onClose }: { archive: AuctionArchiveRow; onClose: () => void }) {
+function ArchiveDetailModal({
+  archive,
+  onClose,
+}: {
+  archive: AuctionArchiveRow;
+  onClose: () => void;
+}) {
   const sortedTeams = [...archive.result_snapshot].sort((a, b) =>
-    a.name.localeCompare(b.name, 'ko-KR', { numeric: true })
-  )
+    a.name.localeCompare(b.name, "ko-KR", { numeric: true }),
+  );
 
   return (
     <div
@@ -26,68 +31,84 @@ function ArchiveDetailModal({ archive, onClose }: { archive: AuctionArchiveRow; 
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 cursor-default"
+        className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-5xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-b-4 border-black flex items-center justify-between shrink-0 bg-minion-yellow">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-minion-yellow rounded-xl flex items-center justify-center">
-              <Trophy size={20} className="text-orange-600" />
-            </div>
+            <Trophy size={20} className="text-black" />
             <div>
-              <h2 className="text-xl font-black text-gray-800">{archive.room_name}</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {new Date(archive.closed_at).toLocaleDateString('ko-KR', {
-                  year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                })} 종료
+              <h2 className="text-lg font-black text-black uppercase">
+                {archive.room_name}
+              </h2>
+              <p className="text-[8px] font-heading text-black/80 mt-1 uppercase">
+                CLOSED:{" "}
+                {new Date(archive.closed_at).toLocaleDateString("ko-KR")}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            className="text-black hover:bg-black/10 p-1 transition-colors"
           >
             <X size={22} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50 custom-scrollbar">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {sortedTeams.map((team) => (
-              <div key={team.id} className="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden">
-                <table className="w-full text-sm border-collapse">
+              <div
+                key={team.id}
+                className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
+              >
+                <table className="w-full text-[10px] border-collapse">
                   <tbody>
                     <tr>
                       <td
                         rowSpan={Math.max(team.players.length, 1) + 2}
-                        className="w-1/3 border-r-2 border-b border-gray-200 bg-gray-50 text-center align-middle p-4"
+                        className="w-1/3 border-r-4 border-b-4 border-black bg-gray-100 text-center align-middle p-4"
                       >
-                        <span className="text-xl font-black text-gray-800">{team.leader_name}</span>
-                        <div className="text-xs text-gray-500 mt-1">{team.name}</div>
-                        <div className="text-xs text-minion-blue font-bold mt-1">잔여 {team.point_balance.toLocaleString()}P</div>
+                        <span className="text-[14px] font-black text-black block mb-1">
+                          {team.leader_name}
+                        </span>
+                        <div className="text-[8px] font-heading text-minion-blue mb-2">
+                          {team.name}
+                        </div>
+                        <div className="inline-block border-2 border-black bg-minion-yellow text-black font-heading text-[7px] px-2 py-1 uppercase">
+                          {team.point_balance.toLocaleString()}P LEFT
+                        </div>
                       </td>
-                      <td className="w-2/3 border-b-2 border-gray-200 bg-minion-blue/5 text-center py-2 px-4">
-                        <span className="font-bold text-gray-600">롤닉</span>
+                      <td className="w-2/3 border-b-4 border-black bg-minion-blue text-white text-center py-2 px-4">
+                        <span className="font-heading text-[8px] uppercase tracking-tighter">
+                          ROSTER
+                        </span>
                       </td>
                     </tr>
                     {/* 팀장 행 */}
                     <tr>
-                      <td className="w-2/3 border-b border-gray-100 text-center py-2.5 px-4 bg-white relative">
-                        <span className="text-indigo-500 absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black bg-indigo-50 px-1.5 py-0.5 rounded">👑</span>
-                        <span className="font-bold text-gray-900">{team.leader_name}</span>
+                      <td className="w-2/3 border-b-2 border-black text-center py-2.5 px-4 bg-blue-50 relative">
+                        <span className="text-indigo-600 absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-heading">
+                          Leader
+                        </span>
+                        <span className="font-black text-[14px] text-gray-900">
+                          {team.leader_name}
+                        </span>
                       </td>
                     </tr>
                     {/* 선수 목록 */}
                     {team.players.length > 0 ? (
                       team.players.map((p, idx) => (
                         <tr key={idx}>
-                          <td className={`w-2/3 text-center py-2.5 px-4 font-semibold text-gray-700 ${idx !== team.players.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                            <span>{p.name}</span>
+                          <td
+                            className={`w-2/3 text-[14px] py-2.5 px-4 font-bold text-gray-700 relative ${idx !== team.players.length - 1 ? "border-b border-gray-300" : ""}`}
+                          >
+                            <div className="text-center w-full">{p.name}</div>
                             {p.sold_price != null && (
-                              <span className="ml-2 text-xs text-gray-400">
-                                {p.sold_price === 0 ? '(유찰)' : `${p.sold_price.toLocaleString()}P`}
+                              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-black text-red-500">
+                                {p.sold_price.toLocaleString()}P
                               </span>
                             )}
                           </td>
@@ -95,7 +116,9 @@ function ArchiveDetailModal({ archive, onClose }: { archive: AuctionArchiveRow; 
                       ))
                     ) : (
                       <tr>
-                        <td className="w-2/3 text-center py-4 text-xs text-gray-400 italic">낙찰된 선수가 없습니다.</td>
+                        <td className="w-2/3 text-center py-6 text-[8px] font-heading text-gray-300 italic">
+                          EMPTY ROSTER
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -105,55 +128,61 @@ function ArchiveDetailModal({ archive, onClose }: { archive: AuctionArchiveRow; 
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 shrink-0">
+        <div className="px-6 py-4 border-t-4 border-black bg-white shrink-0">
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+            className="pixel-button w-full py-3 bg-black text-white text-[10px] font-heading"
           >
-            닫기
+            CLOSE
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-// ── 아카이브 목록 섹션 모달 ─────────────────────────────────────────────────────────
-export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
-  const [archives, setArchives] = useState<AuctionArchiveRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<AuctionArchiveRow | null>(null)
+export function AuctionArchiveSection({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [archives, setArchives] = useState<AuctionArchiveRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<AuctionArchiveRow | null>(null);
 
   const fetchArchives = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('auction_archives')
-        .select('*')
-        .order('closed_at', { ascending: false })
-        .limit(20)
+        .from("auction_archives")
+        .select("*")
+        .order("closed_at", { ascending: false })
+        .limit(20);
 
-      if (!error && data) setArchives(data as AuctionArchiveRow[])
+      if (!error && data) setArchives(data as AuctionArchiveRow[]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      void fetchArchives()
+      void fetchArchives();
     }
-  }, [isOpen, fetchArchives])
+  }, [isOpen, fetchArchives]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  if (loading) return (
-    <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center text-gray-400 text-sm animate-pulse">
-        이전 경매 결과 불러오는 중...
+  if (loading)
+    return (
+      <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4">
+        <div className="bg-white border-4 border-black p-10 max-w-sm w-full text-center text-black font-heading text-xs animate-pulse">
+          LOADING ARCHIVES...
+        </div>
       </div>
-    </div>
-  )
+    );
 
   return (
     <>
@@ -162,26 +191,28 @@ export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, on
         onClick={onClose}
       >
         <div
-          className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 cursor-default overflow-hidden"
+          className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-4xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 cursor-default overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-
           {/* Header */}
-          <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between shrink-0">
-            <h2 className="text-2xl font-black text-minion-blue flex items-center gap-2">
-              <Trophy className="text-minion-yellow" size={24} />
-              이전 경매 결과 모음
+          <div className="px-6 py-4 border-b-4 border-black flex items-center justify-between shrink-0 bg-minion-blue text-white">
+            <h2 className="text-xs font-heading flex items-center gap-2">
+              <Trophy className="text-minion-yellow" size={20} />
+              DATA ARCHIVE
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <button
-                onClick={() => { setLoading(true); void fetchArchives(); }}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-minion-blue transition-colors px-3 py-1.5 rounded-xl hover:bg-gray-100"
+                onClick={() => {
+                  setLoading(true);
+                  void fetchArchives();
+                }}
+                className="flex items-center gap-1.5 text-[8px] font-heading text-white hover:text-minion-yellow transition-colors"
               >
-                <RefreshCw size={14} /> 새로고침
+                <RefreshCw size={12} /> REFRESH
               </button>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                className="text-white hover:text-minion-yellow p-1 transition-colors"
               >
                 <X size={22} />
               </button>
@@ -189,42 +220,51 @@ export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, on
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 bg-blue-50/50">
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-50 custom-scrollbar">
             {archives.length === 0 ? (
-              <div className="text-center py-10 text-gray-400 font-medium">저장된 경매 기록이 없습니다.</div>
+              <div className="text-center py-20 text-gray-300 font-heading text-[10px] border-4 border-dashed border-gray-200">
+                NO RECORDS FOUND
+              </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {archives.map((archive) => (
                   <div
                     key={archive.id}
-                    className="bg-white rounded-2xl border-2 border-gray-100 hover:border-minion-yellow p-5 transition-all shadow-sm group hover:-translate-y-1 hover:shadow-md cursor-pointer"
+                    className="bg-white border-4 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
                     onClick={() => setSelected(archive)}
                   >
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3 min-w-0 pr-2">
-                          <div className="w-12 h-12 bg-minion-yellow/20 rounded-xl flex items-center justify-center shrink-0">
-                            <span className="text-xl">🏆</span>
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="font-black text-gray-800 text-lg truncate group-hover:text-minion-blue transition-colors">
-                              {archive.room_name}
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
-                              {new Date(archive.closed_at).toLocaleDateString('ko-KR', {
-                                year: 'numeric', month: 'long', day: 'numeric',
-                              })}
-                              <span className="w-1 h-1 rounded-full bg-gray-300" />
-                              <span className="font-bold text-minion-blue bg-minion-blue/5 px-2 py-0.5 rounded-md">총 {archive.result_snapshot.length}팀</span>
-                            </p>
-                          </div>
-                        </div>
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-12 h-12 bg-minion-yellow border-2 border-black flex items-center justify-center shrink-0">
+                        <span className="text-xl">🏆</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-black text-black text-lg truncate mb-1">
+                          {archive.room_name}
+                        </h3>
+                        <p className="text-[8px] font-heading text-gray-400 uppercase tracking-tighter flex items-center gap-2">
+                          {new Date(archive.closed_at).toLocaleDateString(
+                            "ko-KR",
+                          )}
+                          <span className="w-1 h-1 bg-gray-300" />
+                          <span className="text-minion-blue font-bold tracking-normal">
+                            {archive.result_snapshot.length} TEAMS
+                          </span>
+                        </p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="px-6 py-4 border-t-4 border-black bg-white">
+            <button
+              onClick={onClose}
+              className="pixel-button w-full py-3 bg-black text-white text-[10px] font-heading"
+            >
+              CLOSE
+            </button>
           </div>
         </div>
       </div>
@@ -236,5 +276,5 @@ export function AuctionArchiveSection({ isOpen, onClose }: { isOpen: boolean, on
         />
       )}
     </>
-  )
+  );
 }

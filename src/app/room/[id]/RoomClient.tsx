@@ -45,23 +45,14 @@ function ElapsedTimer({ createdAt }: { createdAt: string }) {
     return () => clearInterval(iv);
   }, [createdAt]);
   return (
-    <div className="text-[10px] font-mono font-semibold text-blue-200 bg-blue-900/30 px-3 py-1 rounded-md border border-blue-700/40 tracking-widest">
-      경과 시간 <b className="text-minion-yellow text-xs">{elapsed}</b>
+    <div className="pixel-box bg-black px-4 py-1 text-[12px] text-minion-yellow flex gap-2 items-center font-heading">
+      <span className="animate-pulse">●</span> PLAY TIME{" "}
+      <b className="text-black">{elapsed}</b>
     </div>
   );
 }
 
-interface RoomClientProps {
-  roomId: string;
-  roleParam: Role | null;
-  teamIdParam: string | null;
-}
-
-export function RoomClient({
-  roomId,
-  roleParam,
-  teamIdParam,
-}: RoomClientProps) {
+export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
   const { fetchAll } = useAuctionRealtime(roomId);
   const players = useAuctionStore((s) => s.players);
   const teams = useAuctionStore((s) => s.teams);
@@ -77,16 +68,16 @@ export function RoomClient({
   const isReAuctionRound = useAuctionStore((s) => s.isReAuctionRound);
   const setRoomContext = useAuctionStore((s) => s.setRoomContext);
   const setRealtimeData = useAuctionStore((s) => s.setRealtimeData);
+
   const { effectiveRole } = useRoomAuth({
     role: roleParam,
     teamId: teamIdParam || undefined,
     roomId,
     setRoomContext,
   });
+
   const connectedLeaderIds = new Set(
-    presences
-      .filter((p: PresenceUser) => p.role === "LEADER")
-      .map((p: PresenceUser) => p.teamId),
+    presences.filter((p: any) => p.role === "LEADER").map((p: any) => p.teamId),
   );
   const allConnected =
     teams.length > 0 && connectedLeaderIds.size >= teams.length;
@@ -94,11 +85,13 @@ export function RoomClient({
   const waitingPlayers = players.filter((p) => p.status === "WAITING");
   const soldPlayers = players.filter((p) => p.status === "SOLD");
   const unsoldPlayers = players.filter((p) => p.status === "UNSOLD");
+
   const biddableTeams = teams.filter(
     (t) =>
       players.filter((p) => p.team_id === t.id && p.status === "SOLD").length <
         membersPerTeam - 1 && t.point_balance >= 10,
   );
+
   const isAutoDraftMode =
     !currentPlayer &&
     waitingPlayers.length > 0 &&
@@ -109,31 +102,31 @@ export function RoomClient({
   const highestBid =
     playerBids.length > 0 ? Math.max(...playerBids.map((b) => b.amount)) : 0;
   const minBid = highestBid > 0 ? highestBid + 10 : 10;
+
   const [isExpired, setIsExpired] = useState(false);
   useEffect(() => {
     if (!timerEndsAt) {
       setIsExpired(false);
       return;
     }
-    const remain = new Date(timerEndsAt).getTime() - Date.now();
-    if (remain <= 0) {
-      setIsExpired(true);
-      return;
-    }
-    setIsExpired(false);
-    const t = setTimeout(() => setIsExpired(true), remain);
-    return () => clearTimeout(t);
+    const update = () => {
+      const remain = new Date(timerEndsAt).getTime() - Date.now();
+      setIsExpired(remain <= 0);
+    };
+    update();
+    const t = setInterval(update, 100);
+    return () => clearInterval(t);
   }, [timerEndsAt]);
+
   const isAuctionActive = !!timerEndsAt && !isExpired;
-  // storeTeamId: useRoomAuth를 통해 쿠키에서 검증된 teamId (route.ts 토큰 검증 완료)
   const myTeam = teams.find((t) => t.id === storeTeamId);
-  let isTeamFull = false;
-  if (myTeam)
-    isTeamFull =
-      players.filter((p) => p.team_id === myTeam.id && p.status === "SOLD")
+  const isTeamFull = myTeam
+    ? players.filter((p) => p.team_id === myTeam.id && p.status === "SOLD")
         .length >=
-      membersPerTeam - 1;
+      membersPerTeam - 1
+    : false;
   const lotteryPlayer = useAuctionStore((s) => s.lotteryPlayer);
+
   const { handleCloseLottery } = useAuctionControl({
     roomId,
     effectiveRole: effectiveRole ?? "VIEWER",
@@ -142,26 +135,6 @@ export function RoomClient({
     fetchAll,
   });
 
-  // Pause/resume auction on team leader disconnect/reconnect (ORGANIZER only)
-  const prevAllConnectedRef = useRef<boolean | null>(null);
-  const wasPausedByDisconnectRef = useRef(false);
-  const timerEndsAtRef = useRef(timerEndsAt);
-  const currentPlayerRef = useRef(currentPlayer);
-  timerEndsAtRef.current = timerEndsAt;
-  currentPlayerRef.current = currentPlayer;
-  useEffect(() => {
-    if (!roomId || effectiveRole !== "ORGANIZER") return;
-    const prev = prevAllConnectedRef.current;
-    prevAllConnectedRef.current = allConnected;
-    if (prev === null) return;
-    if (!allConnected && prev === true) {
-      if (timerEndsAtRef.current) {
-        wasPausedByDisconnectRef.current = true;
-        pauseAuction(roomId);
-      }
-    }
-    // allConnected 복귀 시 자동 재개하지 않음 — 방장이 수동으로 "▶ 경매 시작" 버튼을 눌러야 재개
-  }, [allConnected, roomId, effectiveRole]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const router = useRouter();
@@ -170,16 +143,18 @@ export function RoomClient({
   const [showResultModal, setShowResultModal] = useState(false);
   const [noticeText, setNoticeText] = useState("");
   const [isSendingNotice, setIsSendingNotice] = useState(false);
+
   const handleNotice = async () => {
     if (!noticeText.trim() || !roomId || isSendingNotice) return;
     setIsSendingNotice(true);
     try {
-      const res = await sendNotice(roomId, noticeText.trim());
-      if (!res.error) setNoticeText("");
+      await sendNotice(roomId, noticeText.trim());
+      setNoticeText("");
     } finally {
       setIsSendingNotice(false);
     }
   };
+
   const handleDraw = async () => {
     setIsDrawing(true);
     try {
@@ -189,23 +164,17 @@ export function RoomClient({
       setIsDrawing(false);
     }
   };
+
   const handleStart = async () => {
     setIsStarting(true);
     try {
-      const duration =
-        isReAuctionRound || wasPausedByDisconnectRef.current ? 5000 : 10000;
-      wasPausedByDisconnectRef.current = false;
-      const res = await startAuction(roomId, duration);
-      if (res.error) {
-        alert(res.error);
-      } else if (res.timerEndsAt) {
-        // 실시간 이벤트 대기 없이 즉시 타이머 반영 (Optimistic Update)
-        setRealtimeData({ timerEndsAt: res.timerEndsAt });
-      }
+      const res = await startAuction(roomId, isReAuctionRound ? 5000 : 10000);
+      if (res.timerEndsAt) setRealtimeData({ timerEndsAt: res.timerEndsAt });
     } finally {
       setIsStarting(false);
     }
   };
+
   const isRoomComplete =
     teams.length > 0 &&
     teams.every(
@@ -219,6 +188,7 @@ export function RoomClient({
     !currentPlayer &&
     soldPlayers.length > 0 &&
     isRoomComplete;
+
   const handleEndRoom = async (saveResult: boolean) => {
     if (!roomId) return;
     setIsDeleting(true);
@@ -239,8 +209,8 @@ export function RoomClient({
           })),
         });
       }
-      const result = await deleteRoom(roomId);
-      if (!result.error) router.push("/");
+      await deleteRoom(roomId);
+      router.push("/");
     } finally {
       setIsDeleting(false);
     }
@@ -248,152 +218,99 @@ export function RoomClient({
 
   if (!isRoomLoaded)
     return (
-      <div className="h-screen bg-blue-50 flex items-center justify-center font-bold text-minion-blue text-lg animate-pulse tracking-tighter uppercase">
-        데이터 로딩 중...
+      <div className="h-screen flex items-center justify-center font-black text-3xl animate-pulse">
+        LOADING INSTANCE...
       </div>
     );
   if (!roomExists)
     return (
-      <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-200">
-          <span className="text-3xl">🚫</span>
+      <div className="h-screen flex flex-col items-center justify-center p-6 text-center gap-6">
+        <div className="pixel-box bg-white p-10 font-black">
+          <p className="text-2xl mb-6">ERROR: ROOM NOT FOUND</p>
+          <button
+            onClick={() => router.push("/")}
+            className="pixel-button bg-minion-yellow px-8 py-3"
+          >
+            RETURN TO MENU
+          </button>
         </div>
-        <h2 className="text-xl font-bold text-minion-blue mb-4">
-          경매가 종료된 방이거나, 유효하지 않은 접근입니다.
-        </h2>
-        <button
-          onClick={() => router.push("/")}
-          className="bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase"
-        >
-          홈으로 돌아가기
-        </button>
-      </div>
-    );
-
-  if (effectiveRole === null)
-    return (
-      <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-200">
-          <span className="text-3xl">🚫</span>
-        </div>
-        <h2 className="text-xl font-bold text-red-500 mb-2">
-          유효하지 않은 접근
-        </h2>
-        <p className="text-sm text-gray-500 font-medium mb-6 max-w-sm leading-relaxed">
-          유효한 인증 정보가 없습니다.
-          <br />
-          초대 링크를 통해 다시 접속해 주세요.
-        </p>
-        <button
-          onClick={() => router.push("/")}
-          className="bg-minion-yellow text-minion-blue font-bold px-8 py-2.5 rounded-lg shadow-sm text-sm uppercase"
-        >
-          홈으로 돌아가기
-        </button>
       </div>
     );
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50/50 font-pretendard">
-      <header className="h-16 shrink-0 bg-minion-blue text-white shadow-sm relative z-[110]">
-        <div className="max-w-7xl mx-auto px-6 w-full h-full flex justify-between items-center">
+    <div className="flex flex-col h-screen overflow-hidden relative crt-overlay">
+      <header className="h-14 shrink-0 bg-black border-b-4 border-black text-white relative z-[110]">
+        <div className="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <h1 className="text-base md:text-xl font-bold text-minion-yellow tracking-tight drop-shadow-sm">
-                MINIONS
-              </h1>
               <Image
                 src="/favicon.png"
-                alt="Minions Icon"
-                width={28}
-                height={28}
-                className="drop-shadow-sm"
+                alt="Icon"
+                width={24}
+                height={24}
+                className="pixelated shadow-lg"
               />
+              <span className="font-black text-minion-yellow tracking-tighter">
+                MINIONS_BID
+              </span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-white/10 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 shadow-inner">
-                {effectiveRole === "ORGANIZER" ? (
-                  <>
-                    <span className="text-sm">👑</span> 주최자
-                  </>
-                ) : effectiveRole === "LEADER" ? (
-                  <>
-                    <span className="text-sm">🛡️</span> 팀장
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sm">👀</span> 관전자
-                  </>
-                )}
+            <div className="flex gap-2">
+              <div className="pixel-box bg-black font-black text-black text-[12px] px-3 py-1 font-heading uppercase border-white/20">
+                {effectiveRole === "ORGANIZER"
+                  ? "주최자"
+                  : effectiveRole === "LEADER"
+                    ? "팀장"
+                    : "관전자"}
               </div>
-              <div className="h-5 w-px bg-white/20 mx-1.5" />
-              <div className="flex gap-2">
-                {effectiveRole === "ORGANIZER" && <LinksModal />}
-                <HowToUseModal variant="header" />
-                {soldPlayers.length > 0 && (
-                  <button
-                    onClick={() => setShowResultModal(true)}
-                    className="bg-minion-yellow hover:bg-yellow-400 text-minion-blue px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
-                  >
-                    <span className="text-sm">📋</span> 결과
-                  </button>
-                )}
-                {effectiveRole === "ORGANIZER" && (
-                  <button
-                    onClick={() => setIsEndRoomOpen(true)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"
-                  >
-                    <span className="text-sm">🚪</span> 종료
-                  </button>
-                )}
-              </div>
+              <ElapsedTimer createdAt={createdAt || ""} />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {createdAt && <ElapsedTimer createdAt={createdAt} />}
+          <div className="flex gap-3">
+            {effectiveRole === "ORGANIZER" && <LinksModal />}
             <button
               onClick={() => setIsLeaveRoomOpen(true)}
-              className="bg-white/10 hover:bg-white/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold border border-white/20 transition-colors shadow-inner flex items-center gap-1.5"
-              title="메인 홈으로 이동"
+              className="flex items-center gap-1.5 bg-white/50 hover:bg-white/20 text-white px-4 py-1.5 border-2 border-white/20 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-[10px] font-heading uppercase"
             >
-              <span className="text-sm">🏠</span> 나가기
+              EXIT
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 p-2 sm:p-3 lg:px-6 overflow-y-auto lg:overflow-hidden min-h-0 max-h-[950px] w-full max-w-7xl mx-auto py-3">
-        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] sm:h-[400px] lg:h-auto lg:self-stretch shrink-0">
-          <div className="bg-card rounded-xl shadow-sm border border-border flex-1 flex flex-col overflow-hidden min-h-0">
-            <div className="px-3 py-2.5 border-b border-border bg-card shrink-0">
-              <h2 className="text-sm font-semibold text-minion-blue flex items-center gap-1.5 uppercase tracking-tight">
-                👥 팀 현황
-              </h2>
+      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-4 p-4 overflow-y-auto lg:overflow-hidden w-full max-w-7xl mx-auto">
+        <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] lg:h-auto shrink-0">
+          <div className="pixel-box bg-white flex-1 flex flex-col overflow-hidden min-h-0">
+            <div className="bg-black text-white px-3 py-1.5 font-heading text-[8px] uppercase flex justify-between">
+              <span>Team Roster</span>
+              <span className="text-minion-yellow animate-pulse">ACTIVE</span>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pr-2 mr-0.5 min-h-0">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 min-h-0">
               <TeamList />
             </div>
           </div>
         </aside>
 
-        <section className="lg:col-span-6 flex flex-col gap-3 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
-          {roomName && (
-            <div className="shrink-0 bg-[#0f1f3d] rounded-xl shadow-lg px-5 py-3 flex items-center gap-3 border border-[#2a3f6f] relative overflow-hidden">
-              {/* 은은한 광택 오버레이 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 pointer-events-none" />
-              <span className="text-3xl shrink-0 drop-shadow">🏆</span>
-              <h2
-                className="text-2xl font-bold truncate tracking-[0.15em] uppercase relative"
-                style={{
-                  fontFamily: "var(--font-cinzel, 'Georgia', serif)",
-                  color: "#FBE042",
-                  textShadow: "0 0 20px rgba(251,224,66,0.35)",
-                }}
-              >
+        <section className="lg:col-span-6 flex flex-col gap-4 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
+          <div className="pixel-box bg-black p-3 flex items-center justify-between overflow-hidden">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏰</span>
+              <h2 className="text-xl font-black text-black truncate uppercase">
                 {roomName}
               </h2>
             </div>
-          )}
+            <div className="flex gap-2">
+              <HowToUseModal variant="header" />
+              {effectiveRole === "ORGANIZER" && (
+                <button
+                  onClick={() => setIsEndRoomOpen(true)}
+                  className="flex items-center gap-1.5 bg-red-600 text-white px-4 py-1.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-[10px] font-heading uppercase"
+                >
+                  END
+                </button>
+              )}
+            </div>
+          </div>
+
           <AuctionBoard
             isLotteryActive={!!lotteryPlayer}
             lotteryPlayer={lotteryPlayer}
@@ -402,78 +319,66 @@ export function RoomClient({
             allConnected={allConnected}
             onCloseLottery={handleCloseLottery}
           />
+
           {effectiveRole === "ORGANIZER" && (
-            <div className="bg-card rounded-xl shadow-md border border-border p-3 lg:p-5 shrink-0 relative z-20">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="text-xs font-semibold text-minion-blue uppercase tracking-wider flex items-center gap-2">
-                  🎛️ 주최자 컨트롤 박스
-                </h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-md border border-gray-100">
-                    대기자: {waitingPlayers.length}명 / 낙찰자:{" "}
-                    {soldPlayers.length}명
-                  </span>
-                </div>
+            <div className="pixel-box bg-white p-4 shrink-0 relative z-20">
+              <div className="bg-black px-3 py-1.5 mb-3 text-[8px] font-heading flex justify-between border-b-4 border-black text-white uppercase">
+                <span>GM CONTROL PANEL</span>
+                <span className="text-minion-yellow">
+                  대기자: {waitingPlayers.length} / 낙찰자:
+                  {soldPlayers.length}
+                </span>
               </div>
-              <div className="flex gap-2 mb-3 pb-3 border-b border-gray-100">
+              <div className="flex gap-2 mb-4">
                 <input
                   type="text"
                   value={noticeText}
                   onChange={(e) => setNoticeText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleNotice()}
-                  placeholder="공지 내용 입력..."
-                  className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-minion-blue focus:ring-1 focus:ring-minion-blue/20"
-                  disabled={isSendingNotice}
+                  placeholder="공지를 작성해주세요..."
+                  className="flex-1 border-4 border-black px-4 py-2 text-xs font-black focus:outline-none bg-yellow-50"
                 />
                 <button
                   onClick={handleNotice}
-                  disabled={!noticeText.trim() || isSendingNotice}
-                  className="bg-minion-yellow text-minion-blue px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm"
+                  className="pixel-button bg-black text-white px-6 text-xs"
                 >
                   선포
                 </button>
               </div>
               {allDone ? (
-                <div className="text-center py-4 bg-green-50 rounded-lg border border-green-200">
-                  <p className="font-bold text-green-600 text-lg tracking-tight">
-                    🏆 경매 완료!
-                  </p>
-                </div>
+                <button
+                  onClick={() => setShowResultModal(true)}
+                  className="w-full pixel-button bg-green-500 text-white h-12 text-lg animate-bounce"
+                >
+                  경매 결과 확인
+                </button>
               ) : !currentPlayer ? (
-                isAutoDraftMode ? (
-                  <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 py-4 rounded-lg font-bold text-center text-base animate-pulse">
-                    ⚡ 자동 드래프트 진행 중
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleDraw}
-                    disabled={
-                      isDrawing || waitingPlayers.length === 0 || !allConnected
-                    }
-                    className="w-full bg-minion-blue hover:bg-minion-blue-hover text-white h-12 lg:h-14 rounded-lg font-bold text-sm md:text-base lg:text-lg shadow-sm"
-                  >
-                    🎲 다음 선수 추첨 (남은 인원 : {waitingPlayers.length}명)
-                  </button>
-                )
+                <button
+                  onClick={handleDraw}
+                  disabled={
+                    isDrawing || waitingPlayers.length === 0 || !allConnected
+                  }
+                  className="w-full pixel-button bg-minion-blue text-white h-14 text-lg"
+                >
+                  {isDrawing
+                    ? "추첨중..."
+                    : `다음 선수 추첨 (${waitingPlayers.length}명)`}
+                </button>
               ) : !timerEndsAt && !lotteryPlayer ? (
                 <button
                   onClick={handleStart}
-                  disabled={isStarting || !allConnected}
-                  className="w-full bg-lime-500 hover:bg-lime-600 text-white h-12 lg:h-14 rounded-lg font-bold text-lg lg:text-xl shadow-sm"
+                  className="w-full pixel-button bg-lime-500 text-white h-14 text-xl"
                 >
-                  ▶ 경매 시작
+                  경매 시작!
                 </button>
-              ) : !timerEndsAt ? (
-                <div className="bg-minion-blue/10 border-2 border-minion-blue/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider">
-                  🎰 추첨 진행 중
-                </div>
               ) : (
-                <div className="bg-minion-yellow/10 border-2 border-minion-yellow/20 text-minion-blue py-4 rounded-lg font-bold text-center text-lg animate-pulse uppercase tracking-wider">
-                  🔥 경매 진행 중 🔥
+                <div className="pixel-box bg-red-600 text-black py-4 font-heading text-center text-sm animate-pulse uppercase">
+                  선수 추첨중!
                 </div>
               )}
             </div>
           )}
+
           {effectiveRole === "LEADER" && roomId && storeTeamId && (
             <BiddingControl
               roomId={roomId}
@@ -488,21 +393,21 @@ export function RoomClient({
           )}
         </section>
 
-        <aside className="lg:col-span-3 flex flex-col gap-2 lg:gap-3 min-h-0 order-2 lg:order-3 h-[400px] sm:h-[500px] lg:h-auto lg:self-stretch shrink-0">
-          <div className="bg-card rounded-xl shadow-sm border border-border flex-none max-h-[140px] flex flex-col overflow-hidden min-h-0 relative">
-            <div className="px-3 py-2 border-b border-border bg-card shrink-0">
-              <h2 className="text-xs font-semibold text-red-500 flex items-center gap-1.5 uppercase px-0.5">
-                👻 유찰 대기석
-              </h2>
+        <aside className="lg:col-span-3 flex flex-col gap-4 min-h-0 order-2 lg:order-3 h-[400px] lg:h-auto shrink-0">
+          <div className="pixel-box bg-black flex-none max-h-[150px] flex flex-col overflow-hidden">
+            <div className="bg-red-600 text-white px-3 py-1.5 font-heading text-[8px] uppercase">
+              유찰명단 (Unsold)
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 pr-2 mr-0.5 min-h-0">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 min-h-0">
               <UnsoldPanel />
             </div>
           </div>
-          <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-card rounded-xl shadow-sm border border-border relative">
-            <div className="flex-1 flex flex-col min-h-0 mr-0.5 overflow-hidden">
-              <ChatPanel />
+          <div className="pixel-box bg-white flex-1 flex flex-col overflow-hidden">
+            <div className="bg-minion-blue text-white px-3 py-1 font-heading text-[8px] uppercase flex justify-between">
+              <span>채팅 로그</span>
+              <span className="animate-pulse">● ONLINE</span>
             </div>
+            <ChatPanel />
           </div>
         </aside>
       </main>

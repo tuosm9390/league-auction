@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { X, HelpCircle } from "lucide-react";
@@ -8,25 +8,25 @@ const HOW_TO_USE = [
     step: "01",
     icon: "🍌",
     title: "경매방 만들기",
-    desc: "팀 수, 인원, 포인트를 설정하고 팀장과 경매 선수를 등록해 방을 생성합니다.",
+    desc: "팀 수, 인원, 포인트를 설정하고 팀장과 선수를 등록해 방을 생성합니다.",
   },
   {
     step: "02",
     icon: "🔗",
     title: "링크 공유",
-    desc: "생성된 팀장별 링크를 각 팀장에게 공유합니다. 관전자 링크도 자유롭게 배포할 수 있습니다.",
+    desc: "생성된 팀장별 링크를 각 팀장에게 공유합니다. 관전자 링크도 배포 가능합니다.",
   },
   {
     step: "03",
     icon: "✅",
-    title: "팀장 접속 확인",
-    desc: "경매 화면에서 팀장들의 실시간 접속 여부를 확인합니다. 모두 접속되면 경매를 시작하세요.",
+    title: "접속 확인",
+    desc: "경매 화면에서 팀장들의 실시간 접속 여부를 확인하고 경매를 시작하세요.",
   },
   {
     step: "04",
     icon: "🔥",
     title: "경매 진행",
-    desc: "주최자가 선수를 하나씩 경매에 올리면 각 팀장이 포인트로 입찰합니다. 타이머 종료 시 최고 입찰 팀이 낙찰됩니다.",
+    desc: "주최자가 선수를 추첨하면 각 팀장이 포인트로 입찰합니다. 최고 입찰 시 낙찰!",
   },
   {
     step: "05",
@@ -37,10 +37,9 @@ const HOW_TO_USE = [
 ];
 
 const TIPS = [
-  "팀장 링크와 주최자 링크는 다른 주소입니다. 혼동하지 않도록 주의해주세요.",
-  "팀장 포인트는 팀 시작 포인트에서 차감됩니다 (팀 예산 = 총 포인트 − 팀장 포인트).",
-  '방 페이지 헤더의 "링크 확인" 버튼으로 언제든지 공유 링크를 다시 확인할 수 있습니다.',
-  '경매가 종료되면 "방 종료" 버튼을 통해 결과를 저장하고, 메인 페이지의 "이전 경기 결과 조회" 버튼을 통해 언제든지 확인 할 수 있습니다.',
+  "팀장 링크와 주최자 링크는 다른 주소입니다. 혼동하지 마세요!",
+  "팀 예산 = 총 포인트 − 팀장 포인트",
+  '경매 종료 후 "방 종료"를 누르면 결과가 아카이브에 영구 저장됩니다.',
 ];
 
 export function HowToUseModal({
@@ -55,9 +54,9 @@ export function HowToUseModal({
       return (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+          className="flex items-center gap-1.5 bg-gray-800 text-white px-4 py-1.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-[10px] font-heading"
         >
-          <span className="text-sm">❓</span> 사용법
+          HELP
         </button>
       );
     }
@@ -65,9 +64,9 @@ export function HowToUseModal({
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full bg-white border border-minion-blue text-minion-blue py-3 rounded-xl font-bold text-base mt-4 hover:bg-blue-50 transition-colors shadow-sm active:translate-y-0.5"
+        className="pixel-button w-full bg-white text-minion-blue py-4 text-base font-heading mt-4"
       >
-        사용법 보기
+        HOW TO PLAY
       </button>
     );
   };
@@ -80,75 +79,65 @@ export function HowToUseModal({
           className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
         >
-          {/* Modal Content */}
           <div
-            className="bg-blue-50 rounded-xl w-full max-w-2xl shadow-md overflow-hidden border border-minion-blue relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+            className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-2xl flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header - Fixed */}
-            <div className="bg-minion-blue px-4 py-3 flex items-center justify-between shrink-0 top-0 z-10">
-              <h2 className="text-sm font-bold text-minion-yellow flex items-center gap-1.5">
-                <span className="text-xl pb-1">💡</span>
-                이렇게 진행됩니다!
+            {/* Header */}
+            <div className="bg-minion-blue px-4 py-4 flex items-center justify-between border-b-4 border-black shrink-0">
+              <h2 className="text-sm font-black text-minion-yellow flex items-center gap-2">
+                💡 이용 방법
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:text-minion-yellow transition-colors p-1"
+                className="text-white hover:text-minion-yellow transition-colors"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X size={20} />
               </button>
             </div>
 
-            {/* Body - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 custom-scrollbar">
               {HOW_TO_USE.map((item) => (
                 <div
                   key={item.step}
-                  className="flex gap-3 bg-white rounded-lg p-3 border border-blue-100 shadow-sm"
+                  className="flex gap-4 bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                 >
-                  <div className="text-xl shrink-0 mt-0.5">{item.icon}</div>
+                  <div className="text-2xl shrink-0 mt-1">{item.icon}</div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-black text-minion-blue bg-minion-yellow/30 px-2 py-0.5 rounded-full">
-                        STEP {item.step}
+                      <span className="text-[8px] font-heading text-minion-blue bg-minion-yellow px-2 py-0.5 border border-black">
+                        STAGE {item.step}
                       </span>
-                      <h3 className="font-black text-gray-800">{item.title}</h3>
+                      <h3 className="font-black text-gray-800 text-sm">
+                        {item.title}
+                      </h3>
                     </div>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-xs text-gray-500 font-bold leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
                 </div>
               ))}
 
-              <div className="bg-minion-blue/5 border border-minion-blue/20 rounded-2xl p-4">
-                <p className="text-sm font-black text-minion-blue mb-2">
-                  💡 알아두면 좋은 점
+              <div className="bg-black text-white border-2 border-minion-yellow p-4 mt-6">
+                <p className="text-[10px] font-heading text-minion-yellow mb-2 uppercase">
+                  ● 알아두면 좋은 팁
                 </p>
-                <ul className="text-sm text-gray-600 space-y-1.5">
+                <ul className="text-xs font-bold text-gray-300 space-y-2">
                   {TIPS.map((tip, i) => (
-                    <li key={i}>· {tip}</li>
+                    <li key={i} className="flex gap-2">
+                      <span>-</span> {tip}
+                    </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 shrink-0">
+            <div className="px-6 py-4 border-t-4 border-black bg-white shrink-0">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-white hover:text-gray-800 transition-colors border border-gray-200 shadow-sm bg-white"
+                className="pixel-button w-full py-3 bg-black text-white text-[10px] font-heading"
               >
                 닫기
               </button>
