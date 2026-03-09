@@ -1,0 +1,222 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1772979159615,
+  "projectRoot": "C:\\Users\\tuosm\\.gemini\\antigravity\\scratch\\league-auction",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "16.1.6",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "19.2.3",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.3",
+        "category": "frontend"
+      },
+      {
+        "name": "@playwright/test",
+        "version": "1.58.2",
+        "category": "testing"
+      },
+      {
+        "name": "playwright",
+        "version": "1.58.2",
+        "category": "testing"
+      },
+      {
+        "name": "vitest",
+        "version": "2.0.0",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "eslint",
+      "test": "vitest run",
+      "test:watch": "vitest",
+      "test:coverage": "vitest run --coverage"
+    }
+  },
+  "conventions": {
+    "namingStyle": "camelCase",
+    "importStyle": "ES modules",
+    "testPattern": "*.test.ts",
+    "fileOrganization": "feature-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "src",
+      "__tests__"
+    ],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "coverage": {
+      "path": "coverage",
+      "purpose": null,
+      "fileCount": 9,
+      "lastAccessed": 1772979159368,
+      "keyFiles": [
+        "auctionActions.ts.html",
+        "base.css",
+        "block-navigation.js",
+        "favicon.png",
+        "index.html"
+      ]
+    },
+    "doc": {
+      "path": "doc",
+      "purpose": null,
+      "fileCount": 10,
+      "lastAccessed": 1772979159370,
+      "keyFiles": [
+        "ARCHITECTURE.md",
+        "AUCTION_LOGIC.md",
+        "COMMON_MISTAKES.md",
+        "COMPONENTS.md",
+        "CONVENTIONS.md"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 17,
+      "lastAccessed": 1772979159448,
+      "keyFiles": [
+        "favicon.png",
+        "main_position_bot.webp",
+        "main_position_jg.svg",
+        "main_position_mid.svg",
+        "main_position_sup.svg"
+      ]
+    },
+    "results": {
+      "path": "results",
+      "purpose": null,
+      "fileCount": 47,
+      "lastAccessed": 1772979159451,
+      "keyFiles": [
+        "260224_ImplementationPlan.md",
+        "260225_E2E_TestScenario.md",
+        "260225_Final_Optimization_Report.md",
+        "260225_ImplementationPlan.md",
+        "260225_ImplementationPlan_FrontendOptimization.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 1,
+      "lastAccessed": 1772979159458,
+      "keyFiles": [
+        "middleware.ts"
+      ]
+    },
+    "supabase": {
+      "path": "supabase",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1772979159463,
+      "keyFiles": []
+    },
+    "__tests__": {
+      "path": "__tests__",
+      "purpose": "Test files",
+      "fileCount": 5,
+      "lastAccessed": 1772979159465,
+      "keyFiles": [
+        "auctionActions.test.ts",
+        "CreateRoomModal.test.tsx",
+        "setup.ts",
+        "useAuctionBoard.test.tsx",
+        "useBiddingControl.test.tsx"
+      ]
+    },
+    "src\\app": {
+      "path": "src\\app",
+      "purpose": "Application code",
+      "fileCount": 6,
+      "lastAccessed": 1772979159478,
+      "keyFiles": [
+        "favicon.ico",
+        "globals.css",
+        "layout.tsx"
+      ]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 3,
+      "lastAccessed": 1772979159479,
+      "keyFiles": [
+        "ArchiveModalWrapper.tsx",
+        "AuctionArchiveSection.tsx",
+        "CreateRoomModal.tsx"
+      ]
+    },
+    "src\\lib": {
+      "path": "src\\lib",
+      "purpose": "Library code",
+      "fileCount": 3,
+      "lastAccessed": 1772979159480,
+      "keyFiles": [
+        "supabase-server.ts",
+        "supabase.ts",
+        "utils.ts"
+      ]
+    },
+    "supabase\\migrations": {
+      "path": "supabase\\migrations",
+      "purpose": "Database migrations",
+      "fileCount": 2,
+      "lastAccessed": 1772979159481,
+      "keyFiles": [
+        "00100_full_schema.sql",
+        "00101_award_player_atomic.sql"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

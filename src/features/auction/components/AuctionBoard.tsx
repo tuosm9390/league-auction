@@ -182,7 +182,7 @@ export function AuctionBoard({
   } = useAuctionBoard({ isLotteryActive, lotteryPlayer, role, allConnected });
 
   return (
-    <div className="bg-white rounded-xl shadow-md border-2 border-minion-blue flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
+    <div className="bg-card rounded-xl shadow-md border-2 border-minion-blue flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
       {latestNotice && <NoticeBanner msg={latestNotice} />}
       {!allConnected && isAuctionStarted && !isAuctionComplete && (
         <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
@@ -223,7 +223,7 @@ export function AuctionBoard({
               ✅ 경매 종료
             </span>
           ) : (
-            <span className="bg-minion-yellow text-minion-blue font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-amber-400">
+            <span className="bg-card text-minion-blue font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-minion-blue">
               ⏱️ 추첨 대기
             </span>
           )}

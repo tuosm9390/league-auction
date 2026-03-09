@@ -15,7 +15,9 @@
       "Bash(git:*)",
       "Bash(npm:*)",
       "Bash(python:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(claude mcp:*)",
+      "mcp__obsidian__get_workspace_files"
     ]
   }
 }

@@ -55,7 +55,7 @@ export function HowToUseModal({
       return (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-muted hover:bg-muted/80 text-foreground px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 border border-border"
+          className="bg-background/10 hover:bg-muted/80 text-background px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 border border-background/30"
         >
           <span className="text-sm">❓</span> 이용방법
         </button>
@@ -112,7 +112,9 @@ export function HowToUseModal({
                       <span className="text-xs font-black text-secondary bg-primary/20 px-2 py-0.5 rounded-full">
                         STEP {item.step}
                       </span>
-                      <h3 className="font-black text-foreground">{item.title}</h3>
+                      <h3 className="font-black text-foreground">
+                        {item.title}
+                      </h3>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {item.desc}
