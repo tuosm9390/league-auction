@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
   useAuctionStore,
   Team,
 } from "@/features/auction/store/useAuctionStore";
-import { Copy, Check, X, Link } from "lucide-react";
+import { Copy, Check, X, Link as LinkIcon } from "lucide-react";
 
 export function LinksModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,9 +45,9 @@ export function LinksModal() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors border border-white/20 shadow-inner"
+        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 border-2 border-white/20 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-[10px] font-heading"
       >
-        <Link size={14} /> 링크 확인
+        <LinkIcon size={12} /> LINKS
       </button>
 
       {isOpen && (
@@ -56,26 +56,26 @@ export function LinksModal() {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="bg-white rounded-xl w-full max-w-md shadow-md animate-in zoom-in-95 duration-200 cursor-default border border-gray-200 overflow-hidden"
+            className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-md flex flex-col max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h2 className="text-base font-bold text-gray-800 flex items-center gap-1.5">
-                <Link size={16} className="text-minion-blue" /> 경매방 링크
+            <div className="px-5 py-4 border-b-4 border-black flex items-center justify-between bg-minion-blue text-white">
+              <h2 className="text-sm font-black flex items-center gap-2">
+                📡 접속 링크
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                className="hover:text-minion-yellow transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="p-5 space-y-6 overflow-y-auto custom-scrollbar bg-gray-50">
               {organizerLink && (
                 <LinkRow
-                  label="👑 주최자 링크"
-                  desc="경매 진행 및 관리 전용"
+                  label="👑 MASTER"
+                  desc="주최자 전용 컨트롤 패널"
                   link={organizerLink}
                   linkKey="organizer"
                   copied={copied}
@@ -83,11 +83,11 @@ export function LinksModal() {
                 />
               )}
 
-              <div>
-                <p className="text-sm font-bold text-gray-600 mb-2.5 flex items-center gap-1.5">
-                  <span className="text-base">🛡️</span> 팀장 링크
+              <div className="space-y-3">
+                <p className="text-[10px] font-heading text-gray-500 uppercase tracking-tighter flex items-center gap-2">
+                  🛡️ TEAM LEADERS
                 </p>
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {[...teams]
                     .sort((a, b) =>
                       a.name.localeCompare(b.name, undefined, {
@@ -115,13 +115,13 @@ export function LinksModal() {
               </div>
 
               {viewerLink && (
-                <div>
-                  <p className="text-sm font-bold text-gray-600 mb-2.5 mt-3 flex items-center gap-1.5">
-                    <span className="text-base">👀</span> 관전자 링크
+                <div className="space-y-3">
+                  <p className="text-[10px] font-heading text-gray-500 uppercase tracking-tighter">
+                    👀 OBSERVERS
                   </p>
                   <LinkRow
                     label="관전자"
-                    desc="관전 전용 — 자유롭게 공유 가능"
+                    desc="누구나 관전 가능"
                     link={viewerLink}
                     linkKey="viewer"
                     copied={copied}
@@ -131,10 +131,10 @@ export function LinksModal() {
               )}
             </div>
 
-            <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+            <div className="px-5 py-4 border-t-4 border-black bg-white">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 rounded-lg text-base font-bold text-gray-600 hover:bg-white hover:text-gray-800 transition-colors border border-gray-200 shadow-sm bg-white"
+                className="pixel-button w-full py-3 bg-black text-white text-[10px] font-heading"
               >
                 닫기
               </button>
@@ -162,28 +162,26 @@ function LinkRow({
   onCopy: (text: string, key: string) => void;
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 bg-white shadow-sm relative group hover:border-minion-blue/30 transition-colors">
+    <div className="border-2 border-black bg-white p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative flex items-center gap-3">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-gray-800 flex items-center gap-1">
-          {label}
-        </p>
-        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-        <div className="mt-1.5 bg-blue-50/50 px-2 py-1 rounded border border-blue-100/50 overflow-hidden">
-          <p className="text-xs text-blue-500/80 font-mono leading-tight truncate">
+        <p className="text-xs font-black text-black uppercase">{label}</p>
+        <p className="text-[10px] text-gray-400 font-bold">{desc}</p>
+        <div className="mt-2 bg-gray-100 p-1 border border-black overflow-hidden">
+          <p className="text-[9px] text-minion-blue font-mono truncate">
             {link}
           </p>
         </div>
       </div>
       <button
         onClick={() => onCopy(link, linkKey)}
-        className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors shrink-0 ${
+        className={`pixel-button w-10 h-10 shrink-0 ${
           copied === linkKey
-            ? "bg-green-50 text-green-600 border border-green-200"
-            : "bg-gray-50 hover:bg-gray-100 text-gray-500 border border-gray-200 hover:text-gray-700"
+            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+            : "bg-muted hover:bg-muted text-muted-foreground border border-border hover:text-foreground"
         }`}
         title="복사하기"
       >
-        {copied === linkKey ? <Check size={18} /> : <Copy size={18} />}
+        {copied === linkKey ? <Check size={16} /> : <Copy size={16} />}
       </button>
     </div>
   );

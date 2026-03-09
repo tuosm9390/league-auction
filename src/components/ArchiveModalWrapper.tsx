@@ -1,24 +1,21 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { History } from 'lucide-react'
-import { AuctionArchiveSection } from './AuctionArchiveSection'
+import { useState } from "react";
+import { AuctionArchiveSection } from "./AuctionArchiveSection";
 
 export function ArchiveModalWrapper() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="mt-4 flex items-center justify-center gap-2 bg-white text-minion-blue border-2 border-minion-blue/20 hover:border-minion-blue/50 hover:bg-blue-50 px-8 py-4 rounded-2xl text-lg font-bold shadow-sm transition-all w-full"
+        className="pixel-button w-full sm:w-auto bg-white text-minion-blue py-5 px-12 text-xl font-heading shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-2 active:translate-y-2 transition-all"
       >
-        <History size={20} />
-        이전 경매 결과 조회
+        VIEW ARCHIVES
       </button>
 
-      {/* isOpen 상태에 따라 화면 전체를 덮는 결과 목록 모달(AuctionArchiveSection 내부 처리) */}
       <AuctionArchiveSection isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
-  )
+  );
 }

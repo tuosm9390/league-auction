@@ -1,7 +1,6 @@
+@import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
 @import "tailwindcss";
-
 @plugin "tailwindcss-animate";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -12,12 +11,12 @@
   --color-minion-grey: #808080;
   --color-minion-skin: #FFC09A;
 
-  --font-cinzel: var(--font-cinzel, 'Cinzel', serif);
+  --font-pixel: 'Galmuri11', var(--font-vt323), monospace;
+  --font-heading: var(--font-press-start), 'Galmuri11', cursive;
+  --font-pixelify: var(--font-pixelify), 'Galmuri11', cursive;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
-  /* Define standard card, border colors */
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -36,9 +35,6 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -46,145 +42,119 @@
   --animate-shake: shake 0.4s cubic-bezier(.36, .07, .19, .97) infinite;
 
   @keyframes shake {
-
-    10%,
-    90% {
-      transform: translate3d(-1px, 0, 0);
-    }
-
-    20%,
-    80% {
-      transform: translate3d(2px, 0, 0);
-    }
-
-    30%,
-    50%,
-    70% {
-      transform: translate3d(-4px, 0, 0);
-    }
-
-    40%,
-    60% {
-      transform: translate3d(4px, 0, 0);
-    }
-  }
-}
-
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
   }
 }
 
 @layer base {
   :root {
-    --background: #F5F5F7;
-    --foreground: #1D1D1F;
+    --background: #E5E5E5; /* 약간 더 진한 배경색으로 변경 */
+    --foreground: #000000;
     --card: #FFFFFF;
-    --card-foreground: #1D1D1F;
-    --popover: #FFFFFF;
-    --popover-foreground: #111827;
+    --card-foreground: #000000;
     --primary: #FBE042;
-    --primary-foreground: #111827;
+    --primary-foreground: #000000;
     --secondary: #2358A4;
-    --secondary-foreground: #FAFAFA;
-    --muted: #F3F4F6;
-    --muted-foreground: #6B7280;
-    --accent: #FFC09A;
-    --accent-foreground: #111827;
-    --destructive: #EF4444;
-    --destructive-foreground: #FAFAFA;
-    --border: #F2F2F7;
-    --input: #E5E7EB;
-    --ring: #FBE042;
-    --radius: 0.5rem;
-  }
+    --secondary-foreground: #FFFFFF;
+    --muted: #D1D5DB;
+    --muted-foreground: #4B5563;
+    --border: #000000;
+    --radius: 0rem;
 
-  .dark {
-    --background: #111827;
-    --foreground: #F9FAFB;
-    --card: #1F2937;
-    --card-foreground: #F9FAFB;
-    --popover: #1F2937;
-    --popover-foreground: #F9FAFB;
-    --primary: #FBE042;
-    --primary-foreground: #111827;
-    --secondary: #2358A4;
-    --secondary-foreground: #FAFAFA;
-    --muted: #374151;
-    --muted-foreground: #9CA3AF;
-    --accent: #FFC09A;
-    --accent-foreground: #111827;
-    --destructive: #7F1D1D;
-    --destructive-foreground: #F9FAFB;
-    --border: #374151;
-    --input: #374151;
-    --ring: #FBE042;
+    --pixel-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+    --pixel-shadow-sm: 4px 4px 0px 0px rgba(0, 0, 0, 1);
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-background text-foreground;
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  button:disabled {
-    cursor: not-allowed !important;
-    pointer-events: none !important;
-    opacity: 0.5 !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  .cursor-pointer {
-    cursor: pointer;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-pixel);
+    overflow-x: hidden;
+    /* 도트 배경 패턴 강화 */
+    background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }
 
 @layer utilities {
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #2358A4 #f3f4f6;
+  .pixel-box {
+    background-color: white;
+    border: 4px solid black;
+    box-shadow: var(--pixel-shadow);
   }
 
+  .pixel-button {
+    border: 4px solid black;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: var(--pixel-shadow-sm);
+    cursor: pointer;
+  }
+
+  .pixel-button:active:not(:disabled) {
+    box-shadow: none;
+    transform: translate(4px, 4px);
+  }
+
+  .font-heading { font-family: var(--font-heading); }
+  .font-pixel { font-family: var(--font-pixel); }
+
+  /* CRT 효과를 더 어둡고 선명하게 수정 */
+  .crt-overlay::before {
+    content: ' ';
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    z-index: 9999;
+    background-size: 100% 3px, 3px 100%;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
+@layer utilities {
+
+  /* 픽셀 스타일 커스텀 스크롤바 */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 16px;
+    height: 16px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f3f4f6;
-    border-radius: 10px;
+    background: #eeeeee;
+    border-left: 4px solid black;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #2358A4;
-    border-radius: 10px;
-    transition: background 0.2s;
+    background: white;
+    border: 4px solid black;
+    box-shadow: inset -4px -4px 0px 0px #cccccc;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #194079;
+    background: var(--color-minion-yellow);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-button {
+    display: block;
+    background-color: #eeeeee;
+    background-repeat: no-repeat;
+    background-size: 8px;
+    background-position: center;
+    width: 16px;
+    height: 16px;
+    border-left: 4px solid black;
   }
 }

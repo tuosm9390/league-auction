@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -658,9 +658,9 @@ export function CreateRoomModal() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="bg-minion-yellow hover:bg-minion-yellow-hover text-[#1D1D1F] font-bold py-5 px-12 rounded-[24px] text-2xl transition-all shadow-lg hover:shadow-xl active:scale-95"
+        className="pixel-button w-[200px] sm:w-auto bg-minion-yellow text-black py-5 px-12 text-xl font-heading shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-2 active:translate-y-2 transition-all"
       >
-        새로운 경매방 만들기
+        MAKE ROOM
       </button>
 
       {isOpen && (
@@ -671,11 +671,11 @@ export function CreateRoomModal() {
           }}
         >
           <div
-            className="bg-white rounded-[40px] w-full max-w-3xl max-h-\[90vh\] flex flex-col shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200 cursor-default"
+            className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-3xl max-h-[90vh] flex flex-col relative animate-in zoom-in-95 duration-200 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <div className="px-5 py-4 border-b-4 border-black flex items-center justify-between shrink-0 bg-minion-yellow">
               <div className="flex items-center gap-2">
                 <Image
                   src="/favicon.png"
@@ -684,7 +684,7 @@ export function CreateRoomModal() {
                   height={28}
                   className="drop-shadow-sm"
                 />
-                <h2 className="text-xl font-black text-minion-blue">
+                <h2 className="font-black text-lg font-heading text-black uppercase">
                   경매방 만들기
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -694,7 +694,7 @@ export function CreateRoomModal() {
               {step < 3 && (
                 <button
                   onClick={close}
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="text-black hover:bg-black/10 p-1 transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -714,14 +714,14 @@ export function CreateRoomModal() {
                       i < step
                         ? "bg-green-500 text-white"
                         : i === step
-                          ? "bg-minion-blue text-white"
+                          ? "bg-black text-white"
                           : "bg-gray-100 text-gray-400"
                     }`}
                   >
                     {i < step ? <Check size={13} /> : i + 1}
                   </div>
                   <span
-                    className={`ml-1.5 text-xs font-medium whitespace-nowrap ${i === step ? "text-minion-blue" : "text-gray-400"}`}
+                    className={`ml-1.5 text-xs font-medium whitespace-nowrap ${i === step ? "text-black" : "text-gray-400"}`}
                   >
                     {label}
                   </span>
@@ -735,7 +735,7 @@ export function CreateRoomModal() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
               {/* Step 0: 기본 정보 */}
               {step === 0 && (
                 <div className="space-y-5">
@@ -800,7 +800,7 @@ export function CreateRoomModal() {
                         setBasic((p) => ({ ...p, title: e.target.value }))
                       }
                       placeholder="예시) 제 14회 미니언즈 정규 리그전"
-                      className="w-full bg-[#F5F5F7] border-0 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-minion-blue/20 transition-all"
+                      className="w-full bg-white border-2 border-black rounded-0 px-4 py-3 text-sm focus:bg-yellow-50 outline-none"
                     />
                   </div>
 
@@ -823,7 +823,7 @@ export function CreateRoomModal() {
                                 : parseInt(e.target.value),
                           }))
                         }
-                        className="w-full bg-[#F5F5F7] border-0 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-minion-blue/20 transition-all"
+                        className="w-full bg-white border-2 border-black rounded-0 px-4 py-3 text-sm focus:bg-yellow-50 outline-none"
                       />
                     </div>
                     <div>
@@ -844,7 +844,7 @@ export function CreateRoomModal() {
                                 : parseInt(e.target.value),
                           }))
                         }
-                        className="w-full bg-[#F5F5F7] border-0 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-minion-blue/20 transition-all"
+                        className="w-full bg-white border-2 border-black rounded-0 px-4 py-3 text-sm focus:bg-yellow-50 outline-none"
                       />
                       <p className="text-xs text-gray-400 mt-1">팀장 포함</p>
                     </div>
@@ -866,7 +866,7 @@ export function CreateRoomModal() {
                                 : parseInt(e.target.value),
                           }))
                         }
-                        className="w-full bg-[#F5F5F7] border-0 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-minion-blue/20 transition-all"
+                        className="w-full bg-white border-2 border-black rounded-0 px-4 py-3 text-sm focus:bg-yellow-50 outline-none"
                       />
                     </div>
                   </div>
@@ -875,7 +875,7 @@ export function CreateRoomModal() {
                     <label className="text-sm font-bold text-gray-700 block mb-1.5">
                       경매 진행 방식
                     </label>
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
+                    <div className="bg-gray-100 border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xs text-gray-500 leading-relaxed">
                       경매는 주최자가 무작위로 선수를 추첨하여 시작됩니다.
                       팀장들은 한정된 포인트를 사용하여 입찰하며, 가장 높은
                       금액을 부른 팀장이 선수를 영입합니다. 모든 팀이 인원을
@@ -883,15 +883,15 @@ export function CreateRoomModal() {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 rounded-2xl p-4 text-sm text-gray-600 space-y-1">
-                    <p className="font-bold text-minion-blue mb-1">요약</p>
+                  <div className="bg-blue-50 border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-sm text-gray-600 space-y-1">
+                    <p className="font-bold text-black mb-1">요약</p>
                     <p>
                       · 총 {basic.teamCount}팀, 팀당 {basic.membersPerTeam}명
                       (팀장 포함)
                     </p>
                     <p>
                       · 경매 선수{" "}
-                      <span className="font-bold text-minion-blue">
+                      <span className="font-bold text-black">
                         {minPlayers}명
                       </span>{" "}
                       고정 등록
@@ -908,14 +908,15 @@ export function CreateRoomModal() {
               {step === 1 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-3 gap-3">
-                    <p className="text-xs text-gray-500">
-                      팀장 이름을 입력하면 팀명이 자동으로 생성됩니다. 팀장
-                      포인트는 시작 포인트에서 차감됩니다.
+                    <p className="text-xs text-gray-500 whitespace-pre-line text-left leading-relaxed">
+                      {
+                        "● 팀장 이름을 입력하면 팀명이 자동으로 생성됩니다.\n● 팀장 포인트는 시작 포인트에서 차감됩니다."
+                      }
                     </p>
                     <button
                       type="button"
                       onClick={openTemplateModal}
-                      className="flex items-center gap-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap shrink-0"
+                      className="pixel-button flex items-center gap-1.5 text-purple-700 hover:bg-purple-100 px-3 py-1 text-sm font-bold transition-colors whitespace-nowrap shrink-0"
                     >
                       🎲 테스트 데이터 생성
                     </button>
@@ -923,7 +924,7 @@ export function CreateRoomModal() {
                   {captains.map((captain, i) => (
                     <div
                       key={i}
-                      className="bg-[#F5F5F7]/50 rounded-3xl p-6 border border-gray-100"
+                      className="bg-white border-2 border-black p-6 mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-7 h-7 bg-minion-blue rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
@@ -936,12 +937,12 @@ export function CreateRoomModal() {
                             updateCaptain(i, "teamName", e.target.value)
                           }
                           placeholder="팀 이름"
-                          className="font-bold text-minion-blue bg-transparent border-b-2 border-gray-200 focus:border-minion-blue outline-none px-1 py-0.5 text-sm flex-1 min-w-0"
+                          className="font-bold text-black bg-transparent border-b-2 border-gray-200 focus:border-minion-blue outline-none px-1 py-0.5 text-sm flex-1 min-w-0"
                         />
                         <span className="text-xs text-gray-500 whitespace-nowrap shrink-0">
                           시작 포인트:{" "}
                           <span
-                            className={`font-bold ${basic.totalPoints - captain.captainPoints > 0 ? "text-minion-blue" : "text-red-500"}`}
+                            className={`font-bold ${basic.totalPoints - captain.captainPoints > 0 ? "text-black" : "text-red-500"}`}
                           >
                             {basic.totalPoints - captain.captainPoints}P
                           </span>
@@ -959,7 +960,7 @@ export function CreateRoomModal() {
                               updateCaptain(i, "name", e.target.value)
                             }
                             placeholder="이름"
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            className="w-full border-2 border-black rounded-0 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
                           />
                         </div>
                         <div>
@@ -971,7 +972,7 @@ export function CreateRoomModal() {
                             onChange={(e) =>
                               updateCaptain(i, "position", e.target.value)
                             }
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            className="w-full border-2 border-black rounded-0 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
                           >
                             {POSITIONS.map((p) => (
                               <option key={p} value={p}>
@@ -998,7 +999,7 @@ export function CreateRoomModal() {
                                   : parseInt(e.target.value),
                               )
                             }
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            className="w-full border-2 border-black rounded-0 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
                           />
                         </div>
                         <div>
@@ -1012,7 +1013,7 @@ export function CreateRoomModal() {
                               updateCaptain(i, "description", e.target.value)
                             }
                             placeholder="간단 소개"
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
+                            className="w-full border-2 border-black rounded-0 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white"
                           />
                         </div>
                       </div>
@@ -1049,7 +1050,7 @@ export function CreateRoomModal() {
                       <button
                         type="button"
                         onClick={openTemplateModal}
-                        className="flex items-center gap-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-xl text-sm font-bold transition-colors whitespace-nowrap"
+                        className="pixel-button flex items-center gap-1.5 text-purple-700 hover:bg-purple-100 px-3 py-1 text-sm font-bold transition-colors whitespace-nowrap shrink-0"
                       >
                         🎲 테스트 데이터 생성
                       </button>
@@ -1064,7 +1065,7 @@ export function CreateRoomModal() {
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
                         data-testid="excel-upload-button"
-                        className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="pixel-button flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Upload size={14} />{" "}
                         {isUploading ? "처리 중..." : "엑셀 업로드"}
@@ -1089,7 +1090,7 @@ export function CreateRoomModal() {
                     {players.map((player, i) => (
                       <div
                         key={i}
-                        className="grid gap-2 items-center bg-gray-50 rounded-xl px-2 py-1.5"
+                        className="grid gap-2 items-center bg-white border-2 border-black px-2 py-1.5"
                         style={{
                           gridTemplateColumns: "1.5rem 1fr 5rem 5rem 5rem 1fr",
                         }}
@@ -1104,14 +1105,14 @@ export function CreateRoomModal() {
                             updatePlayer(i, "name", e.target.value)
                           }
                           placeholder="선수 이름"
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border-2 border-black rounded-0 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
                         />
                         <select
                           value={player.tier}
                           onChange={(e) =>
                             updatePlayer(i, "tier", e.target.value)
                           }
-                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border-2 border-black rounded-0 px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
                         >
                           {TIERS.map((t) => (
                             <option key={t} value={t}>
@@ -1124,7 +1125,7 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updatePlayer(i, "mainPosition", e.target.value)
                           }
-                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border-2 border-black rounded-0 px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
                         >
                           {POSITIONS.map((p) => (
                             <option key={p} value={p}>
@@ -1137,7 +1138,7 @@ export function CreateRoomModal() {
                           onChange={(e) =>
                             updatePlayer(i, "subPosition", e.target.value)
                           }
-                          className="border border-gray-200 rounded-lg px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border-2 border-black rounded-0 px-1 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
                         >
                           {POSITIONS.map((p) => (
                             <option key={p} value={p}>
@@ -1152,7 +1153,7 @@ export function CreateRoomModal() {
                             updatePlayer(i, "description", e.target.value)
                           }
                           placeholder="소개 (선택)"
-                          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
+                          className="border-2 border-black rounded-0 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-minion-blue bg-white w-full"
                         />
                       </div>
                     ))}
@@ -1163,27 +1164,32 @@ export function CreateRoomModal() {
               {/* Step 3: 링크 발급 */}
               {step === 3 && links && (
                 <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
-                    <div className="text-3xl mb-1">?��</div>
+                  <div className="border-4 border-green-600 bg-green-50 p-5 text-center shadow-[4px_4px_0px_0px_rgba(22,163,74,1)] mb-6">
+                    {/* <div className="text-3xl mb-1">🎉</div> */}
                     <p className="font-black text-green-700 text-lg">
-                      경매방이 생성되었습니다!
+                      <p className="font-black text-green-700 text-xl font-heading uppercase tracking-tighter">
+                        ROOM CREATED!
+                      </p>
                     </p>
-                    <p className="text-sm text-green-600 mt-1">
-                      아래 링크를 각 참가자에게 공유하세요.
-                    </p>
+                    <p className="text-sm text-green-600 mt-1"></p>
                   </div>
 
-                  <LinkCard
-                    label="👑 주최자 링크"
-                    desc="경매 진행 및 관리 전용"
-                    link={links.organizerLink}
-                    linkKey="organizer"
-                    copied={copied}
-                    onCopy={copyToClipboard}
-                  />
+                  <div>
+                    <p className="text-[10px] font-heading text-gray-500 uppercase tracking-tighter flex items-center gap-2 mb-3">
+                      👑 주최자 링크
+                    </p>
+                    <LinkCard
+                      label="👑 주최자 링크"
+                      desc="경매 진행 및 관리 전용"
+                      link={links.organizerLink}
+                      linkKey="organizer"
+                      copied={copied}
+                      onCopy={copyToClipboard}
+                    />
+                  </div>
 
                   <div>
-                    <p className="text-sm font-bold text-gray-700 mb-2">
+                    <p className="text-[10px] font-heading text-gray-500 uppercase tracking-tighter flex items-center gap-2 mb-3">
                       🛡️ 팀장 링크 (팀별 개별 공유)
                     </p>
                     <div className="space-y-2">
@@ -1201,25 +1207,30 @@ export function CreateRoomModal() {
                     </div>
                   </div>
 
-                  <LinkCard
-                    label="👀 관전자 링크"
-                    desc="관전 전용 — 입찰 불가, 자유롭게 공유 가능"
-                    link={links.viewerLink}
-                    linkKey="viewer"
-                    copied={copied}
-                    onCopy={copyToClipboard}
-                  />
+                  <div>
+                    <p className="text-[10px] font-heading text-gray-500 uppercase tracking-tighter flex items-center gap-2 mb-3">
+                      🛡️ 관전자 링크
+                    </p>
+                    <LinkCard
+                      label="👀 관전자 링크"
+                      desc="관전 전용 — 입찰 불가, 자유롭게 공유 가능"
+                      link={links.viewerLink}
+                      linkKey="viewer"
+                      copied={copied}
+                      onCopy={copyToClipboard}
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+            <div className="px-6 py-4 border-t-4 border-black bg-white flex justify-between items-center shrink-0">
               {step < 3 ? (
                 <>
                   <button
                     onClick={step === 0 ? close : () => setStep((s) => s - 1)}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                    className="pixel-button bg-white text-black px-5 py-2.5 text-sm font-bold"
                   >
                     {step === 0 ? "취소" : "← 이전"}
                   </button>
@@ -1227,12 +1238,12 @@ export function CreateRoomModal() {
                     onClick={handleNext}
                     disabled={isLoading}
                     data-testid="next-button"
-                    className="bg-[#0071E3] hover:bg-[#0077ED] text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="pixel-button bg-black text-white px-8 py-3 text-sm font-heading disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading
                       ? "생성 중..."
                       : step === 2
-                        ? "방 만들기 ?"
+                        ? "방 만들기 🎉"
                         : "다음 →"}
                   </button>
                 </>
@@ -1240,7 +1251,7 @@ export function CreateRoomModal() {
                 <>
                   <button
                     onClick={close}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                    className="pixel-button bg-white text-black px-5 py-2.5 text-sm font-bold"
                   >
                     닫기
                   </button>
@@ -1250,7 +1261,7 @@ export function CreateRoomModal() {
                         window.location.href = links.organizerPath;
                         close();
                       }}
-                      className="bg-minion-yellow hover:bg-minion-yellow-hover text-minion-blue px-6 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2 shadow-[0_4px_0_#D9B310] hover:shadow-[0_2px_0_#D9B310] hover:translate-y-0.5 active:shadow-none active:translate-y-1"
+                      className="pixel-button bg-minion-yellow hover:bg-minion-yellow-hover text-black px-6 py-2.5 text-sm font-black transition-colors flex items-center gap-2 shadow-[0_4px_0_#D9B310]"
                     >
                       경매 시작하기 <ExternalLink size={14} />
                     </button>
@@ -1269,13 +1280,13 @@ export function CreateRoomModal() {
           onClick={() => setIsTemplateModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl"
+            className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-2xl max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 헤더 */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <div className="px-5 py-4 border-b-4 border-black flex items-center justify-between shrink-0 bg-minion-yellow">
               <div>
-                <h3 className="text-lg font-black text-minion-blue">
+                <h3 className="text-lg font-black text-black">
                   🎲 테스트 데이터 미리보기
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -1285,14 +1296,14 @@ export function CreateRoomModal() {
               </div>
               <button
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                className="text-black hover:bg-black/10 p-1 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* 콘텐츠 */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar">
               {/* 팀장 섹션 */}
               <div>
                 <p className="text-sm font-black text-gray-700 mb-2">
@@ -1316,7 +1327,7 @@ export function CreateRoomModal() {
                       style={{ gridTemplateColumns: "2rem 1fr 1fr 4rem 1fr" }}
                     >
                       <span className="text-gray-400">{i + 1}</span>
-                      <span className="font-bold text-minion-blue truncate pr-2">
+                      <span className="font-bold text-black truncate pr-2">
                         {c.teamName}
                       </span>
                       <span className="truncate pr-2">{c.name}</span>
@@ -1371,10 +1382,10 @@ export function CreateRoomModal() {
             </div>
 
             {/* 푸터 */}
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+            <div className="px-6 py-4 border-t-4 border-black bg-white flex justify-between items-center shrink-0">
               <button
                 onClick={() => setIsTemplateModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                className="pixel-button bg-white text-black px-5 py-2.5 text-sm font-bold"
               >
                 취소
               </button>
@@ -1385,13 +1396,13 @@ export function CreateRoomModal() {
                       buildTemplateData(basic.teamCount, basic.membersPerTeam),
                     );
                   }}
-                  className="px-4 py-2.5 rounded-xl text-sm font-bold text-purple-600 hover:bg-purple-50 transition-colors border border-purple-200"
+                  className="pixel-button bg-purple-100 text-purple-700 px-4 py-2.5 text-sm font-bold"
                 >
                   🔄 다시 생성
                 </button>
                 <button
                   onClick={applyTemplate}
-                  className="bg-[#0071E3] hover:bg-[#0077ED] text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-md transition-colors"
+                  className="pixel-button bg-black text-white px-8 py-3 text-sm font-heading"
                 >
                   템플릿 적용 ✓
                 </button>
@@ -1420,31 +1431,28 @@ function LinkCard({
   onCopy: (text: string, key: string) => void;
 }) {
   return (
-    <div className="border border-gray-200 rounded-xl p-3 flex items-center gap-3 bg-gray-50">
+    <div className="border-2 border-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative flex items-center gap-4 mb-4">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-gray-800">{label}</p>
-        <p className="text-xs text-gray-500">{desc}</p>
-        <p className="text-xs text-blue-500 truncate mt-0.5 font-mono">
-          {link}
+        <p className="text-xs font-black text-black uppercase flex items-center gap-2">
+          {label}
         </p>
+        <p className="text-[10px] text-gray-400 font-bold mt-0.5">{desc}</p>
+        <div className="mt-2.5 bg-gray-100 p-2 border-2 border-black overflow-hidden relative group">
+          <p className="text-[9px] text-minion-blue font-mono truncate pr-2">
+            {link}
+          </p>
+        </div>
       </div>
       <button
         onClick={() => onCopy(link, linkKey)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${
+        className={`pixel-button w-12 h-12 shrink-0 ${
           copied === linkKey
-            ? "bg-green-100 text-green-700"
-            : "bg-white hover:bg-gray-100 text-gray-600 border border-gray-200"
+            ? "bg-green-500 text-white"
+            : "bg-white hover:bg-gray-50 text-black"
         }`}
+        title="복사하기"
       >
-        {copied === linkKey ? (
-          <>
-            <Check size={12} /> 복사됨
-          </>
-        ) : (
-          <>
-            <Copy size={12} /> 복사
-          </>
-        )}
+        {copied === linkKey ? <Check size={20} /> : <Copy size={20} />}
       </button>
     </div>
   );

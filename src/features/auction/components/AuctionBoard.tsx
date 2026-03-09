@@ -19,7 +19,7 @@ const TIER_COLOR: Record<string, string> = {
   에메랄드: "text-emerald-500",
   플래티넘: "text-teal-400",
   골드: "text-yellow-500",
-  실버: "text-gray-400",
+  실버: "text-gray-600",
   브론즈: "text-amber-700",
   아이언: "text-gray-500",
   언랭: "text-black",
@@ -30,13 +30,12 @@ const TIER_COLOR: Record<string, string> = {
   Emerald: "text-emerald-500",
   Platinum: "text-teal-400",
   Gold: "text-yellow-500",
-  Silver: "text-gray-400",
+  Silver: "text-gray-600",
   Bronze: "text-amber-700",
   Iron: "text-gray-500",
   Unranked: "text-black",
 };
 
-/** 한글 티어명을 영문 파일명으로 매핑 */
 export const getTierImage = (tier: string) => {
   const map: Record<string, string> = {
     챌린저: "Challenger",
@@ -55,7 +54,6 @@ export const getTierImage = (tier: string) => {
   return `/Rank=${englishTier}.png`;
 };
 
-/** 한글/영문 포지션을 영문 파일명으로 매핑 */
 export const getPositionImage = (pos: string) => {
   const normalized = pos.trim().toLowerCase();
   if (normalized.includes("탑") || normalized.includes("top"))
@@ -74,7 +72,7 @@ export const getPositionImage = (pos: string) => {
     normalized.includes("ad") ||
     normalized.includes("adc")
   )
-    return "/main_position_bot.svg";
+    return "/main_position_bot.webp";
   if (
     normalized.includes("서폿") ||
     normalized.includes("서포터") ||
@@ -86,12 +84,9 @@ export const getPositionImage = (pos: string) => {
 
 const NoticeBanner = memo(function NoticeBanner({ msg }: { msg: Message }) {
   return (
-    <div className="bg-amber-50/50 border-b border-amber-100 px-5 py-3 flex items-center gap-2 shrink-0">
-      <span className="text-xl shrink-0">📢</span>
-      <p className="text-[11px] font-bold text-amber-800 truncate">
-        <span className="text-xl opacity-50 mr-1.5">공지:</span>
-        <span className="text-xl">{msg.content}</span>
-      </p>
+    <div className="bg-black border-b-4 border-minion-yellow px-5 py-2 flex items-center gap-3 shrink-0">
+      <span className="text-minion-yellow animate-pulse text-lg">[SYSTEM]</span>
+      <p className="text-sm font-bold text-white truncate">{msg.content}</p>
     </div>
   );
 });
@@ -105,7 +100,6 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
   }, []);
   const target = new Date(timerEndsAt).getTime();
   useEffect(() => {
-    // timerEndsAt 변경(또는 최초 마운트) 시 항상 initialDuration 설정
     initialDuration.current = target - Date.now();
   }, [target]);
   const timeLeftMs = Math.max(0, target - now);
@@ -114,45 +108,32 @@ export function CenterTimer({ timerEndsAt }: { timerEndsAt: string }) {
   const progress = initialDuration.current
     ? (timeLeftMs / initialDuration.current) * 100
     : 0;
-  const pad = (n: number) => String(n).padStart(2, "0");
   const isUrgent = displayTime > 0 && displayTime <= 5;
+  const pad = (n: number) => String(n).padStart(2, "0");
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="w-full flex flex-col items-center gap-2">
       <div
-        className={`relative flex items-center justify-center gap-1.5 lg:gap-2 rounded-lg px-3 py-1.5 sm:px-4 lg:px-6 lg:py-2.5 font-mono font-bold text-2xl sm:text-3xl lg:text-4xl transition-all duration-300 overflow-hidden ${isUrgent ? "bg-red-500 text-white animate-shake shadow-md" : displayTime === 0 ? "bg-gray-100 text-gray-400" : "bg-[#1D1D1F] text-[#4285F4] shadow-lg"}`}
+        className={`pixel-box px-6 py-2 flex items-center gap-3 ${isUrgent ? "bg-white !border-red-600 text-red-600 animate-shake" : "bg-black border-black text-minion-yellow"}`}
       >
-        <span className="text-lg sm:text-xl lg:text-2xl">⏱</span>
-        <span className="z-10 tracking-tighter">
+        <span className="text-xl">⏳</span>
+        <span className="text-3xl lg:text-4xl font-black tracking-widest">
           {isUrgent
             ? timeLeftSec.toFixed(1)
             : `${pad(Math.floor(displayTime / 60))}:${pad(displayTime % 60)}`}
         </span>
-        {displayTime > 0 && (
-          <div
-            className={`absolute bottom-0 left-0 h-1.5 transition-all duration-100 ${isUrgent ? "bg-white/40" : "bg-minion-yellow/40"}`}
-            style={{ width: `${progress}%` }}
-          />
-        )}
+      </div>
+      <div className="w-48 h-4 bg-gray-800 border-2 border-black overflow-hidden">
+        <div
+          className={`h-full transition-all duration-100 ${isUrgent ? "bg-red-500" : "bg-minion-yellow"}`}
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </div>
   );
 }
 
-export function AuctionBoard({
-  isLotteryActive = false,
-  lotteryPlayer,
-  waitingPlayers = [],
-  role,
-  allConnected = true,
-  onCloseLottery,
-}: {
-  isLotteryActive?: boolean;
-  lotteryPlayer?: Player | null;
-  waitingPlayers?: Player[];
-  role?: Role;
-  allConnected?: boolean;
-  onCloseLottery?: () => void;
-}) {
+export function AuctionBoard(props: any) {
   const {
     teams,
     teamId,
@@ -179,260 +160,190 @@ export function AuctionBoard({
     setLotteryDone,
     handleDraft,
     handleRestartAuction,
-  } = useAuctionBoard({ isLotteryActive, lotteryPlayer, role, allConnected });
+  } = useAuctionBoard(props);
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 flex-1 flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500 min-h-[460px]">
+    <div className="pixel-box bg-[#f8f8f8] flex-1 flex flex-col relative overflow-hidden min-h-[500px]">
       {latestNotice && <NoticeBanner msg={latestNotice} />}
-      {!allConnected && isAuctionStarted && !isAuctionComplete && (
-        <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
-          <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-red-500 flex flex-col items-center gap-4 max-w-sm text-center">
-            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-red-100 rounded-full flex items-center justify-center text-2xl lg:text-3xl animate-pulse">
-              ⚠️
-            </div>
-            <h2 className="text-xl font-bold text-red-600 tracking-tight">
-              팀장 접속 이탈
+
+      {!props.allConnected && isAuctionStarted && !isAuctionComplete && (
+        <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="pixel-box bg-white p-8 border-red-600 flex flex-col items-center gap-4 text-center">
+            <div className="text-4xl animate-bounce">🚫</div>
+            <h2 className="text-xl font-heading text-red-600">
+              CONNECTION LOST
             </h2>
-            <p className="text-sm text-gray-500 font-medium leading-tight">
-              경매가 일시정지되었습니다.
-              <br />
-              모든 팀장이 재입장하면 재개됩니다.
+            <p className="text-sm font-bold">
+              팀장의 연결이 끊겨 경매가 일시정지되었습니다.
             </p>
           </div>
         </div>
       )}
-      <div className="absolute top-0 right-0 w-60 h-60 bg-minion-yellow/10 rounded-full blur-[80px] pointer-events-none" />
-      <div className="z-10 flex flex-col flex-1 p-6 lg:p-8 gap-4 lg:gap-6 min-h-0">
-        <div className="flex justify-center min-h-[32px]">
-          {currentPlayer ? (
-            timerEndsAt ? (
-              <span className="bg-red-500 text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-red-600 animate-bounce">
-                🔥 경매 진행 중 🔥
-              </span>
-            ) : (
-              <span className="bg-gray-200 text-gray-500 font-bold px-4 py-1.5 rounded-md text-xs border border-gray-300 animate-pulse uppercase tracking-wider">
-                경매 준비중...
-              </span>
-            )
-          ) : isLotteryActive ? (
-            <span className="bg-minion-blue text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-blue-600 animate-pulse">
-              🎲 추첨 진행 중
-            </span>
-          ) : isAuctionFinished ? (
-            <span className="bg-green-500 text-white font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-green-600">
-              ✅ 경매 종료
-            </span>
-          ) : (
-            <span className="bg-minion-yellow text-minion-blue font-bold px-4 py-1.5 rounded-md text-xs shadow-sm border border-amber-400">
-              ⏱️ 추첨 대기
-            </span>
-          )}
-        </div>
-        <div className="flex-1 flex flex-col min-h-0">
-          {isLotteryActive && lotteryPlayer ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
+
+      <div className="flex-1 flex flex-col p-6 lg:p-10">
+        <div className="flex-1 flex flex-col">
+          {props.isLotteryActive && props.lotteryPlayer ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-10">
               <LotteryAnimation
-                candidates={waitingPlayers}
-                targetPlayer={lotteryPlayer}
+                candidates={props.waitingPlayers}
+                targetPlayer={props.lotteryPlayer}
                 onFinished={() => setLotteryDone(true)}
               />
-              <div className="min-h-[70px] flex items-center justify-center">
-                {role === "ORGANIZER" && lotteryDone && (
-                  <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <button
-                      onClick={onCloseLottery}
-                      className="w-[180px] bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-bold text-base shadow-sm active:translate-y-0.5 transition-all"
-                    >
-                      경매 준비
-                    </button>
-                  </div>
-                )}
-              </div>
+              {props.role === "ORGANIZER" && lotteryDone && (
+                <button
+                  onClick={props.onCloseLottery}
+                  className="pixel-button bg-black text-white px-10 py-4 text-lg"
+                >
+                  경매 시작하기
+                </button>
+              )}
             </div>
           ) : currentPlayer ? (
-            <div className="flex-1 flex flex-col gap-3 min-h-0">
-              <div className="flex justify-center min-h-[48px]">
+            <div className="flex-1 flex flex-col gap-6">
+              <div className="flex justify-center">
                 {timerEndsAt && <CenterTimer timerEndsAt={timerEndsAt} />}
               </div>
-              <div className="flex-1 flex flex-col items-center justify-center text-center gap-1.5 lg:gap-2">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight drop-shadow-sm leading-none">
-                  {currentPlayer.name}
-                </h2>
-                <div className="flex gap-4 lg:gap-6 items-center justify-center my-2">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center">
+
+              <div className="flex-1 flex flex-col items-center justify-center bg-white border-4 border-black p-6 shadow-inner">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <h2 className="text-3xl lg:text-4xl font-heading tracking-tighter mb-2">
+                      {currentPlayer.name}
+                    </h2>
+                  </div>
+
+                  <div className="flex gap-10 items-center justify-center border-y-4 border-black border-double py-4 w-full">
+                    <div className="flex flex-col items-center gap-2">
                       <Image
                         src={getTierImage(currentPlayer.tier)}
-                        alt={currentPlayer.tier}
-                        width={64}
-                        height={64}
-                        className="object-contain drop-shadow-md"
+                        alt="Tier"
+                        width={60}
+                        height={60}
+                        className="pixelated"
                       />
+                      <span
+                        className={`text-lg font-black uppercase ${TIER_COLOR[currentPlayer.tier]}`}
+                      >
+                        {currentPlayer.tier}
+                      </span>
                     </div>
-                    <div
-                      className={`text-sm lg:text-lg font-bold bg-gray-50/80 px-4 py-2 rounded-2xl border border-gray-100 ${TIER_COLOR[currentPlayer.tier] || "text-gray-600"}`}
-                    >
-                      {currentPlayer.tier}
-                    </div>
-                  </div>
-
-                  <div className="text-gray-300 mx-2 text-2xl font-light border border-gray-200 h-20" />
-
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-12 h-12 lg:w-16 lg:h-16 relative flex items-center justify-center">
+                    <div className="w-1 h-12 bg-black" />
+                    <div className="flex flex-col items-center gap-2 text-gray-700">
                       <Image
                         src={getPositionImage(currentPlayer.main_position)}
-                        alt={currentPlayer.main_position}
+                        alt="Pos"
                         width={50}
                         height={50}
-                        className="object-contain drop-shadow-md opacity-90"
+                        className="pixelated"
                       />
-                    </div>
-                    <div className="text-sm lg:text-lg font-bold bg-gray-50/80 px-4 py-2 rounded-2xl border border-gray-100 text-gray-700">
-                      {currentPlayer.main_position}
+                      <span className="text-lg font-black uppercase">
+                        {currentPlayer.main_position}
+                      </span>
                     </div>
                   </div>
+                  {currentPlayer.description && (
+                    <p className="mt-4 text-sm font-bold text-gray-600 italic">
+                      "{currentPlayer.description}"
+                    </p>
+                  )}
                 </div>
-                {currentPlayer.description && (
-                  <p className="text-sm text-gray-400 max-w-md font-bold italic">
-                    "{currentPlayer.description}"
-                  </p>
-                )}
               </div>
+
               <div
-                className={`rounded-lg lg:rounded-xl p-2.5 sm:p-3 lg:p-4 border transition-all ${highestBid > 0 ? "bg-minion-yellow/5 border-minion-yellow shadow-sm" : "bg-gray-50 border-gray-200"}`}
+                className={`pixel-box p-4 transition-all ${highestBid > 0 ? "bg-minion-yellow/10" : "bg-gray-100 opacity-50"}`}
               >
                 {highestBid > 0 ? (
-                  <div className="flex items-center justify-between px-1.5 lg:px-3">
-                    <div>
-                      <p className="text-[8px] sm:text-[9px] lg:text-[10px] text-gray-400 font-bold mb-0.5 uppercase tracking-wider">
-                        최고 입찰가
-                      </p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-minion-blue tabular-nums">
-                        {highestBid.toLocaleString()}
-                        <span className="text-sm sm:text-base lg:text-lg ml-0.5">
-                          P
-                        </span>
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">💰</span>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-500">
+                          CURRENT BID
+                        </p>
+                        <p className="text-3xl font-black text-minion-blue">
+                          {highestBid.toLocaleString()} P
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[8px] sm:text-[9px] lg:text-[10px] text-gray-400 font-bold mb-0.5 uppercase tracking-wider">
-                        최고 입찰팀
+                      <p className="text-[10px] font-bold uppercase text-gray-500">
+                        LEADING TEAM
                       </p>
-                      <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-800">
+                      <p className="text-xl font-black">
                         {leadingTeam?.name || "?"}
                       </p>
                       {leadingTeam?.id === teamId && (
-                        <p className="text-xs font-black text-green-600 animate-pulse mt-1">
-                          현재 최고 입찰 중입니다! 👑
-                        </p>
+                        <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 font-bold">
+                          선두입니다!
+                        </span>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-base text-center text-gray-400 py-1.5 font-bold italic tracking-tight">
-                    입찰을 기다리고 있습니다...
+                  <p className="text-center font-bold text-gray-600 py-2 animate-pulse">
+                    경매 대기중...
                   </p>
                 )}
               </div>
             </div>
           ) : (isAuctionFinished || isAutoDraftMode) && !isRoomComplete ? (
-            <div className="flex-1 flex flex-col min-h-0">
-              {(() => {
-                const effectivePhase = isAutoDraftMode ? "DRAFT" : phase;
-                const draftablePlayers = isAutoDraftMode
-                  ? waitingPlayersList
-                  : unsoldPlayers;
-                return (
-                  <>
-                    <div className="text-center mb-4">
-                      <span
-                        className={`text-white font-bold px-6 py-2 rounded-lg text-sm border shadow-sm ${effectivePhase === "DRAFT" ? "bg-purple-500 border-purple-600" : "bg-orange-500 border-orange-600"}`}
-                      >
-                        {effectivePhase === "DRAFT"
-                          ? "🤝 유찰 선수 배정 진행 중"
-                          : "🔄 유찰 선수 재경매 진행 중"}
-                      </span>
-                      {effectivePhase === "DRAFT" && currentTurnTeam && (
-                        <div className="mt-4 flex flex-col items-center">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-                            배정 순서
-                          </span>
-                          <span className="text-xl lg:text-2xl font-bold text-purple-700 bg-purple-50 px-4 py-1.5 lg:px-6 lg:py-1.5 rounded-lg border border-purple-200 shadow-sm">
-                            {currentTurnTeam.name}{" "}
-                            <span className="text-base lg:text-lg text-purple-400 ml-1.5">
-                              ({currentTurnTeam.point_balance}P)
-                            </span>
-                          </span>
-                        </div>
-                      )}
-                      {effectivePhase !== "DRAFT" && role === "ORGANIZER" && (
-                        <div className="mt-6">
-                          <button
-                            onClick={handleRestartAuction}
-                            disabled={isRestarting || !allConnected}
-                            className="bg-orange-500 text-white font-bold px-8 py-3 rounded-lg text-base shadow-sm active:translate-y-0.5 transition-all"
-                          >
-                            ▶ 재경매 시작하기
-                          </button>
-                        </div>
-                      )}
+            <div className="flex-1 flex flex-col">
+              <div className="text-center mb-6">
+                <div className="pixel-box bg-black text-black inline-block px-6 py-2 font-bold mb-4">
+                  {phase === "DRAFT" || isAutoDraftMode
+                    ? "유찰 선수 배정"
+                    : "재경매 진행"}
+                </div>
+                {phase === "DRAFT" && currentTurnTeam && (
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] font-bold text-gray-600">
+                      CURRENT TURN
+                    </span>
+                    <div className="pixel-box bg-purple-100 px-6 py-2 font-black text-purple-700">
+                      {currentTurnTeam.name} ({currentTurnTeam.point_balance}P)
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar px-1.5 mt-1.5">
-                      <div className="grid grid-cols-2 gap-2 p-0.5">
-                        {draftablePlayers.map((p) => (
-                          <div
-                            key={p.id}
-                            className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between hover:border-minion-blue transition-colors shadow-sm"
-                          >
-                            <div className="min-w-0">
-                              <p className="font-black text-base text-gray-800 truncate">
-                                {p.name}
-                              </p>
-                              <p
-                                className={`text-xs font-black ${TIER_COLOR[p.tier] || "text-gray-500"}`}
-                              >
-                                {p.tier}{" "}
-                                <span className="text-gray-300 ml-1">|</span>{" "}
-                                <span className="text-gray-500 ml-1">
-                                  {p.main_position}
-                                </span>
-                              </p>
-                            </div>
-                            {effectivePhase === "DRAFT" &&
-                              role === "ORGANIZER" && (
-                                <button
-                                  onClick={() => handleDraft(p.id)}
-                                  disabled={
-                                    isProcessingAction !== null ||
-                                    !currentTurnTeam
-                                  }
-                                  className="bg-purple-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm active:translate-y-0.5"
-                                >
-                                  배정
-                                </button>
-                              )}
-                          </div>
-                        ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3 overflow-y-auto max-h-[300px] p-2">
+                {(isAutoDraftMode ? waitingPlayersList : unsoldPlayers).map(
+                  (p: any) => (
+                    <div
+                      key={p.id}
+                      className="pixel-box bg-white p-3 flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-black">{p.name}</p>
+                        <p
+                          className={`text-[10px] font-bold ${TIER_COLOR[p.tier]}`}
+                        >
+                          {p.tier} | {p.main_position}
+                        </p>
                       </div>
+                      {phase === "DRAFT" && props.role === "ORGANIZER" && (
+                        <button
+                          onClick={() => handleDraft(p.id)}
+                          className="pixel-button bg-purple-600 text-white px-3 py-1 text-[10px]"
+                        >
+                          배정
+                        </button>
+                      )}
                     </div>
-                  </>
-                );
-              })()}
+                  ),
+                )}
+              </div>
             </div>
           ) : isAuctionFinished ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-green-50 rounded-full flex items-center justify-center mb-4 border-2 border-green-200">
-                <span className="text-3xl lg:text-4xl animate-bounce">?��</span>
-              </div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-green-600 mb-3 drop-shadow-sm">
-                모든 경매 종료!
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+              <div className="text-6xl">🏆</div>
+              <h1 className="text-2xl font-heading text-green-600">
+                모든 경매가 종료되었습니다!
               </h1>
               <button
                 onClick={() => setShowResultModal(true)}
-                className="bg-minion-blue text-white font-bold px-6 py-3 lg:px-8 lg:py-3.5 rounded-xl text-base lg:text-lg shadow-sm active:translate-y-0.5 transition-all animate-pulse"
+                className="pixel-button bg-minion-blue text-white px-10 py-4 text-xl"
               >
-                📋 결과 최종 확인
+                팀 결과를 확인해주세요
               </button>
               <AuctionResultModal
                 isOpen={showResultModal}
@@ -440,74 +351,37 @@ export function AuctionBoard({
               />
             </div>
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
-              {!allConnected ? (
-                <>
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h2 className="text-xl font-bold text-minion-blue flex items-center gap-2">
-                      <span className="w-2 h-7 bg-minion-yellow rounded-full shadow-sm"></span>
-                      팀장 접속 현황
-                    </h2>
-                    <span className="text-xs font-bold px-3 py-1.5 rounded-md border bg-orange-50 text-orange-600 border-orange-200 shadow-sm animate-pulse">
-                      ⏳ 접속 대기 중 ({connectedLeaderIds.size}/{teams.length})
-                    </span>
-                  </div>
-                  <div className="flex flex-row overflow-x-auto custom-scrollbar gap-3 p-1.5 min-h-0 w-full">
-                    {teams.map((team) => {
-                      const connected = connectedLeaderIds.has(team.id);
-                      return (
-                        <div
-                          key={team.id}
-                          className={`flex-1 min-w-[110px] rounded-xl border-2 p-3 lg:p-4 flex flex-col items-center justify-center text-center gap-2 transition-all duration-500 ${connected ? "border-green-300 bg-green-50/50 shadow-sm scale-[1.01]" : "border-gray-100 bg-gray-50/50 grayscale opacity-60"}`}
-                        >
-                          <div
-                            className={`w-12 h-12 rounded-full flex shrink-0 items-center justify-center text-2xl mb-1 ${connected ? "bg-green-100" : "bg-gray-200"}`}
-                          >
-                            {connected ? "✅" : "⏳"}
-                          </div>
-                          <div className="w-full min-w-0 flex flex-col items-center">
-                            <p className="font-bold text-gray-800 text-sm w-full truncate mb-0.5">
-                              {team.name}
-                            </p>
-                            <p
-                              className={`font-black text-[10px] sm:text-[11px] uppercase tracking-widest ${connected ? "text-green-600" : "text-gray-400"}`}
-                            >
-                              {connected ? "Online" : "Offline"}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-700">
-                  <div className="w-16 h-16 lg:w-20 lg:h-20 bg-minion-yellow/10 rounded-full flex items-center justify-center mb-3 lg:mb-4 border-2 border-dashed border-minion-yellow animate-[spin_15s_linear_infinite]">
-                    <span className="text-3xl lg:text-4xl animate-bounce">
-                      ?��
-                    </span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-minion-blue mb-2 tracking-tight">
-                    모든 준비�? ?�료?�었?�니??
-                  </h3>
-                  <p className="text-sm text-gray-500 font-medium max-w-md leading-relaxed">
-                    ?�재{" "}
-                    <span className="text-minion-blue bg-minion-yellow px-2 py-0.5 rounded-md shadow-sm">
-                      추첨 ?��?�?
-                    </span>
-                    ?�니??
-                    <br />
-                    주최?��? ?�수�?추첨?�면 경매가 ?�작?�니??
-                  </p>
-                  <div className="mt-5 flex gap-2">
-                    {[0, 0.2, 0.4].map((d) => (
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
+              {!props.allConnected ? (
+                <div className="w-full space-y-6">
+                  <h2 className="text-xl font-black text-minion-blue">
+                    TEAM LEADERS CONNECTING...
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-4">
+                    {teams.map((team: any) => (
                       <div
-                        key={d}
-                        className="w-2 h-2 bg-minion-yellow rounded-full animate-bounce"
-                        style={{ animationDelay: `${d}s` }}
-                      />
+                        key={team.id}
+                        className={`pixel-box p-4 min-w-[120px] ${connectedLeaderIds.has(team.id) ? "bg-green-50" : "bg-gray-100 grayscale opacity-50"}`}
+                      >
+                        <div className="text-2xl mb-2">
+                          {connectedLeaderIds.has(team.id) ? "✅" : "💤"}
+                        </div>
+                        <p className="font-bold text-xs truncate">
+                          {team.name}
+                        </p>
+                      </div>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div className="animate-in zoom-in-95 duration-700 space-y-6">
+                  <div className="text-6xl animate-bounce">⏳</div>
+                  <h3 className="text-2xl font-black text-minion-blue">
+                    ARE YOU READY?
+                  </h3>
+                  <p className="font-bold text-gray-500">
+                    방장이 추첨을 시작하면 경매가 개시됩니다.
+                  </p>
                 </div>
               )}
             </div>

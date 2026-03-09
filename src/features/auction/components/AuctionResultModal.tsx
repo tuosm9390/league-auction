@@ -16,12 +16,10 @@ export function AuctionResultModal({
   const players = useAuctionStore((state) => state.players || []);
 
   const membersPerTeam = useAuctionStore((state) => state.membersPerTeam);
-  // 팀장을 제외한 팀원 슬롯 수
   const rosterSlots = Math.max((membersPerTeam ?? 5) - 1, 1);
 
   if (!isOpen) return null;
 
-  // 1팀부터 정렬 (이름 기준 오름차순 정도)
   const sortedTeams = [...teams].sort((a, b) =>
     a.name.localeCompare(b.name, "ko-KR", { numeric: true }),
   );
@@ -32,123 +30,121 @@ export function AuctionResultModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl relative animate-in zoom-in-95 duration-200 cursor-default"
+        className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-5xl max-h-[90vh] flex flex-col relative animate-in zoom-in-95 duration-200 cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Content */}
-        <div className="bg-white rounded-xl w-full shadow-md overflow-hidden border border-gray-200 relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white/95 rounded-t-xl z-10">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-minion-yellow/20 rounded-lg flex items-center justify-center border border-amber-200">
-                <Trophy size={16} className="text-orange-500" />
-              </div>
-              <h2 className="text-base font-bold text-gray-800 tracking-tight">
-                최종 경매 결과
-              </h2>
+        {/* Header */}
+        <div className="px-5 py-4 border-b-4 border-black flex items-center justify-between shrink-0 bg-minion-yellow">
+          <div className="flex items-center gap-2.5">
+            <Trophy size={18} className="text-black" />
+            <h2 className="font-black text-lg font-heading text-black uppercase">
+              경매 결과
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-black hover:bg-black/10 p-1 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50 custom-scrollbar">
+          {sortedTeams.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 font-heading text-[10px] border-4 border-dashed border-gray-200">
+              NO DATA FOUND
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 p-1.5 rounded-md hover:bg-gray-100 transition-colors bg-white shadow-sm border border-gray-200"
-            >
-              <X size={16} />
-            </button>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {sortedTeams.map((team: Team) => {
+                const teamPlayers = players.filter(
+                  (p) => p.team_id === team.id,
+                );
+                const slots = Array.from(
+                  { length: rosterSlots },
+                  (_, i) => teamPlayers[i] ?? null,
+                );
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-5 z-10 bg-gray-50/30 custom-scrollbar">
-            {sortedTeams.length === 0 ? (
-              <div className="text-center py-10 text-gray-400 font-medium text-sm border border-dashed border-gray-200 rounded-lg">
-                표시할 팀 데이터가 없습니다.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {sortedTeams.map((team: Team) => {
-                  const teamPlayers = players.filter(
-                    (p) => p.team_id === team.id,
-                  );
+                return (
+                  <div
+                    key={team.id}
+                    className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col"
+                  >
+                    <table className="w-full text-[10px] border-collapse h-full">
+                      <tbody>
+                        <tr>
+                          <td
+                            rowSpan={rosterSlots + 2}
+                            className="w-[35%] border-r-4 border-b-4 border-black bg-gray-100 text-center align-middle p-4"
+                          >
+                            <span className="text-sm font-black text-black block mb-1">
+                              {team.leader_name}
+                            </span>
+                            <div className="text-[8px] font-heading text-minion-blue mb-3">
+                              {team.name}
+                            </div>
+                            <div className="inline-block border-2 border-black bg-minion-yellow text-black font-heading text-[7px] px-2 py-1 uppercase">
+                              {team.point_balance}P LEFT
+                            </div>
+                          </td>
+                          <td className="w-[65%] border-b-4 border-black bg-minion-blue text-white text-center py-2 px-3">
+                            <span className="font-heading text-[10px] uppercase tracking-tighter">
+                              ROSTER
+                            </span>
+                          </td>
+                        </tr>
 
-                  // rosterSlots 개수의 고정 행 생성 (선수가 있으면 채우고, 없으면 빈 슬롯)
-                  const slots = Array.from(
-                    { length: rosterSlots },
-                    (_, i) => teamPlayers[i] ?? null,
-                  );
+                        <tr>
+                          <td className="w-[65%] border-b-2 border-black text-center py-2.5 px-3 bg-blue-50 relative">
+                            <span className="text-indigo-600 absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-heading">
+                              Leader
+                            </span>
+                            <span className="font-black text-[14px] text-gray-900">
+                              {team.leader_name}
+                            </span>
+                          </td>
+                        </tr>
 
-                  return (
-                    <div
-                      key={team.id}
-                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col group hover:border-minion-blue/50 transition-colors h-full"
-                    >
-                      <table className="w-full text-xs border-collapse h-full">
-                        <tbody>
-                          {/* 헤더 행 */}
-                          <tr>
+                        {slots.map((player, idx) => (
+                          <tr key={player?.id ?? `empty-${idx}`}>
                             <td
-                              rowSpan={rosterSlots + 2}
-                              className="w-[35%] border-r border-b border-gray-200 bg-gray-50 text-center align-middle p-3"
+                              className={`w-[65%] text-center py-2.5 px-3 relative ${idx !== slots.length - 1 ? "border-b border-gray-300" : ""}`}
                             >
-                              <span className="text-base font-bold text-gray-800">
-                                {team.leader_name}
-                              </span>
-                              <div className="text-[10px] text-gray-500 mt-0.5">
-                                {team.name}
-                              </div>
-                              <div className="mt-2 inline-flex border border-amber-200 bg-amber-50 text-amber-700 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded leading-none">
-                                {team.point_balance}P 남음
-                              </div>
-                            </td>
-                            <td className="w-[65%] border-b border-gray-200 bg-blue-50/50 text-center py-1.5 px-3">
-                              <span className="font-semibold text-gray-500 text-[10px] uppercase tracking-wider">
-                                소속 선수
-                              </span>
-                            </td>
-                          </tr>
-
-                          {/* 팀장 행 */}
-                          <tr>
-                            <td className="w-[65%] border-b border-gray-100 text-center py-2 px-3 bg-white relative">
-                              <span className="text-indigo-500 absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold bg-indigo-50 px-1 py-0.5 rounded leading-none border border-indigo-100">
-                                👑 팀장
-                              </span>
-                              <span className="font-bold text-gray-800">
-                                {team.leader_name}
-                              </span>
-                            </td>
-                          </tr>
-
-                          {/* 팀원 고정 슬롯 */}
-                          {slots.map((player, idx) => (
-                            <tr key={player?.id ?? `empty-${idx}`}>
-                              <td
-                                className={`w-[65%] text-center py-2 px-3 relative ${idx !== rosterSlots - 1 ? "border-b border-gray-50" : ""}`}
-                              >
-                                {player ? (
-                                  <>
-                                    <span className="font-medium text-gray-700">
-                                      {player.name}
-                                    </span>
-                                    {player.sold_price && (
-                                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold text-blue-500 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">
-                                        {player.sold_price}P
-                                      </span>
-                                    )}
-                                  </>
-                                ) : (
-                                  <span className="text-[11px] text-gray-300 italic">
-                                    —
+                              {player ? (
+                                <>
+                                  <span className="font-black text-[14px] text-gray-800">
+                                    {player.name}
                                   </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                                  {typeof player.sold_price === "number" && (
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[12px] font-black text-red-500">
+                                      {player.sold_price}P
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-[8px] font-heading text-gray-300">
+                                  --- EMPTY ---
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t-4 border-black bg-white shrink-0">
+          <button
+            onClick={onClose}
+            className="pixel-button w-full py-3 bg-black text-white text-[10px] font-heading"
+          >
+            CLOSE
+          </button>
         </div>
       </div>
     </div>

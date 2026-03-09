@@ -337,3 +337,117 @@ Broadcast-primary 아키텍처로 전환하면서 Zustand store에서 `hasPlayed
 ### AI 행동 지침 (Lessons Learned & New Rules)
 
 > **Flex 컨테이너 내부에서 스크롤이 가능한 세로형 레이아웃(`flex-col` + `overflow-y-auto`)을 구축할 때, 각 자식 컴포넌트가 최소한의 높이를 보장받아야 한다면 반드시 `shrink-0` 속성을 부여하라. 그렇지 않으면 브라우저는 좁은 화면 배율에서 자식 요소를 우선적으로 수축(`shrink`)시켜, 레이아웃 겹침(Overflow overlap) 등 치명적인 UI 버그를 유발한다.**
+
+## [2026-03-09 16:04:12] 픽셀아트 컨셉 폰트 적용 시 @import 위치 오류
+- **이슈 요약 (The Problem)**: 픽셀아트 컨셉 구현을 위해 외부 폰트(Galmuri)를 @import로 추가했으나, Tailwind CSS의 @import "tailwindcss" 보다 뒤에 위치하여 빌드 경고 및 적용 순서 혼선 발생.
+- **실패한 접근법 (What didn't work)**: CSS 파일 중간에 @import를 삽입하거나 PowerShell의 -replace 연산자를 사용하여 정규식 이스케이프 문제로 파일 내용이 깨짐.
+- **최종 해결책 (What worked)**: @import 규칙은 파일의 최상단(@charset 제외)에 위치해야 한다는 표준을 준수하여 globals.css를 전체 재작성(Set-Content)함.
+- **AI 행동 지침 (Lessons Learned & New Rules)**: CSS 수정 시 @import 규칙은 항상 파일의 가장 처음에 배치해야 하며, 특수문자가 많은 설정 파일은 부분 치환보다 전체 구조를 재작성하는 것이 안전하다.
+
+## [2026-03-09 16:37:53] PowerShell 경로 내 특수문자([id]) 처리 오류
+- **이슈 요약 (The Problem)**: Next.js의 dynamic route 경로인 [id]가 포함된 파일을 PowerShell Get-Content로 읽을 때, []를 와일드카드로 인식하여 파일을 찾지 못하는 현상 발생.
+- **실패한 접근법 (What didn't work)**: 일반적인 따옴표 처리만으로는 해결되지 않음.
+- **최종 해결책 (What worked)**: -LiteralPath 파라미터를 사용하여 경로를 문자열 그대로 인식하게 함.
+- **AI 행동 지침 (Lessons Learned & New Rules)**: 대괄호([])가 포함된 경로를 다룰 때는 반드시 -LiteralPath를 사용해야 하며, 가시성 개선 시에는 텍스트 색상뿐만 아니라 배경과의 대비(Contrast Ratio)를 최우선으로 고려한다.
+
+## [2026-03-09 16:51:30] 서로 다른 역할의 컨트롤 패널 디자인 불일치
+- **이슈 요약 (The Problem)**: 주최자 패널은 픽셀아트/블랙 헤더 스타일이 적용된 반면, 팀장 패널은 이전의 모던한 스타일이 남아있어 시각적 괴리 발생.
+- **최종 해결책 (What worked)**: RoomClient의 GM Panel 레이아웃을 BiddingControl에 이식하여 상단 블랙 헤더, 고대비 텍스트, 픽셀 박스 스타일을 통일함.
+- **AI 행동 지침 (Lessons Learned & New Rules)**: 전체 테마 변경 시 한 페이지 내의 모든 제어 컴포넌트를 전수 조사하여 디자인 일관성을 즉시 확보해야 한다.
+
+## [2026-03-09 17:40:48] 일부 버튼의 스타일 가이드라인 미준수
+- **이슈 요약 (The Problem)**: EXIT와 END 버튼이 전역 pixel-button 스타일이 아닌 개별 인라인 스타일(border-white 등)을 사용하여 통일감 저하.
+- **최종 해결책 (What worked)**: 해당 버튼들을 pixel-button 클래스로 교체하고, 일관된 패딩과 폰트 크기를 적용함.
+- **AI 행동 지침 (Lessons Learned & New Rules)**: 스타일 수정 시 특정 버튼만 고치는 것이 아니라, 해당 페이지 내의 모든 버튼이 동일한 전역 클래스를 사용하는지 전수 검사해야 한다.
+
+
+## 2026-03-09: CenterTimer Style Update & Command Execution Issue
+### 이슈 요약 (The Problem)
+AuctionBoard.tsx의 CenterTimer 컴포넌트 스타일을 수정하던 중, 윈도우 환경에서 sed 명령어 체이닝(&&) 실패와 멀티라인 문자열 치환 오류가 발생함.
+
+### 실패한 접근법 (What didn't work)
+- sed -i ... && sed -i ...를 하나의 un_shell_command로 실행하려 했으나 윈도우 쉘에서 문법 오류 발생.
+- $content.Replace(, )을 사용한 멀티라인 치환 시, 코드의 인덴트나 개행 문자가 정확히 일치하지 않아 치환이 무시됨.
+
+### 최종 해결책 (What worked)
+- powershell의 oreach 루프를 사용하여 라인별로 패턴을 매칭하고 필요한 부분만 Replace를 적용함.
+- !border-red-600과 같이 중요도(!)를 명시하여 기존 pixel-box 유틸리티 클래스의 스타일 충돌을 해결함.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+윈도우 환경에서 복잡한 코드 수정 시 문자열 전체 치환보다는 라인별 매칭 수정을 우선하고, 스타일 우선순위 충돌이 예상될 경우 ! (important) 플래그를 적극 활용한다.
+
+
+## 2026-03-09: JavaScript Falsy Value in Conditional Rendering (0 Price Issue)
+### 이슈 요약 (The Problem)
+경매 결과 모달(AuctionResultModal.tsx)에서 sold_price가 0포인트인 경우 포인트 정보가 화면에 나타나지 않는 문제가 발생함.
+
+### 실패한 접근법 (What didn't work)
+- {player.sold_price && (...)}와 같은 단순 논리 연산자(&&) 사용. 자바스크립트에서  은 falsy 값이기 때문에 sold_price가 0이면 조건이 거짓으로 판명되어 렌더링이 건너뛰어짐.
+
+### 최종 해결책 (What worked)
+- {typeof player.sold_price === "number" && (...)}로 조건을 변경하여  이라는 유효한 숫자값도 렌더링될 수 있도록 수정함.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+숫자 값이  을 가질 수 있는 필드(가격, 점수, 카운트 등)를 조건부 렌더링할 때는 단순히 && 연산자만 쓰지 말고, 명시적으로 	ypeof를 확인하거나 null/undefined 여부를 비교한다.
+
+
+## 2026-03-09: Table Cell Multi-Alignment Layout Refactoring
+### 이슈 요약 (The Problem)
+AuctionArchiveSection.tsx에서 선수 이름과 낙찰 금액이 같은 곳에 뭉쳐 있어 가독성이 떨어짐. 이름은 중앙, 금액은 우측 끝으로 분할 배치가 필요함.
+
+### 실패한 접근법 (What didn't work)
+- 단순 ml-3 (margin-left) 사용: 이름의 길이에 따라 금액의 위치가 유동적으로 변하여 표가 지저분해 보임.
+
+### 최종 해결책 (What worked)
+- 	d를 elative로 설정하고, 이름은 	ext-center를 가진 div로 감싸 중앙에 배치.
+- 금액은 bsolute right-4를 사용하여 우측 끝에 고정 배치함으로써 이름의 길이와 상관없이 일관된 레이아웃을 완성함.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+요소의 중앙 정렬을 유지하면서 특정 정보를 우측에 고정해야 할 때는, 중앙 요소의 너비를 100%로 잡고 정보 요소를 bsolute로 배치하여 레이아웃 무결성을 유지한다.
+
+
+## 2026-03-09: Button Style Synchronization (UI Consistency)
+### 이슈 요약 (The Problem)
+메인 페이지의 두 핵심 버튼("방 만들기", "아카이브 보기")의 스타일이 서로 달라 디자인 일관성이 깨져 보임. 하나는 현대적인 둥근 스타일, 하나는 레트로 픽셀 스타일이었음.
+
+### 실패한 접근법 (What didn't work)
+- 개별 컴포넌트 내에서 스타일을 수정하다 보니, 공통 부모(page.tsx)에서의 배치 간격이나 모바일 반응형 너비가 어긋나는 경우가 발생할 수 있음.
+
+### 최종 해결책 (What worked)
+- 두 버튼 모두 pixel-button 베이스 클래스를 적용하고, 동일한 8px 검은색 픽셀 그림자를 설정함.
+- w-full sm:w-auto를 통해 모바일과 데스크탑 환경 모두에서 균형 잡힌 레이아웃을 유지하도록 함.
+- 부모 컨테이너의 gap을 조정하여 시각적 밀도를 높임.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+나란히 배치되는 버튼들은 반드시 동일한 외곽선(border), 그림자(shadow), 패딩(padding) 규격을 공유해야 하며, 색상으로만 기능을 구분하여 디자인 무결성을 유지한다.
+
+
+## 2026-03-09: Modal Style Normalization (Pixel Art UI)
+### 이슈 요약 (The Problem)
+CreateRoomModal.tsx가 프로젝트의 전체적인 픽셀 아트 테마와 어울리지 않게 현대적인 둥근 디자인을 사용하고 있어 시각적 불일치가 발생함.
+
+### 실패한 접근법 (What didn't work)
+- 일부 클래스만 수정할 경우, 입력창이나 카드 요소들의 둥근 정도가 남아있어 여전히 어색해 보일 수 있음. 전체적인 컴포넌트 스타일을 한꺼번에 마이그레이션해야 함.
+
+### 최종 해결책 (What worked)
+- 모든 ounded 관련 클래스를 제거하거나 ounded-0으로 덮어씀.
+- 테두리와 그림자 규격을 AuctionResultModal의 성공적인 사례에서 복사하여 적용함.
+- pixel-button 유틸리티를 전면 도입하여 버튼 액션의 시각적 피드백을 통일함.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+특정 프로젝트의 독특한 디자인 시스템(예: 픽셀 아트)이 존재하는 경우, 새로운 컴포넌트나 수정 시 반드시 기존의 가장 완성도 높은 모달/섹션의 스타일 코드를 참조하여 작성한다.
+
+
+## 2026-03-09: Pixel Art Scrollbar Customization
+### 이슈 요약 (The Problem)
+브라우저 기본 스크롤바가 프로젝트의 픽셀 아트 컨셉과 어울리지 않아 UI 완성도를 저해함.
+
+### 실패한 접근법 (What didn't work)
+- 일반적인 scrollbar-width: thin과 같은 표준 속성은 스타일링 자유도가 낮아 픽셀 특유의 두꺼운 테두리와 입체감을 표현하기 어려움.
+
+### 최종 해결책 (What worked)
+- ::-webkit-scrollbar 계열의 비표준 속성을 사용하여 너비, 배경, 테두리, 내부 그림자를 상세히 정의함.
+- inset 그림자를 활용하여 별도의 이미지 자산 없이도 픽셀 느낌의 입체적인 핸들을 구현함.
+
+### AI 행동 지침 (Lessons Learned & New Rules)
+레트로/픽셀 아트 테마 작업 시, 스크롤바와 같은 세부 요소도 order-radius: 0과 order를 명시적으로 적용하여 "부드러움"을 배제하고 "딱딱하고 명확한" 선 중심의 디자인을 유지한다.

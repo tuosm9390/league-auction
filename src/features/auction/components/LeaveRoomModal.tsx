@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { X, LogOut, AlertCircle } from "lucide-react";
 
@@ -21,60 +21,54 @@ export function LeaveRoomModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-sm shadow-xl animate-in zoom-in-95 duration-200 cursor-default border border-gray-200 overflow-hidden"
+        className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-sm animate-in zoom-in-95 duration-200 cursor-default overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+        <div className="px-5 py-4 border-b-4 border-black flex items-center justify-between bg-minion-yellow">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100">
-              <LogOut size={18} className="text-minion-blue" />
-            </div>
-
-            <div>
-              <h2 className="text-base font-bold text-foreground ">
-                방 나가기
-              </h2>
-            </div>
+            <LogOut size={18} className="text-black" />
+            <h2 className="text-sm font-black text-black">방 나가기</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="text-black hover:bg-black/10 p-1 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-5 py-6">
-          <div className="bg-blue-50/50 border border-blue-100/50 rounded-xl p-4 flex gap-3">
+        <div className="px-5 py-6 space-y-4">
+          <div className="bg-blue-50 border-2 border-black p-4 flex gap-3">
             <AlertCircle
               size={20}
               className="text-minion-blue shrink-0 mt-0.5"
             />
-            <div className="text-sm text-gray-700 space-y-1">
-              <p className="font-bold">정말 나가시겠습니까?</p>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                경매방에 다시 접속하려면 초대 링크나 방 번호가 필요합니다. 진행
-                중인 경매 정보는 유지됩니다.
+            <div className="text-xs font-bold text-gray-700 space-y-1">
+              <p className="text-sm font-black">[!] ARE YOU SURE?</p>
+              <p className="leading-relaxed">
+                경매방에 다시 접속하려면 초대 링크가 필요합니다. 진행 중인
+                데이터는 서버에 안전하게 보관됩니다.
               </p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 pb-5 flex flex-col gap-2.5">
+        <div className="px-5 pb-5 flex flex-col gap-3">
           <button
             onClick={onConfirm}
-            className="w-full py-3 bg-minion-blue hover:bg-minion-blue-hover text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm shadow-sm active:scale-[0.98]"
+            className="pixel-button w-full py-3 bg-red-500 text-white text-xs"
           >
-            <LogOut size={14} />방 나가기
+            <LogOut size={14} className="mr-2" />
+            나가기
           </button>
           <button
             onClick={onClose}
-            className="w-full py-2.5 text-xs font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors border border-transparent hover:border-gray-200"
+            className="pixel-button w-full py-3 bg-white text-gray-500 text-xs"
           >
-            취소
+            닫기
           </button>
         </div>
       </div>

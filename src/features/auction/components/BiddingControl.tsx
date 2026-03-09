@@ -43,54 +43,52 @@ export function BiddingControl(props: BiddingControlProps) {
   } = props;
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 lg:p-8 shrink-0">
-      <div className="flex items-start justify-between mb-3 pb-3 border-0 pb-4">
-        <h3 className="text-xs lg:text-sm font-semibold text-[#1D1D1F] tracking-tight font-bold flex items-center gap-1.5 mt-1">
-          <span className="text-base lg:text-lg">🔨</span> 팀장 컨트롤 박스
-        </h3>
-        <div className="flex flex-col items-end gap-1.5">
-          <span className="text-xs font-semibold text-gray-400 bg-[#F5F5F7] text-[#86868B] px-4 py-2 rounded-full border-0">
-            대기자: {waitingCount}명 / 낙찰자: {soldCount}명
+    <div className="pixel-box bg-white p-4 shrink-0 relative z-20">
+      {/* Header Area (GM Panel Style) */}
+      <div className="bg-black text-white px-3 py-1.5 mb-3 text-[8px] font-heading flex justify-between border-b-4 border-black uppercase">
+        <span>LEADER CONTROL PANEL</span>
+        <span className="text-minion-yellow">
+          대기자: {waitingCount} / 낙찰자: {soldCount}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex flex-col">
+          <span className="text-[7px] font-heading text-gray-600 uppercase tracking-tighter">
+            잔여 포인트
           </span>
-          <div className="flex items-center gap-3 lg:gap-4 mt-0.5">
-            <div className="flex flex-col items-end">
-              <span className="text-[8px] lg:text-[9px] font-bold text-gray-400 uppercase tracking-tight">
-                남은 포인트
-              </span>
-              <span className="text-xl lg:text-2xl font-bold text-[#1D1D1F] tabular-nums leading-none">
-                {myTeam?.point_balance?.toLocaleString() ?? 0}P
-              </span>
-            </div>
-            {currentPlayer && (
-              <div className="flex flex-col items-end">
-                <span className="text-[9px] lg:text-[10px] font-black text-gray-400 uppercase tracking-tighter">
-                  최소 입찰가
-                </span>
-                <span className="text-base lg:text-lg font-bold text-red-500 tabular-nums leading-none">
-                  {minBid.toLocaleString()}P
-                </span>
-              </div>
-            )}
-          </div>
+          <span className="text-2xl font-black text-black leading-none tabular-nums">
+            {myTeam?.point_balance?.toLocaleString() ?? 0}P
+          </span>
         </div>
+        {currentPlayer && (
+          <div className="flex flex-col items-end">
+            <span className="text-[7px] font-heading text-gray-600 uppercase tracking-tighter text-right">
+              입찰 최소 금액
+            </span>
+            <span className="text-xl font-black text-red-600 leading-none tabular-nums">
+              {minBid.toLocaleString()}P
+            </span>
+          </div>
+        )}
       </div>
 
       {bidError && (
-        <div className="mb-3 bg-red-50 border border-red-100 text-red-600 text-[12px] py-2 px-3 rounded-lg font-bold text-center animate-pulse">
+        <div className="mb-3 bg-red-50 border-2 border-black text-red-600 text-[10px] py-2 px-3 font-bold text-center animate-pulse uppercase">
           {bidError}
         </div>
       )}
 
-      <div className="flex gap-1.5 lg:gap-3 relative h-10 md:h-11 lg:h-12">
+      <div className="flex gap-2 relative h-12">
         {!isAuctionActive && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg border border-dashed border-gray-200">
-            <p className="text-xs lg:text-sm text-gray-500 font-medium flex items-center gap-1.5 lg:gap-2">
-              <span className="text-base lg:text-lg animate-bounce">?�️</span>
+          <div className="absolute inset-0 bg-white/95 backdrop-blur-[2px] z-10 flex items-center justify-center border-2 border-black border-dashed">
+            <p className="text-[10px] text-gray-500 font-bold flex items-center gap-2 uppercase">
+              <span className="text-base animate-bounce">⏳</span>
               {!currentPlayer
-                ? "선수가 추첨되면 입찰 창이 활성화됩니다."
+                ? "다음 선수 준비중..."
                 : !timerEndsAt
-                  ? "주최자가 경매를 시작하면 입찰할 수 있습니다."
-                  : "경매 시간이 종료되었습니다."}
+                  ? "경매 준비 완료"
+                  : "경매 종료"}
             </p>
           </div>
         )}
@@ -98,9 +96,9 @@ export function BiddingControl(props: BiddingControlProps) {
         <button
           onClick={decrementBid}
           disabled={!canBid || numericBidAmount <= minBid}
-          className="bg-white hover:bg-gray-50 text-gray-700 w-10 lg:w-12 h-full rounded-2xl font-medium text-2xl border border-gray-200 transition-all hover:bg-gray-50 active:scale-95 disabled:opacity-20 shadow-none"
+          className="pixel-button bg-white text-black w-12 h-full text-xl"
         >
-          －
+          -
         </button>
 
         <div className="relative flex-1 group">
@@ -112,9 +110,9 @@ export function BiddingControl(props: BiddingControlProps) {
             onChange={(e) => setBidAmount(e.target.value)}
             onFocus={(e) => e.target.select()}
             disabled={!canBid}
-            className="w-full h-full bg-white border border-gray-200 focus:border-minion-blue rounded-2xl bg-[#F5F5F7] px-2 sm:px-3 lg:px-4 text-lg sm:text-xl md:text-2xl lg:text-2xl font-bold text-center focus:outline-none focus:ring-1 focus:ring-minion-blue/20 transition-all disabled:opacity-50 tabular-nums"
+            className="w-full h-full bg-yellow-50 border-4 border-black px-4 text-xl font-black text-center focus:outline-none tabular-nums"
           />
-          <div className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-gray-300 font-bold text-sm lg:text-base pointer-events-none group-focus-within:text-minion-blue transition-colors">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-black text-sm pointer-events-none group-focus-within:text-minion-blue transition-colors">
             P
           </div>
         </div>
@@ -122,33 +120,33 @@ export function BiddingControl(props: BiddingControlProps) {
         <button
           onClick={incrementBid}
           disabled={!canBid}
-          className="bg-white hover:bg-gray-50 text-gray-700 w-10 lg:w-12 h-full rounded-2xl font-medium text-2xl border border-gray-200 transition-all hover:bg-gray-50 active:scale-95 disabled:opacity-20 shadow-none"
+          className="pixel-button bg-white text-black w-12 h-full text-xl"
         >
-          ＋
+          +
         </button>
 
         <button
           onClick={handleBid}
           disabled={!canBid}
-          className={`flex-\[1.5\] h-full rounded-2xl font-bold text-base tracking-tight transition-all active:scale-95 disabled:opacity-30 shadow-none ${
+          className={`flex-[1.5] h-full pixel-button font-heading text-[10px] tracking-tighter ${
             isLeading
-              ? "bg-minion-yellow text-minion-blue border border-amber-300"
-              : "bg-[#0071E3] hover:bg-[#0077ED] text-white"
+              ? "bg-minion-yellow text-black border-4 border-black"
+              : "bg-minion-blue text-white"
           }`}
         >
           {isLeading
-            ? "낙찰 유력 후보! 👑"
+            ? "선두 유지 중! 👑"
             : isBidding
-              ? "입찰 중..."
+              ? "입찰중..."
               : isTeamFull
-                ? "🚫 정원 초과"
-                : "입찰 하기 🔥"}
+                ? "팀이 가득 차서 입찰할 수 없습니다"
+                : "입찰하기 🔥"}
         </button>
       </div>
 
       {isTeamFull && (
-        <p className="text-[10px] text-red-500 mt-3 text-center font-bold animate-pulse">
-          ※ 현재 팀의 모든 자리가 가득 찼습니다.
+        <p className="text-[8px] font-heading text-red-600 mt-3 text-center animate-pulse uppercase">
+          팀이 가득 차서 입찰할 수 없습니다
         </p>
       )}
     </div>
