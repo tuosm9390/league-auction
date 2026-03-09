@@ -38,8 +38,8 @@ export function OrganizerControlPanel({
   return (
     <div className="pixel-box bg-white p-4 shrink-0 relative z-20">
       <div className="bg-black px-3 py-1.5 mb-3 text-[8px] font-heading flex justify-between border-b-4 border-black text-white uppercase">
-        <span>GM CONTROL PANEL</span>
-        <span className="text-minion-yellow">
+        <span className="text-[12px]">GM CONTROL PANEL</span>
+        <span className="text-minion-yellow text-[12px]">
           대기자: {waitingPlayersCount} / 낙찰자: {soldPlayersCount}
         </span>
       </div>

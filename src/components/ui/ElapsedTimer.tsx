@@ -26,8 +26,9 @@ export function ElapsedTimer({ createdAt }: ElapsedTimerProps) {
 
   return (
     <div className="pixel-box bg-black px-4 py-1 text-[12px] text-minion-yellow flex gap-2 items-center font-heading border-white/20">
-      <span className="animate-pulse">●</span> PLAY TIME{" "}
-      <b className="text-white">{elapsed}</b>
+      <span className="animate-pulse">●</span>{" "}
+      <span className="font-black">PLAY TIME </span>
+      <b className="text-black">{elapsed}</b>
     </div>
   );
 }

@@ -46,8 +46,8 @@ export function BiddingControl(props: BiddingControlProps) {
     <div className="pixel-box bg-white p-4 shrink-0 relative z-20">
       {/* Header Area (GM Panel Style) */}
       <div className="bg-black text-white px-3 py-1.5 mb-3 text-[8px] font-heading flex justify-between border-b-4 border-black uppercase">
-        <span>LEADER CONTROL PANEL</span>
-        <span className="text-minion-yellow">
+        <span className="text-[12px]">LEADER CONTROL PANEL</span>
+        <span className="text-minion-yellow text-[12px]">
           대기자: {waitingCount} / 낙찰자: {soldCount}
         </span>
       </div>

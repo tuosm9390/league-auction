@@ -29,8 +29,7 @@ export const metadata: Metadata = {
     default: "Minions Bid 🍌",
     template: "%s | Minions Bid",
   },
-  description:
-    "리그 오브 레전드 미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
+  description: "미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
   keywords: [
     "리그오브레전드",
     "LoL",
@@ -95,8 +94,7 @@ export default async function RootLayout({
               "@type": "WebApplication",
               name: "Minions Bid",
               url: "https://minionsbid.vercel.app",
-              description:
-                "리그 오브 레전드 미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
+              description: "미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
               applicationCategory: "GameApplication",
               operatingSystem: "All",
               offers: {

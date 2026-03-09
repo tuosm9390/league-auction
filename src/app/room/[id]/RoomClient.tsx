@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  useAuctionStore,
-} from "@/features/auction/store/useAuctionStore";
+import { useAuctionStore } from "@/features/auction/store/useAuctionStore";
 import { useAuctionRealtime } from "@/features/auction/hooks/useAuctionRealtime";
 import { useRoomAuth } from "@/features/auction/hooks/useRoomAuth";
 import { useAuctionControl } from "@/features/auction/hooks/useAuctionControl";
@@ -64,19 +62,23 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
   const connectedLeaderIds = new Set(
     presences.filter((p: any) => p.role === "LEADER").map((p: any) => p.teamId),
   );
-  const allConnected = teams.length > 0 && connectedLeaderIds.size >= teams.length;
+  const allConnected =
+    teams.length > 0 && connectedLeaderIds.size >= teams.length;
   const currentPlayer = players.find((p) => p.status === "IN_AUCTION");
   const waitingPlayers = players.filter((p) => p.status === "WAITING");
   const soldPlayers = players.filter((p) => p.status === "SOLD");
   const unsoldPlayers = players.filter((p) => p.status === "UNSOLD");
 
   const biddableTeams = teams.filter(
-    (t) => players.filter((p) => p.team_id === t.id && p.status === "SOLD").length < membersPerTeam - 1 && t.point_balance >= 10,
+    (t) =>
+      players.filter((p) => p.team_id === t.id && p.status === "SOLD").length <
+        membersPerTeam - 1 && t.point_balance >= 10,
   );
 
   const bids = useAuctionStore((s) => s.bids);
   const playerBids = bids.filter((b) => b.player_id === currentPlayer?.id);
-  const highestBid = playerBids.length > 0 ? Math.max(...playerBids.map((b) => b.amount)) : 0;
+  const highestBid =
+    playerBids.length > 0 ? Math.max(...playerBids.map((b) => b.amount)) : 0;
   const minBid = highestBid > 0 ? highestBid + 10 : 10;
 
   useEffect(() => {
@@ -95,7 +97,11 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
 
   const isAuctionActive = !!timerEndsAt && !isExpired;
   const myTeam = teams.find((t) => t.id === storeTeamId);
-  const isTeamFull = myTeam ? players.filter((p) => p.team_id === myTeam.id && p.status === "SOLD").length >= membersPerTeam - 1 : false;
+  const isTeamFull = myTeam
+    ? players.filter((p) => p.team_id === myTeam.id && p.status === "SOLD")
+        .length >=
+      membersPerTeam - 1
+    : false;
   const lotteryPlayer = useAuctionStore((s) => s.lotteryPlayer);
 
   const { handleCloseLottery } = useAuctionControl({
@@ -137,8 +143,19 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
     }
   };
 
-  const isRoomComplete = teams.length > 0 && teams.every((t) => players.filter((p) => p.team_id === t.id && p.status === "SOLD").length === membersPerTeam - 1);
-  const allDone = waitingPlayers.length === 0 && !currentPlayer && soldPlayers.length > 0 && isRoomComplete;
+  const isRoomComplete =
+    teams.length > 0 &&
+    teams.every(
+      (t) =>
+        players.filter((p) => p.team_id === t.id && p.status === "SOLD")
+          .length ===
+        membersPerTeam - 1,
+    );
+  const allDone =
+    waitingPlayers.length === 0 &&
+    !currentPlayer &&
+    soldPlayers.length > 0 &&
+    isRoomComplete;
 
   const handleEndRoom = async (saveResult: boolean) => {
     if (!roomId) return;
@@ -146,10 +163,17 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
     try {
       if (saveResult && allDone) {
         await saveAuctionArchive({
-          roomId, roomName: roomName ?? "경매방", roomCreatedAt: createdAt ?? new Date().toISOString(),
+          roomId,
+          roomName: roomName ?? "경매방",
+          roomCreatedAt: createdAt ?? new Date().toISOString(),
           teams: teams.map((t) => ({
-            id: t.id, name: t.name, leader_name: t.leader_name, point_balance: t.point_balance,
-            players: players.filter((p) => p.team_id === t.id).map((p) => ({ name: p.name, sold_price: p.sold_price })),
+            id: t.id,
+            name: t.name,
+            leader_name: t.leader_name,
+            point_balance: t.point_balance,
+            players: players
+              .filter((p) => p.team_id === t.id)
+              .map((p) => ({ name: p.name, sold_price: p.sold_price })),
           })),
         });
       }
@@ -160,19 +184,34 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
     }
   };
 
-  if (!isRoomLoaded) return <div className="h-screen flex items-center justify-center font-black text-3xl animate-pulse">LOADING INSTANCE...</div>;
-  if (!roomExists) return (
-    <div className="h-screen flex flex-col items-center justify-center p-6 text-center gap-6">
-      <div className="pixel-box bg-white p-10 font-black">
-        <p className="text-2xl mb-6">ERROR: ROOM NOT FOUND</p>
-        <button onClick={() => router.push("/")} className="pixel-button bg-minion-yellow px-8 py-3">RETURN TO MENU</button>
+  if (!isRoomLoaded)
+    return (
+      <div className="h-screen flex items-center justify-center font-black text-3xl animate-pulse">
+        LOADING INSTANCE...
       </div>
-    </div>
-  );
+    );
+  if (!roomExists)
+    return (
+      <div className="h-screen flex flex-col items-center justify-center p-6 text-center gap-6">
+        <div className="pixel-box bg-white p-10 font-black">
+          <p className="text-2xl mb-6">ERROR: ROOM NOT FOUND</p>
+          <button
+            onClick={() => router.push("/")}
+            className="pixel-button bg-minion-yellow px-8 py-3"
+          >
+            RETURN TO MENU
+          </button>
+        </div>
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-screen overflow-hidden relative crt-overlay">
-      <RoomHeader effectiveRole={effectiveRole} createdAt={createdAt} onLeaveRoom={() => setIsLeaveRoomOpen(true)} />
+      <RoomHeader
+        effectiveRole={effectiveRole}
+        createdAt={createdAt}
+        onLeaveRoom={() => setIsLeaveRoomOpen(true)}
+      />
 
       <main className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-4 p-4 overflow-y-auto lg:overflow-hidden w-full max-w-7xl mx-auto">
         <aside className="lg:col-span-3 flex flex-col min-h-0 order-3 lg:order-1 h-[300px] lg:h-auto shrink-0">
@@ -181,7 +220,9 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
               <span>Team Roster</span>
               <span className="text-minion-yellow animate-pulse">ACTIVE</span>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 min-h-0"><TeamList /></div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 min-h-0">
+              <TeamList />
+            </div>
           </div>
         </aside>
 
@@ -189,45 +230,74 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
           <div className="pixel-box bg-black p-3 flex items-center justify-between overflow-hidden">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🏰</span>
-              <h2 className="text-xl font-black text-white truncate uppercase">{roomName}</h2>
+              <h2 className="text-xl font-black text-black truncate uppercase">
+                {roomName}
+              </h2>
             </div>
             <div className="flex gap-2">
               <HowToUseModal variant="header" />
               {effectiveRole === "ORGANIZER" && (
-                <button onClick={() => setIsEndRoomOpen(true)} className="flex items-center gap-1.5 bg-red-600 text-white px-4 py-1.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-[10px] font-heading uppercase">END</button>
+                <button
+                  onClick={() => setIsEndRoomOpen(true)}
+                  className="flex items-center gap-1.5 bg-red-600 text-white px-4 py-1.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-[10px] font-heading uppercase"
+                >
+                  END
+                </button>
               )}
             </div>
           </div>
 
           <AuctionBoard
-            isLotteryActive={!!lotteryPlayer} lotteryPlayer={lotteryPlayer}
-            waitingPlayers={waitingPlayers} role={effectiveRole}
-            allConnected={allConnected} onCloseLottery={handleCloseLottery} roomId={roomId}
+            isLotteryActive={!!lotteryPlayer}
+            lotteryPlayer={lotteryPlayer}
+            waitingPlayers={waitingPlayers}
+            role={effectiveRole}
+            allConnected={allConnected}
+            onCloseLottery={handleCloseLottery}
+            roomId={roomId}
           />
 
           {effectiveRole === "ORGANIZER" && (
             <OrganizerControlPanel
-              noticeText={noticeText} setNoticeText={setNoticeText} onSendNotice={handleNotice}
-              waitingPlayersCount={waitingPlayers.length} soldPlayersCount={soldPlayers.length}
-              allDone={allDone} currentPlayer={currentPlayer || null} timerEndsAt={timerEndsAt}
-              lotteryPlayer={lotteryPlayer} isDrawing={isDrawing} allConnected={allConnected}
-              onShowResult={() => setShowResultModal(true)} onDraw={handleDraw} onStart={handleStart}
+              noticeText={noticeText}
+              setNoticeText={setNoticeText}
+              onSendNotice={handleNotice}
+              waitingPlayersCount={waitingPlayers.length}
+              soldPlayersCount={soldPlayers.length}
+              allDone={allDone}
+              currentPlayer={currentPlayer || null}
+              timerEndsAt={timerEndsAt}
+              lotteryPlayer={lotteryPlayer}
+              isDrawing={isDrawing}
+              allConnected={allConnected}
+              onShowResult={() => setShowResultModal(true)}
+              onDraw={handleDraw}
+              onStart={handleStart}
             />
           )}
 
           {effectiveRole === "LEADER" && roomId && storeTeamId && (
             <BiddingControl
-              roomId={roomId} teamId={storeTeamId} currentPlayer={currentPlayer || null}
-              myTeam={myTeam || null} isAuctionActive={isAuctionActive}
-              timerEndsAt={timerEndsAt} minBid={minBid} isTeamFull={isTeamFull}
+              roomId={roomId}
+              teamId={storeTeamId}
+              currentPlayer={currentPlayer || null}
+              myTeam={myTeam || null}
+              isAuctionActive={isAuctionActive}
+              timerEndsAt={timerEndsAt}
+              minBid={minBid}
+              isTeamFull={isTeamFull}
             />
           )}
         </section>
 
         <aside className="lg:col-span-3 flex flex-col gap-4 min-h-0 order-2 lg:order-3 h-[400px] lg:h-auto shrink-0">
           <div className="pixel-box bg-black flex-none max-h-[150px] flex flex-col overflow-hidden">
-            <div className="bg-red-600 text-white px-3 py-1.5 font-heading text-[8px] uppercase">유찰명단 (Unsold)</div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 min-h-0"><UnsoldPanel /></div>
+            <div className="bg-red-600 text-white px-3 py-1.5 font-heading text-[8px] uppercase">
+              유찰명단 (Unsold)
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 min-h-0">
+              <UnsoldPanel />
+            </div>
           </div>
           <div className="pixel-box bg-white flex-1 flex flex-col overflow-hidden">
             <div className="bg-minion-blue text-white px-3 py-1 font-heading text-[8px] uppercase flex justify-between">
@@ -239,9 +309,22 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
         </aside>
       </main>
 
-      <LeaveRoomModal isOpen={isLeaveRoomOpen} onClose={() => setIsLeaveRoomOpen(false)} onConfirm={() => router.push("/")} />
-      <EndRoomModal isOpen={isEndRoomOpen} isCompleted={allDone} isDeleting={isDeleting} onClose={() => setIsEndRoomOpen(false)} onConfirm={handleEndRoom} />
-      <AuctionResultModal isOpen={showResultModal} onClose={() => setShowResultModal(false)} />
+      <LeaveRoomModal
+        isOpen={isLeaveRoomOpen}
+        onClose={() => setIsLeaveRoomOpen(false)}
+        onConfirm={() => router.push("/")}
+      />
+      <EndRoomModal
+        isOpen={isEndRoomOpen}
+        isCompleted={allDone}
+        isDeleting={isDeleting}
+        onClose={() => setIsEndRoomOpen(false)}
+        onConfirm={handleEndRoom}
+      />
+      <AuctionResultModal
+        isOpen={showResultModal}
+        onClose={() => setShowResultModal(false)}
+      />
     </div>
   );
 }

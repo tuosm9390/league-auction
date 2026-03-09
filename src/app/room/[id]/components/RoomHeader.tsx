@@ -10,7 +10,11 @@ interface RoomHeaderProps {
   onLeaveRoom: () => void;
 }
 
-export function RoomHeader({ effectiveRole, createdAt, onLeaveRoom }: RoomHeaderProps) {
+export function RoomHeader({
+  effectiveRole,
+  createdAt,
+  onLeaveRoom,
+}: RoomHeaderProps) {
   return (
     <header className="h-14 shrink-0 bg-black border-b-4 border-black text-white relative z-[110]">
       <div className="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
