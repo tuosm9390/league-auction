@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     siteName: "Minions Bid",
     images: [
       {
-        url: "/thumbnail.png",
+        url: "/thumbnail_2.png",
         width: 1200,
         height: 630,
         alt: "Minions Bid Thumbnail",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Minions Bid",
     description: "미니언즈(소모임) 전용 실시간 경매 드래프트 플랫폼",
-    images: ["/thumbnail.png"],
+    images: ["/thumbnail_2.png"],
   },
 };
 

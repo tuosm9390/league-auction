@@ -12,14 +12,30 @@ const MAX_MESSAGE_LENGTH = 200;
 function MessageItem({ msg }: { msg: Message }) {
   const role = msg.sender_role;
 
+  const renderFormattedSystemMessage = (content: string) => {
+    const regex =
+      /(\d+P|[\w가-힣]+팀|[\w가-힣]+(?=\s선수)|[\w가-힣]+(?=\s->)|(?<=->\s)[\w가-힣]+)/g;
+    const parts = content.split(regex);
+    return parts.map((part, i) => {
+      if (part.match(regex)) {
+        return (
+          <strong key={i} className="font-black text-black not-italic mx-0.5">
+            {part}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
   if (role === "SYSTEM") {
     return (
       <div className="flex items-center gap-2 my-1 px-2">
         <span className="text-[10px] text-gray-400 font-bold tracking-tighter">
           [SYSTEM]
         </span>
-        <span className="text-[10px] text-gray-500 font-bold italic">
-          {msg.content}
+        <span className="text-[12px] text-gray-500 font-medium italic">
+          {renderFormattedSystemMessage(msg.content)}
         </span>
       </div>
     );
@@ -30,7 +46,7 @@ function MessageItem({ msg }: { msg: Message }) {
       <div className="bg-yellow-50 border-4 border-black p-3 my-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
         <div className="flex items-center gap-2 mb-1">
           <span className="bg-black text-minion-yellow text-[8px] px-1.5 py-0.5 font-heading uppercase">
-            QUEST ALERT
+            공지사항
           </span>
           <span className="text-[8px] text-gray-400 ml-auto font-mono">
             {new Date(msg.created_at).toLocaleTimeString([], {

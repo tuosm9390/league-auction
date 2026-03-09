@@ -229,7 +229,7 @@ export function RoomClient({ roomId, roleParam, teamIdParam }: any) {
         <section className="lg:col-span-6 flex flex-col gap-4 min-h-0 order-1 lg:order-2 lg:h-full shrink-0">
           <div className="pixel-box bg-black p-3 flex items-center justify-between overflow-hidden">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🏰</span>
+              <span className="text-2xl">🏆</span>
               <h2 className="text-xl font-black text-black truncate uppercase">
                 {roomName}
               </h2>

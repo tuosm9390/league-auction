@@ -46,9 +46,9 @@ export function BiddingControl(props: BiddingControlProps) {
     <div className="pixel-box bg-white p-4 shrink-0 relative z-20">
       {/* Header Area (GM Panel Style) */}
       <div className="bg-black text-white px-3 py-1.5 mb-3 text-[8px] font-heading flex justify-between border-b-4 border-black uppercase">
-        <span className="text-[12px]">LEADER CONTROL PANEL</span>
+        <span className="text-[12px]">[팀장] 컨트롤 박스</span>
         <span className="text-minion-yellow text-[12px]">
-          대기자: {waitingCount} / 낙찰자: {soldCount}
+          대기자: {waitingCount}명 / 낙찰자: {soldCount}명
         </span>
       </div>
 
@@ -81,7 +81,7 @@ export function BiddingControl(props: BiddingControlProps) {
 
       <div className="flex gap-2 relative h-12">
         {!isAuctionActive && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-[2px] z-10 flex items-center justify-center border-2 border-black border-dashed">
+          <div className="pixel-box absolute inset-0 bg-white/95 backdrop-blur-[8px] z-10 flex items-center justify-center border-2 border-black !shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <p className="text-[10px] text-gray-500 font-bold flex items-center gap-2 uppercase">
               <span className="text-base animate-bounce">⏳</span>
               {!currentPlayer

@@ -76,7 +76,7 @@ export function AuctionResultModal({
                         <tr>
                           <td
                             rowSpan={rosterSlots + 2}
-                            className="w-[35%] border-r-4 border-b-4 border-black bg-gray-100 text-center align-middle p-4"
+                            className="w-[35%] border-r-4 border-black bg-gray-100 text-center align-middle p-4"
                           >
                             <span className="text-sm font-black text-black block mb-1">
                               {team.leader_name}

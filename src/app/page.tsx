@@ -1,4 +1,4 @@
-﻿import { CreateRoomModal } from "@/components/CreateRoomModal";
+import { CreateRoomModal } from "@/components/CreateRoomModal";
 import { ArchiveModalWrapper } from "@/components/ArchiveModalWrapper";
 import Image from "next/image";
 
@@ -37,7 +37,7 @@ const HOW_TO_USE = [
     step: "05",
     icon: "🏆",
     title: "팀 확정",
-    desc: "최종 팀 구성을 확인하고 내전을 준비하세요!",
+    desc: "최종 팀 구성을 확인하고 경기를 준비하세요!",
   },
 ];
 
@@ -56,22 +56,23 @@ export default function Home() {
                 alt="Icon"
                 width={48}
                 height={48}
-                className="pixelated"
+                className="pixelated shrink-0"
               />
-              <div className="w-[450px]">
-                <span className="text-minion-yellow block drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-                  MINIONS
-                </span>
-                <span className="drop-shadow-[4px_4px_0px_rgba(251,224,66,1)]">
-                  AUCTION
-                </span>
+              <div className="w-[300px] sm:w-[450px] aspect-[3/1] relative flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/thumbnail.png"
+                  alt="MINIONS AUCTION"
+                  fill
+                  priority
+                  className="pixelated object-contain scale-[1.8]"
+                />
               </div>
               <Image
                 src="/favicon.png"
                 alt="Icon"
                 width={48}
                 height={48}
-                className="pixelated"
+                className="pixelated shrink-0"
               />
             </div>
           </h1>

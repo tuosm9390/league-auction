@@ -64,12 +64,12 @@ function ArchiveDetailModal({
                 key={team.id}
                 className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
               >
-                <table className="w-full text-[10px] border-collapse">
+                <table className="w-full h-full text-[10px] border-collapse">
                   <tbody>
                     <tr>
                       <td
                         rowSpan={Math.max(team.players.length, 1) + 2}
-                        className="w-1/3 border-r-4 border-b-4 border-black bg-gray-100 text-center align-middle p-4"
+                        className="w-1/3 border-r-4 border-black bg-gray-100 text-center align-middle p-4"
                       >
                         <span className="text-[14px] font-black text-black block mb-1">
                           {team.leader_name}

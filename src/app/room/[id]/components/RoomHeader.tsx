@@ -28,7 +28,7 @@ export function RoomHeader({
               className="pixelated shadow-lg"
             />
             <span className="font-black text-minion-yellow tracking-tighter">
-              MINIONS_BID
+              MINIONS
             </span>
           </div>
           <div className="flex gap-2">
